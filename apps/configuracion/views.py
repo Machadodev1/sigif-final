@@ -1,14 +1,13 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+
 from .models import EmpresaConfig
 
 
 def configuracion(request):
     config = EmpresaConfig.objects.get (id=1)
-    return render(request, 'configuracion/configuracion.html', {'config': config})
 
 
-"""  if request.method == 'POST':
+    if request.method == 'POST':
 
         
         if request.user.is_staff:
@@ -25,7 +24,8 @@ def configuracion(request):
 
             config.save() 
             
-"""
+    return render(request, 'configuracion/configuracion.html', {'config': config})
+
 
 def backupypermisos(request):
     return render(request, 'configuracion/backupypermisos.html')
