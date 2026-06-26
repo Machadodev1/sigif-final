@@ -1,23 +1,39 @@
 from django.shortcuts import render
 from django.views.generic import ListView, DetailView
 from .models import Factura, Cliente, Producto
+from core.decoradores import requerir_rol
+
 
 class FacturaListView(ListView):
     model = Factura
     template_name = 'facturacion/facturacion.html'
     context_object_name = 'facturas'
 
+    def dispatch(self, request, *args, **kwargs):
+        # Facturación es admin y empleado
+        return requerir_rol(["Admin", "Empleado"])(super().dispatch)(request, *args, **kwargs)
+
+
 class FacturaDetailView(DetailView):
     model = Factura
     template_name = 'facturacion/facturacion.html'
     context_object_name = 'factura'
 
+    def dispatch(self, request, *args, **kwargs):
+        # Facturación es admin y empleado
+        return requerir_rol(["Admin", "Empleado"])(super().dispatch)(request, *args, **kwargs)
+
+
+@requerir_rol(["Admin", "Empleado"])
 def clientes_view(request):
     clientes = Cliente.objects.all()
     return render(request, 'facturacion/cliente.html', {'clientes': clientes})
 
+
+@requerir_rol(["Admin", "Empleado"])
 def productos_facturacion_view(request):
     productos = Producto.objects.all()
+
     return render(request, 'facturacion/productos_facturacion.html', {'productos': productos})
 
 

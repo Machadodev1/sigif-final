@@ -1,9 +1,12 @@
 from django.shortcuts import render, redirect
 
 from .models import EmpresaConfig
+from core.decoradores import requerir_rol
 
 
+@requerir_rol(["Admin"])
 def configuracion(request):
+
     config = EmpresaConfig.objects.get (id=1)
 
 
@@ -27,5 +30,9 @@ def configuracion(request):
     return render(request, 'configuracion/configuracion.html', {'config': config})
 
 
+
+
+@requerir_rol(["Admin"])
 def backupypermisos(request):
+
     return render(request, 'configuracion/backupypermisos.html')
