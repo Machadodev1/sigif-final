@@ -25,15 +25,18 @@
                 placeholder="Buscar productos por nombre o ID"/>
         </div>
     </div>
-    {% for producto in producto %}
-    <div class="tarjetas-inv">
-        <div class="inv-info">
-            <strong>{{ producto.nombre }}</strong>
-            <div class="extra">
-                <span>Cantidad: {{ producto.stock }} Unidades.</span>
-            </div>
+{% for producto in producto %}
+
+<div class="tarjetas-inv {% if producto.stock < 10 %}border border-danger border-3 bg-danger-subtle{% endif %}">
+    <div class="inv-info">
+        <strong>{{ producto.nombre }}</strong>
+        <div class="extra">
+            <span>Cantidad: {{ producto.stock }} Unidades.</span>
         </div>
     </div>
-    {% endfor %}
+</div>
+
+{% endfor %}
+
 </section>
 {% endblock %}
