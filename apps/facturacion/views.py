@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.views.generic import ListView, DetailView
-from .models import Factura, Cliente, Producto
+from apps.facturacion.models import Factura
+from apps.productos.models import Producto
+from apps.facturacion.models import Cliente
 from core.decoradores import requerir_rol
 
 
