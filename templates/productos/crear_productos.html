@@ -1,12 +1,60 @@
-<!DOCTYPE html>
 {% extends 'base.html' %}
 {% block title %}Crear Producto{% endblock %}
 {% block content %}
-<h1>Crear Producto</h1>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Crear</button>
-  <a href="{% url 'productos' %}">Cancelar</a>
-</form>
+
+<div class="usuarios-header">
+  <div>
+    <h2>Crear Producto</h2>
+    <p>Registra un nuevo producto en el sistema</p>
+  </div>
+  <a href="{% url 'productos' %}" class="btn-nuevo">Volver</a>
+</div>
+
+<div class="contenedor-formularios">
+  <div class="form-configuracion">
+    <h3>Datos del producto</h3>
+    <div class="form-body">
+
+      {% if form.errors %}
+        <div class="alert error">
+          <strong>Errores:</strong>
+          <ul>
+            {% for field in form %}
+              {% for error in field.errors %}
+                <li>{{ field.label }}: {{ error }}</li>
+              {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <form method="POST">
+        {% csrf_token %}
+
+        {% for field in form.visible_fields %}
+          <div class="inv-info">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+              <div class="alert error">
+                {{ field.errors|join:", " }}
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        <div class="actions-container">
+          <button type="submit" class="btn-guardar">Crear Producto</button>
+          <a href="{% url 'productos' %}" class="btn-nuevo">Cancelar</a>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
 {% endblock %}
