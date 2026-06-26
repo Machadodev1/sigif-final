@@ -9,9 +9,9 @@
     </header>
 
     <div class="menu-horizontal">
-        <a href="{% url 'inv_control' %}">Control de stock</a>
-        <a href="{% url 'inventario' %}">Carritos de compras</a>
-        <a href="{% url 'inv_historial' %}" class="active">Historial de movimientos</a>
+        <a href="{% url 'inv_control' %}" class="{% if request.resolver_match.url_name == 'inv_control' %}active{% endif %}">Control de stock</a>
+        <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Catalogo de ventas</a>
+        <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">Historial de movimientos</a>
     </div>
 
     <section class="inventario-container2">

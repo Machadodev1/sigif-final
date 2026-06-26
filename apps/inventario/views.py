@@ -27,7 +27,7 @@ def inventario(request):
     }
 
 
-    return render(request, "inventario/inventario copy.html", contexto)
+    return render(request, "inventario/inventario.html", contexto)
 
 @requerir_rol(["Admin", "Empleado"])
 def inv_historial(request):
