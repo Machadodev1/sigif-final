@@ -5,10 +5,9 @@ from django.db.models import Sum # Necesario para sumar los totales de las factu
 class Cliente(models.Model):
     nombre = models.CharField(max_length=100)
     correo = models.EmailField()
-
+    
     def __str__(self):
         return self.nombre
-
     # NUEVO: Calcula el total de dinero que este cliente ha gastado
     def get_total_gastado(self):
         # 'factura_set' busca todas las facturas asociadas a este cliente
@@ -19,16 +18,6 @@ class Cliente(models.Model):
     def get_ultima_fecha(self):
         ultima_factura = self.factura_set.order_by('-fecha').first()
         return ultima_factura.fecha if ultima_factura else "Sin compras"
-
-
-class Producto(models.Model):
-    nombre = models.CharField(max_length=100)
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
-    stock = models.IntegerField()
-
-    def __str__(self):
-        return self.nombre
-
 
 class Factura(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)

@@ -32,7 +32,14 @@ def inventario(request):
 @requerir_rol(["Admin", "Empleado"])
 def inv_historial(request):
 
-    return render(request, "inventario/inv_historial.html")
+    movimientos = Producto.objects.order_by('-id')[:2]
+    for movimiento in movimientos:
+        movimiento.total = movimiento.precio * movimiento.stock
+    contexto = {
+        'movimientos': movimientos,
+    }
+
+    return render(request, "inventario/inv_historial.html", contexto)
 
 @requerir_rol(["Admin", "Empleado"])
 def inv_control(request):
