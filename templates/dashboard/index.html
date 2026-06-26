@@ -24,12 +24,14 @@
     <section class="metricas">
         <div class="tarjetas">
             <h3>Usuarios Activos</h3>
-            <p class="valor">{{ total }}</p>
+            <br>
+            <strong class="valor">{{ total }}</strong>
         </div>
 
         <div class="tarjetas">
             <h3>Productos</h3>
-            <p class="valor">{{ to }}</p>
+            <br>
+            <strong class="valor">{{ to }} </strong>
         </div>
 
         <div class="tarjetas">
@@ -39,6 +41,7 @@
 
         <div class="tarjetas">
             <h3>Ventas del Mes</h3>
+            <br>
             <p class="valor">${{ sales_this_month|default:"0.00" }}</p>
             
         </div>

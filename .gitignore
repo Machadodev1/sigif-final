@@ -1,6 +1,14 @@
+<<<<<<< HEAD
+# Python cache
+=======
+>>>>>>> origin/main
 __pycache__/
 *.pyc
-db.sqlite3
-*.sqlite3
-.env
-.DS_Store
+*.pyo
+
+
+# Virtual env
+venv/
+
+# Logs
+*.log

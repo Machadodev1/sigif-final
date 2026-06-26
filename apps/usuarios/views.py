@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .forms import UsuarioForm
 from .models import Usuarios
+from apps.auditoria.models import Auditoria
 
 def login_view(request):
     if request.method == "POST":
@@ -35,7 +36,13 @@ def crear_usuarios(request):
     if request.method == 'POST':
         form = UsuarioForm (request.POST)
         if form.is_valid():
-            form.save()
+            usuarios = form.save()
+            Auditoria.objects.create(
+                usuario=request.session["logueado"]["nombre"],
+                accion=f"CREO USUARIO: {usuarios.nombre}",
+                modulo="USUARIOS"
+            )
+
             return redirect('usuarios')
     else:
         form = UsuarioForm ()
@@ -43,26 +50,42 @@ def crear_usuarios(request):
 
 
 def editar_usuarios(request, id):
-    user = get_object_or_404(Usuarios, id=id)
+    usuarios = get_object_or_404(Usuarios, id=id)
     if request.method == 'POST':
-        form = UsuarioForm(request.POST, instance=user)
+        form = UsuarioForm(request.POST, instance=usuarios)
         if  form.is_valid():
-            form.save()
+            usuarios = form.save()
+            Auditoria.objects.create(
+                usuario=request.session["logueado"]["nombre"],
+                accion=f"ACTUALIZO USUARIO: {usuarios.nombre}",
+                modulo="USUARIOS"
+            )
             return redirect('usuarios')
     else:
-        form = UsuarioForm(instance=user)
+        form = UsuarioForm(instance=usuarios)
     return render(request, 'usuarios/editar_usuarios.html', {'form': form})
 
 def eliminar_usuario(request, id):
-    user = get_object_or_404(Usuarios, id=id)
+    usuarios = get_object_or_404(Usuarios, id=id)
     if request.method == 'POST':
-        user.delete()
+        nombre = usuarios.nombre 
+        usuarios.delete()
+        Auditoria.objects.create(
+                usuario=request.session["logueado"]["nombre"],
+                accion=f"ELIMINO USUARIO: {nombre}",
+                modulo="USUARIOS"
+            )
         return redirect('usuarios')
     else:
-        return render(request, 'usuarios/eliminar_usuario.html', {'user': user})
+        return render(request, 'usuarios/eliminar_usuario.html', {'usuarios': usuarios})
 
 
 def logout_view(request):
+    Auditoria.objects.create(
+                usuario=request.session["logueado"]["nombre"],
+                accion=f"CERRO SESION: {usuarios.nombre}",
+                modulo="USUARIOS"
+            )
     request.session.flush()
-    messages.success(request, "Sesión cerrada")
+    messages.success(request, "Sesion cerrada")
     return redirect('login')
