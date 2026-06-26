@@ -1,79 +1,56 @@
 {% extends 'base.html' %}
 
-{% block title %} Historial {% endblock %}
+{% block title %}Historial{% endblock %}
 
-{% block content %} 
+{% block content %}
 
-    <header class="inventario-header">
-        <h1>Gestión de inventario</h1>
-    </header>
+<header class="inventario-header">
+    <h1>Gestión de inventario</h1>
+</header>
 
-    <div class="menu-horizontal">
-        <a href="{% url 'inv_control' %}">Control de stock</a>
-        <a href="{% url 'inventario' %}">Carritos de compras</a>
-        <a href="{% url 'inv_historial' %}" class="active">Historial de movimientos</a>
+<div class="menu-horizontal">
+    <a href="{% url 'inv_control' %}">Control de stock</a>
+    <a href="{% url 'inventario' %}">Carritos de compras</a>
+    <a href="{% url 'inv_historial' %}" class="active">Historial de movimientos</a>
+</div>
+
+<section class="inventario-container2">
+    <div class="inv-header">
+        <div>
+            <h2>Historial de Movimientos</h2>
+            <p>Registro de Entradas y Salidas</p>
+        </div>
     </div>
 
-    <section class="inventario-container2">
-        <div class="inv-header">
-            <div>
-                <h2>Historial De Movimientos</h2>
-                <p>Registro De Entradas y Salidas</p>
+    <div class="movimientos">
+        <div class="movimientos-col">
+
+            <!-- ENTRADAS -->
+            <div class="columna">
+                <h3>Últimas Entradas</h3>
+
+                {% for movimiento in movimientos %}
+                <div class="tarjeta-mov">
+                    <div class="mov-info">
+                        <strong>{{ movimiento.nombre }}</strong>
+                        <p>Cantidad: {{ movimiento.stock }} unidades</p>
+                        <p>Precio unitario: ${{ movimiento.precio }}</p>
+                    </div>
+
+                    <div class="fw-bold text-success fs-5">
+                        ${{ movimiento.total }}
+                    </div>
+                </div>
+                {% empty %}
+                <p>No hay movimientos registrados.</p>
+                {% endfor %}
             </div>
-        </div>
 
-        <div class="movimientos">
-            <div class="movimientos-col">
+            <!-- SALIDAS -->
+            <div class="columna">
+                <h3>Últimas Salidas</h3>
+            </div>
 
-                <div class="columna">
-                    <h3>Últimas Entradas</h3>
-
-                    <div class="tarjeta-mov">
-                        <div class="mov-info">
-                            <strong>Neumatico Trasero - Cross 21</strong>
-                            <p>Cantidad: 50 unidades</p>
-                            <p>Precio unitario: $90,000</p>
-                        </div>
-                        <div class="vl2">+$4,500,000</div>
-                    </div>
-
-                    <div class="tarjeta-mov">
-                        <div class="mov-info">
-                            <strong>Kit de arrastre</strong>
-                            <p>Cantidad: 15 unidades</p>
-                            <p>Precio unitario: $180,000</p>
-                        </div>
-                        <div class="vl2">+$2,700,000</div>
-                    </div>
-                </div> <div class="columna">
-                    <h3>Últimas Salidas</h3>
-
-                    <div class="tarjeta-mov">
-                        <div class="mov-info">
-                            <strong>Líquido de frenos</strong>
-                            <p>Motul — Cantidad: 2</p>
-                            <p>Precio unitario: $48,000</p>
-                        </div>
-                        <div class="vl2">-$96,000</div>
-                    </div>
-
-                    <div class="tarjeta-mov">
-                        <div class="mov-info">
-                            <strong>Filtro de Aire</strong>
-                            <p>Motul — Cantidad: 4</p>
-                            <p>Precio unitario: $22,000</p>
-                        </div>
-                        <div class="vl2">-$88,000</div>
-                    </div>
-
-                    <div class="tarjeta-mov">
-                        <div class="mov-info">
-                            <strong>Kit Luces LED</strong>
-                            <p>Philips — Cantidad: 1</p>
-                            <p>Precio unitario: $85,000</p>
-                        </div>
-                        <div class="vl2">-$85,000</div>
-                    </div>
-                </div> </div> </div> </section>
+</section>
 
 {% endblock %}
