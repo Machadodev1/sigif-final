@@ -6,10 +6,13 @@ from django.http import JsonResponse
 def index(request):
     total = Usuarios.objects.count()
     to = Producto.objects.count()
+    low_stock = Producto.objects.filter(stock__lt=10).count()
 
     context = {
         'total': total,
-        'to': to
+        'to': to,
+        'low_stock': low_stock
+
     }
 
     return render(request, 'dashboard/index.html', context)

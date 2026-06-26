@@ -14,11 +14,12 @@
                 </div>
             {% endfor %}
         {% endif %}
-
-    <div class="alert error">
-        Algunos productos están agotados o con stock bajo.
-        <a href="{% url 'inv_control' %}">Ver detalles</a>
-    </div>            
+    {% if low_stock > 0 %}
+        <div class="alert error">
+            Algunos productos están agotados o con stock bajo.
+            <a href="{% url 'inv_control' %}">Ver detalles</a>
+        </div> 
+    {% endif %}           
 
     <section class="metricas">
         <div class="tarjetas">
@@ -33,14 +34,13 @@
 
         <div class="tarjetas">
             <h3>Stock Bajo</h3>
-            <p class="valor">{{ low_stock_count|default:"0" }}</p>
-            <span class="negativo">-12%</span>
+            <p class="valor">{{ low_stock }}</p>
         </div>
 
         <div class="tarjetas">
             <h3>Ventas del Mes</h3>
             <p class="valor">${{ sales_this_month|default:"0.00" }}</p>
-            <span class="positivo">+8%</span>
+            
         </div>
     </section>
 

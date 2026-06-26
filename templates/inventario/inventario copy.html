@@ -40,7 +40,7 @@
                 <span>Cantidad: {{ producto.stock }} Unidades.</span>
                 <span>Precio Unitario:</span>
                 <span class="vl1">
-                    ${{ producto.precio|floatformat:2 }}
+                    ${{ producto.precio }}
                 </span>
                 <button
                     class="agregar btn btn-dark btn-sm"
@@ -152,9 +152,9 @@ const btndes = document.getElementById('btn-des');
 const descu = document.getElementById('des');
 const pret = document.getElementById('pre');
 const codi = {
-    mono: 20,
-    machado: 30,
-    elprofe: 50
+    Yamaha : 20,
+    Motul : 30,
+    CRC: 50
 };
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 let porcentajeAplicado = 0;
