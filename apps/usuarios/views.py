@@ -3,6 +3,9 @@ from django.contrib import messages
 from .forms import UsuarioForm
 from .models import Usuarios
 from apps.auditoria.models import Auditoria
+from core.decoradores import requerir_rol
+
+
 
 def login_view(request):
     if request.method == "POST":
@@ -27,11 +30,13 @@ def login_view(request):
         else:
             return render(request, "usuarios/login.html")
 
+@requerir_rol(["Admin"])
 def usuarios(request):
     user = Usuarios.objects.all()
     return render(request, 'usuarios/usuarios.html', {'user': user})
-    
 
+
+@requerir_rol(["Admin"])
 def crear_usuarios(request):
     if request.method == 'POST':
         form = UsuarioForm (request.POST)
@@ -49,6 +54,7 @@ def crear_usuarios(request):
     return render(request, "usuarios/crear_usuarios.html",  {'form': form})
 
 
+@requerir_rol(["Admin"])
 def editar_usuarios(request, id):
     usuarios = get_object_or_404(Usuarios, id=id)
     if request.method == 'POST':
@@ -65,6 +71,7 @@ def editar_usuarios(request, id):
         form = UsuarioForm(instance=usuarios)
     return render(request, 'usuarios/editar_usuarios.html', {'form': form})
 
+@requerir_rol(["Admin"])
 def eliminar_usuario(request, id):
     usuarios = get_object_or_404(Usuarios, id=id)
     if request.method == 'POST':
@@ -81,11 +88,15 @@ def eliminar_usuario(request, id):
 
 
 def logout_view(request):
-    Auditoria.objects.create(
-                usuario=request.session["logueado"]["nombre"],
-                accion=f"CERRO SESION: {usuarios.nombre}",
-                modulo="USUARIOS"
-            )
+    logueado = request.session.get("logueado")
+    if logueado:
+        Auditoria.objects.create(
+            usuario=logueado.get("nombre", ""),
+            accion="CERRO SESION",
+            modulo="USUARIOS",
+        )
+
     request.session.flush()
     messages.success(request, "Sesion cerrada")
     return redirect('login')
+
