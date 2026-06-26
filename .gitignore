@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 # Python cache
-=======
->>>>>>> origin/main
 __pycache__/
 *.pyc
 *.pyo
