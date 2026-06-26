@@ -2,7 +2,7 @@
 __pycache__/
 *.pyc
 *.pyo
-
+.venv
 
 # Virtual env
 venv/

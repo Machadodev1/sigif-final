@@ -2,21 +2,20 @@
 
 {% block title %} Facturación - Clientes {% endblock %}
 
-{% block content %} 
+{% block content %}
 
 <header class="facturacion-header">
     <h1>Gestión de facturación</h1>
     <a href="{% url 'dashboard' %}"><i class="bg-secondary"></i></a>
 </header>
 
-<!-- Menú horizontal: 'Clientes' tiene la clase active -->
 <div class="menu-horizontal">
-    <a href="{% url 'facturacion' %}">Facturas</a>
+    <a href="{% url 'factura-list' %}">Facturas</a>
     <a href="{% url 'clientes' %}" class="active">Clientes</a>
     <a href="{% url 'productos_facturacion' %}">Productos</a>
 </div>
 
-<!-- CONTENEDOR DEL LISTADO DE CLIENTES -->
+
 <section class="facturacion-container2">
     <div class="facturacion-header">
         <div>
@@ -25,14 +24,12 @@
         </div>
     </div>
 
-    <!-- Recorremos la variable 'clientes' que mandas desde tu def clientes_view -->
     {% for cliente in clientes %}
     <div class="tarjetas-facturacion">
         <div class="facturacion-info">
             <strong>{{ cliente.nombre }}</strong>
             <div class="extra">
                 <span>Correo: {{ cliente.correo }}</span>
-                <!-- Usamos las funciones matemáticas automáticas que agregamos a tu models.py -->
                 <span>Última Compra: {{ cliente.get_ultima_fecha|date:"Y-m-d" }}</span>
                 <span>Total Facturado: ${{ cliente.get_total_gastado }}</span>
             </div>

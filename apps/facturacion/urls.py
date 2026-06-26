@@ -1,8 +1,9 @@
 from django.urls import path
+from django.views.generic.base import RedirectView
 from . import views
 
 urlpatterns = [
-    path('', views.FacturaListView.as_view(), name='facturacion'),
+    path('', RedirectView.as_view(pattern_name='factura-list', permanent=False), name='facturacion'),
     path('facturas/', views.FacturaListView.as_view(), name='factura-list'),
     path('facturas/<int:pk>/', views.FacturaDetailView.as_view(), name='factura-detail'),
     path('clientes/', views.clientes_view, name='clientes'),
