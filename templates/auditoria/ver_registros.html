@@ -10,6 +10,19 @@
 </header>
 
 <section class="auditoria-container2">
+    <form method="GET" style="margin-bottom:20px;">
+        <label for="modulo">Módulo:</label>
+
+        <select name="modulo" id="modulo" onchange="this.form.submit()">
+            <option value="">Todos</option>
+
+            {% for value, label in modulos %}
+            <option value="{{ value }}" {% if value == modulo_actual %}selected{% endif %}>
+                {{ label }}
+            </option>
+            {% endfor %}
+        </select>
+    </form>
     <table>
         <thead>
             <tr>
