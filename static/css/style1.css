@@ -794,3 +794,32 @@ body.login-body {
     width: 100%;
     border-radius: 35%;
 }
+.alert {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.alert.success {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #badbcc;
+}
+
+.alert.error {
+    background-color: #fce8e6;
+    color: #d93025;
+    border: 1px solid #fad2cf;
+}
+
+.alert.warning {
+    background-color: #fff3cd;
+    color: #664d03;
+    border: 1px solid #ffecb5;
+}
+
+.alert.info {
+    background-color: #cff4fc;
+    color: #055160;
+    border: 1px solid #b6effb;
+}
