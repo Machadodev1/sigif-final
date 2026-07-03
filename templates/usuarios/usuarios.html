@@ -4,7 +4,6 @@
 
 <header class="usuarios-header">
   <h1>Gestión de usuarios</h1>
-  <p>Administra los usuarios del sistema</p>
 </header>
 
 <!-- CONTENEDOR DEL LISTADO -->
@@ -14,14 +13,16 @@
       <h2>Lista de usuarios</h2>
       <p>Usuarios registrados en el sistema</p>
     </div>
-<div style="display: flex; gap: 15px; align-items: center;">
-    <a href="{% url 'crear_usuarios' %}" class="btn-nuevo">
-      <span></span> Nuevo Usuario
-    </a>
-    <input type="text" class="buscar" placeholder="Buscar productos por nombre o ID" />
+    <div style="display: flex; gap: 15px; align-items: center;">
+      <a href="{% url 'crear_usuarios' %}" class="btn-nuevo">
+        <span></span> Nuevo Usuario
+      </a>
+      <input type="text" class="buscar" placeholder="Buscar productos por nombre o ID" />
+    </div>
+    
   </div>
 
-  <!-- TARJETAS DE USUARIOS -->
+    <!-- TARJETAS DE USUARIOS -->
   <table border="1" cellpadding="10">
     <thead>
       <tr>
@@ -45,7 +46,7 @@
         <td>{{ user.fecha_inicio }}</td>
         <td class="td-actions">
           <a href="{% url 'editar_usuarios' user.id %}" class="btn-nuevo btn-sm">Editar</a>
-
+          
           <form action="{% url 'eliminar_usuario' user.id %}" method="POST">
             {% csrf_token %}
             <button type="submit" class="btn-logout btn-sm">Eliminar</button>
@@ -59,5 +60,7 @@
       {% endfor %}
     </tbody>
   </table>
+  <p style="text-align: center; margin-top: 16px;">Administra los usuarios del sistema</p>
+  
 </section>
 {% endblock %}
