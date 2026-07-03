@@ -14,10 +14,11 @@
       <h2>Lista de usuarios</h2>
       <p>Usuarios registrados en el sistema</p>
     </div>
-
+<div style="display: flex; gap: 15px; align-items: center;">
     <a href="{% url 'crear_usuarios' %}" class="btn-nuevo">
       <span></span> Nuevo Usuario
     </a>
+    <input type="text" class="buscar" placeholder="Buscar productos por nombre o ID" />
   </div>
 
   <!-- TARJETAS DE USUARIOS -->

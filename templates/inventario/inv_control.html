@@ -13,17 +13,15 @@
     <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">Historial de movimientos</a>
 </div>
 <section class="inventario-container2">
-    <div class="inv-header">
+    <div class="usuarios-header">
         <div>
             <h2>Catalogo de Stock</h2>
             <p>revisa el estado de tu inventario</p>
         </div>
-        <div class="total" style="display:flex;align-items:center;gap:10px;">
-            <input
-                type="text"
-                class="buscar"
-                placeholder="Buscar productos por nombre o ID"/>
-        </div>
+        <input
+            type="text"
+            class="buscar"
+            placeholder="Buscar productos por nombre o ID"/>
     </div>
 {% for producto in producto %}
 

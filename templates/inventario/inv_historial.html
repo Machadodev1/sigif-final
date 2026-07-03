@@ -14,7 +14,14 @@
         <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">Historial de movimientos</a>
     </div>
 
-    <div class="movimientos">
+    <section class="usuarios-container2">
+        <div class="usuarios-header">
+            <div>
+                <h2>Historial de Movimientos</h2>
+                <p>Últimas entradas y salidas de inventario</p>
+            </div>
+        </div>
+
         <div class="movimientos-col">
 
             <!-- ENTRADAS -->
@@ -43,6 +50,7 @@
                 <h3>Últimas Salidas</h3>
             </div>
 
-</section>
+        </div>
+    </section>
 
 {% endblock %}

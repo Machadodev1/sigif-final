@@ -10,22 +10,20 @@ Productos
     <h2>Gestión de productos</h2>
     <p>Administra el catálogo de productos</p>
   </div>
-  <a href="{% url 'crear_productos' %}" class="btn-nuevo">Nuevo producto</a>
 </header>
-<section class="productos-lista">
-  <div class="productos-sub">
+<section class="usuarios-container2">
+  <div class="usuarios-header">
     <div>
       <h2>Productos Registrados</h2>
       <p>Lista de productos registrados en el sistema</p>
     </div>
-
-    <input
-      type="text"
-      class="buscar"
-      placeholder=" Buscar productos por nombre o ID"
-    />
+    <div style="display: flex; gap: 15px; align-items: center;">
+      <a href="{% url 'crear_productos' %}" class="btn-nuevo">
+        <span></span> Nuevo producto
+      </a>
+      <input type="text" class="buscar" placeholder="Buscar productos por nombre o ID" />
+    </div>
   </div>
-
   <table border="1" cellpadding="10">
     <thead>
       <tr>
@@ -70,3 +68,5 @@ Productos
     </table>
 </section>
 {% endblock %}
+
+
