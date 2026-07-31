@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework import viewsets
 
 from apps.auditoria.models import Auditoria
@@ -15,19 +14,6 @@ from .serializador import (
     ProductoSerializer,
     UsuarioSerializer,
 )
-
-
-def api_index(request):
-    endpoints = [
-        ('auditoria', 'auditoria'),
-        ('configuracion', 'empresa-config'),
-        ('cliente', 'cliente'),
-        ('factura', 'factura'),
-        ('producto', 'producto'),
-        ('usuario', 'usuario'),
-    ]
-
-    return render(request, 'api/index.html', {'endpoints': endpoints})
 
 
 class AuditoriaViewSet(viewsets.ModelViewSet):

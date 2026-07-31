@@ -12,4 +12,5 @@ urlpatterns = [
     path('facturacion/', include('apps.facturacion.urls')),
     path('auditoria/', include('apps.auditoria.urls')),
     path('configuracion/', include('apps.configuracion.urls')),
+    path('api/auth/', include('rest_framework.urls')),
 ]
