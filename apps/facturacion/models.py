@@ -1,6 +1,6 @@
 # Create your models here.
 from django.db import models
-from django.db.models import Sum # Necesario para sumar los totales de las facturas
+from django.db.models import Sum 
 
 class Cliente(models.Model):
     nombre = models.CharField(max_length=100)
@@ -8,13 +8,10 @@ class Cliente(models.Model):
     
     def __str__(self):
         return self.nombre
-    # NUEVO: Calcula el total de dinero que este cliente ha gastado
     def get_total_gastado(self):
-        # 'factura_set' busca todas las facturas asociadas a este cliente
         resultado = self.factura_set.aggregate(total_compras=Sum('total'))['total_compras']
         return resultado if resultado else 0
 
-    # NUEVO: Obtiene la fecha de la última factura de este cliente
     def get_ultima_fecha(self):
         ultima_factura = self.factura_set.order_by('-fecha').first()
         return ultima_factura.fecha if ultima_factura else "Sin compras"

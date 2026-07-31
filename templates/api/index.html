@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API SIGIF</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; line-height: 1.6; }
+        a { color: #0b5fff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code { background: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>API SIGIF</h1>
+    <p>Accede a las tablas del proyecto desde los endpoints listados abajo.</p>
+    <ul>
+        {% for slug, label in endpoints %}
+            <li><a href="/api/{{ slug }}/"><code>/api/{{ slug }}/</code></a></li>
+        {% endfor %}
+    </ul>
+    <p>También puedes consultar la API directamente en formato JSON desde cada URL.</p>
+</body>
+</html>
