@@ -2,7 +2,6 @@ from django.shortcuts import render
 from .models import Auditoria
 from core.decoradores import requerir_rol
 
-
 @requerir_rol(["Admin"])
 def auditoria(request):
 
@@ -20,3 +19,7 @@ def auditoria(request):
         "modulos": modulos,
         "modulo_actual": modulo,
     })
+
+
+
+

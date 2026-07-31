@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'apps.configuracion',
     'apps.api',
     'rest_framework',
+    'drf_spectacular',
+
 
     
 ]
@@ -129,3 +131,16 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly'
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
+}
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'SIGIF API',
+    'DESCRIPTION': 'API del Sistema de Inventario y Facturación',
+    'VERSION': '1.0.0',
+}
