@@ -12,6 +12,7 @@ from apps.productos.models import Producto
 from apps.usuarios.models import Usuarios
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from .authentication import *
 
 from .serializador import (
     AuditoriaSerializer,

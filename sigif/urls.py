@@ -21,7 +21,6 @@ urlpatterns = [
     path('facturacion/', include('apps.facturacion.urls')),
     path('auditoria/', include('apps.auditoria.urls')),
     path('configuracion/', include('apps.configuracion.urls')),
-    #path('api/auth/', include('rest_framework.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
 
     path(
@@ -37,4 +36,5 @@ urlpatterns = [
     ),
     path('api/api-token-auth/', obtain_auth_token, name='api_token_auth'),
     path('api/auth/logout/', LogoutView.as_view(), name='api_logout')
+    
 ]

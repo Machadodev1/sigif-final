@@ -133,13 +133,7 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly'
-    ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 
-}
 SPECTACULAR_SETTINGS = {
     'TITLE': 'SIGIF API',
     'DESCRIPTION': 'API del Sistema de Inventario y Facturación',
@@ -147,9 +141,10 @@ SPECTACULAR_SETTINGS = {
 }
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',  # <--- Activado
+        'apps.api.authentication.ExpiringTokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',  # <--- Restringe accesos anónimos
-    ]
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
