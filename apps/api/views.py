@@ -26,7 +26,7 @@ class AuditoriaViewSet(viewsets.ModelViewSet):
     serializer_class = AuditoriaSerializer
     @action(detail=False, methods=['get'])
     def recientes(self, request):
-        auditorias = Auditoria.objects.order_by('-fecha')[:10]
+        auditorias = Auditoria.objects.order_by('-fecha')[:5]
         serializer = self.get_serializer(auditorias, many=True)
         return Response(serializer.data)
 
@@ -71,6 +71,6 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     serializer_class = UsuarioSerializer
     @action(detail=False, methods=['get'])
     def activos(self, request):
-        usuarios = Usuarios.objects.filter(is_active=True)
+        usuarios = Usuarios.objects.filter(activo=True)
         serializer = self.get_serializer(usuarios, many=True)
         return Response(serializer.data)
