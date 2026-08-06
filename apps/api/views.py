@@ -1,6 +1,10 @@
 from rest_framework import viewsets
 from rest_framework.authentication import *
 from rest_framework.permissions import *
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from rest_framework.views import APIView
+
 from apps.auditoria.models import Auditoria
 from apps.configuracion.models import EmpresaConfig
 from apps.facturacion.models import Cliente, Factura
@@ -74,3 +78,14 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         usuarios = Usuarios.objects.filter(activo=True)
         serializer = self.get_serializer(usuarios, many=True)
         return Response(serializer.data)
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Elimina el token asociado al usuario de la petición
+        request.user.auth_token.delete()
+        return Response(
+            {"message": "Sesión cerrada correctamente. Token destruido."}, 
+            status=status.HTTP_200_OK
+        )
