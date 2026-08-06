@@ -81,6 +81,8 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
 
     def post(self, request):
         # Elimina el token asociado al usuario de la petición
