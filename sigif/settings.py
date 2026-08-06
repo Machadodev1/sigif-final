@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'apps.api',
     'rest_framework',
     'drf_spectacular',
+    'rest_framework.authtoken',
 
 
     
@@ -143,4 +144,12 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'SIGIF API',
     'DESCRIPTION': 'API del Sistema de Inventario y Facturación',
     'VERSION': '1.0.0',
+}
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',  # <--- Activado
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  # <--- Restringe accesos anónimos
+    ]
 }
