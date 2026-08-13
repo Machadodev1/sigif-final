@@ -13,17 +13,27 @@
       <h2>Lista de usuarios</h2>
       <p>Usuarios registrados en el sistema</p>
     </div>
-    <div style="display: flex; gap: 15px; align-items: center;">
-      <a href="{% url 'crear_usuarios' %}" class="btn-nuevo">
-        <span></span> Nuevo Usuario
-      </a>
-      <input type="text" class="buscar" placeholder="Buscar productos por nombre o ID" />
-    </div>
+    <form method="GET" action="{% url 'usuarios' %}" style="display: flex; gap: 10px; align-items: center;">
+      <input type="text" class="buscar" placeholder="Buscar usuarios por nombre, rol o teléfono..." name="q" value="{{ q|default:'' }}" />
+      <button type="submit" class="btn-nuevo">Buscar</button>
+      {% if q %}
+      <a href="{% url 'usuarios' %}" class="btn-nuevo" style="background-color: #64748b; text-decoration: none;">Limpiar</a>
+      {% endif %}
+    </form>
     
   </div>
 
-    <!-- TARJETAS DE USUARIOS (cards) -->
+  <!-- TARJETAS DE USUARIOS (cards) -->
   <div class="cards-grid">
+    <!-- TARJETA VACÍA PARA CREAR USUARIO -->
+    <a href="{% url 'crear_usuarios' %}" class="tarjetas-usuario tarjeta-crear-usuario">
+      <div class="tarjeta-crear-content">
+        <div class="icon-plus">+</div>
+        <strong>Crear usuario</strong>
+        <span>Clic aquí para ingresar al formulario</span>
+      </div>
+    </a>
+
     {% for user in user %}
     <div class="tarjetas-usuario">
       <div class="usu-info">
@@ -44,12 +54,14 @@
       </div>
     </div>
     {% empty %}
-    <div class="tarjetas-usuario">
+    {% if q %}
+    <div class="tarjetas-usuario" style="grid-column: 1 / -1; text-align: center; padding: 25px;">
       <div class="usu-info">
-        <strong>No hay usuarios</strong>
-        <p class="text-muted">Aún no se han registrado usuarios en el sistema.</p>
+        <strong>No se encontraron usuarios</strong>
+        <p class="text-muted" style="margin-top: 5px;">No se encontraron coincidencia para "{{ q }}".</p>
       </div>
     </div>
+    {% endif %}
     {% endfor %}
   </div>
   <p style="text-align: center; margin-top: 16px;">Administra los usuarios del sistema</p>
