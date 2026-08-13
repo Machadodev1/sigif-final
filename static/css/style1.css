@@ -337,6 +337,38 @@ body {
     flex-shrink: 0;
 }
 
+/* Auditoría: cabecera y tarjetas */
+.auditoria-header h1 {
+    font-size: 1.8rem;
+    margin: 0 0 6px 0;
+}
+.auditoria-header p {
+    color: var(--text-muted);
+    margin: 0;
+}
+.filter-form .buscar {
+    min-width: 200px;
+}
+.tarjetas-productos {
+    background: var(--card-bg);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 6px 20px rgba(18,38,58,0.04);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.tarjetas-productos:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(18,38,58,0.06); }
+.tarjetas-productos strong { font-size: 1.05rem; color: #0f1724; }
+.tarjetas-productos .rol {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: var(--text-dark);
+    font-weight:700;
+    font-size: 0.78rem;
+}
+
 /* Actividad Reciente Icons */
 .Actividad-recientes ul li:nth-child(1)::before { content: "\F4E1"; background: #e3f2fd; color: #1976d2; }
 .Actividad-recientes ul li:nth-child(2)::before { content: "\F1E4"; background: #e8f5e9; color: #388e3c; }
