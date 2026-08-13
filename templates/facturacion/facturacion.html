@@ -1,55 +1,72 @@
 {% extends 'base.html' %}
 
-{% block title %} Facturación {% endblock %}
+{% block title %}Facturación{% endblock %}
 
-{% block content %} 
+{% block content %}
 
 <header class="facturacion-header">
     <h1>Gestión de facturación</h1>
-    <a href="{% url 'dashboard' %}"><i class="bg-secondary"></i></a>
+    <a href="{% url 'dashboard' %}">
+        <i class="bg-secondary"></i>
+    </a>
 </header>
 
-<!-- Menu horizontal con Bootstrap button group -->
 <div class="menu-horizontal">
     <a href="{% url 'factura-list' %}" class="active">Facturas</a>
     <a href="{% url 'clientes' %}">Clientes</a>
     <a href="{% url 'productos_facturacion' %}">Productos</a>
 </div>
 
-        <!-- CONTENEDOR DEL LISTADO -->
-        <section class="facturacion-container2">
-            <div class="facturacion-header">
-                <div>
-                    <h2>Facturas recientes</h2>
-                    <p>Listado de las últimas facturas generadas</p>
-                </div>
-            </div>
+<section class="facturacion-container2">
+    <div class="facturacion-header">
+        <div>
+            <h2>Facturas recientes</h2>
+            <p>Listado de las últimas facturas generadas</p>
+        </div>
+    </div>
 
-            <!-- Tarjetas de facturas -->
-            <div class="tarjetas-facturacion">
-                <div class="facturacion-info">
-                    <strong>Factura #001</strong>
+    {% for factura in facturas %}
+        <div class="tarjetas-facturacion">
+            <div class="facturacion-info">
+                <strong>Factura #{{ factura.id }}</strong>
+
+                <div class="extra">
+                    <span>Cliente: {{ factura.cliente.nombre }}</span>
+                    <span>Correo: {{ factura.cliente.correo }}</span>
+                    <span>Vendido por: {{ factura.usuario }}</span>
+                    <span>Fecha: {{ factura.fecha|date:"d/m/Y H:i" }}</span>
+                    <span>Descuento: ${{ factura.descuento }}</span>
+                    <span>Total: ${{ factura.total }}</span>
+                </div>
+
+                <hr>
+
+                <strong>Productos vendidos</strong>
+
+                {% for detalle in factura.detalles.all %}
                     <div class="extra">
-                        <span>Cliente: Juan Pérez</span>
-                        <span>Total: $150,000</span>
-                        <span>Fecha: 2024-06-01</span>
+                        <span>Producto: {{ detalle.producto.nombre }}</span>
+                        <span>Cantidad: {{ detalle.cantidad }}</span>
+                        <span>Precio: ${{ detalle.precio }}</span>
+                        <span>Subtotal: ${{ detalle.subtotal }}</span>
                     </div>
-                </div>
-            </div>
-
-            <div class="tarjetas-facturacion">
-                <div class="facturacion-info">
-                    <strong>Factura #002</strong>
+                {% empty %}
                     <div class="extra">
-                        <span>Cliente: María Gómez</span>
-                        <span>Total: $200,000</span>
-                        <span>Fecha: 2024-06-02</span>
+                        <span>No hay productos registrados en esta factura.</span>
                     </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% empty %}
+        <div class="tarjetas-facturacion">
+            <div class="facturacion-info">
+                <strong>No hay facturas</strong>
+                <div class="extra">
+                    <span>Todavía no se han realizado ventas.</span>
                 </div>
             </div>
-
-            <!-- Más tarjetas de facturas... -->
-
-        </section>
+        </div>
+    {% endfor %}
+</section>
 
 {% endblock %}

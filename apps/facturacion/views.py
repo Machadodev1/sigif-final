@@ -1,8 +1,14 @@
-from django.shortcuts import render
+import json
+from decimal import Decimal
+
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView
-from apps.facturacion.models import Factura
+from django.contrib import messages
+from django.db import transaction
+from django.http import JsonResponse
+
+from apps.facturacion.models import Factura, Cliente, DetalleFactura
 from apps.productos.models import Producto
-from apps.facturacion.models import Cliente
 from core.decoradores import requerir_rol
 
 
@@ -12,7 +18,6 @@ class FacturaListView(ListView):
     context_object_name = 'facturas'
 
     def dispatch(self, request, *args, **kwargs):
-        # Facturación es admin y empleado
         return requerir_rol(["Admin", "Empleado"])(super().dispatch)(request, *args, **kwargs)
 
 
@@ -22,7 +27,6 @@ class FacturaDetailView(DetailView):
     context_object_name = 'factura'
 
     def dispatch(self, request, *args, **kwargs):
-        # Facturación es admin y empleado
         return requerir_rol(["Admin", "Empleado"])(super().dispatch)(request, *args, **kwargs)
 
 
@@ -34,59 +38,167 @@ def clientes_view(request):
 
 @requerir_rol(["Admin", "Empleado"])
 def productos_facturacion_view(request):
-    productos = Producto.objects.all()
+    detalles = DetalleFactura.objects.select_related(
+        'producto',
+        'factura',
+        'factura__cliente'
+    ).order_by('-factura__fecha')
 
-    return render(request, 'facturacion/productos_facturacion.html', {'productos': productos})
-
-
-# Esta parte de la funcion es de los clientes ficticos para probar el diseño listo calisto
-def clientes_view(request):
-    # Intentamos traer los clientes reales de la base de datos
-    clientes = Cliente.objects.all()
-    
-    # SI NO HAY CLIENTES EN LA BASE DE DATOS, CREAMOS UNOS EN MEMORIA PARA PROBAR EL DISEÑO:
-    if not clientes.exists():
-        # Creamos objetos ficticios usando el modelo para que el HTML no se rompa
-        cliente1 = Cliente(nombre="Juan Pérez", correo="juan@email.com")
-        cliente2 = Cliente(nombre="María Gómez", correo="maria@email.com")
-        
-        #  colocamos informacion para simular la base de datos
-        cliente1.get_total_gastado = lambda: "150,000.00"
-        cliente1.get_ultima_fecha = lambda: "2024-06-01"
-        
-        cliente2.get_total_gastado = lambda: "200,000.00"
-        cliente2.get_ultima_fecha = lambda: "2024-06-02"
-        
-        clientes = [cliente1, cliente2] 
-
-    return render(request, 'facturacion/cliente.html', {'clientes': clientes})
+    return render(
+        request,
+        'facturacion/productos_facturacion.html',
+        {'detalles': detalles}
+    )
 
 
+@requerir_rol(["Admin", "Empleado"])
+def factura_generada(request, pk):
+    factura = get_object_or_404(Factura, pk=pk)
+    return render(
+        request,
+        'facturacion/factura_generada.html',
+        {'factura': factura}
+    )
 
-def productos_facturacion_view(request):
-    # Intentamos ver si hay algo real en la base de datos
-    productos = Producto.objects.all()
-    
-    # Si está vacía, inyectamos las autopartes con su desglose de ventas simulado
-    if not productos.exists():
-        prod1 = Producto(nombre="Kit Pastillas de Freno (Moto Yamaha NMAX)", precio=150000.00, stock=25)
-        prod2 = Producto(nombre="Filtro de Aceite Sintético (Carro Chevrolet Sail)", precio=100000.00, stock=40)
-        prod3 = Producto(nombre="Juego de Bujías de Iridium (Universal Carro)", precio=85000.00, stock=15)
-        prod4 = Producto(nombre="Kit de Arrastre Racing (Moto Pulsar NS200)", precio=180000.00, stock=10)
-        
-        # --- Datos para el desglose tipo recibo ---
-        prod1.comprador = "Juan Pérez"
-        prod1.cantidad_vendida = 1
-        prod1.subtotal_venta = 150000.00
-        prod1.fecha_venta = "2024-06-01"
-        prod1.num_factura = "001"
 
-        prod2.comprador = "María Gómez"
-        prod2.cantidad_vendida = 2
-        prod2.subtotal_venta = 200000.00
-        prod2.fecha_venta = "2024-06-02"
-        prod2.num_factura = "002"
-        
-        productos = [prod1, prod2, prod3, prod4]
+@requerir_rol(["Admin", "Empleado"])
+def pago(request):
+    return render(request, 'facturacion/pago.html')
 
-    return render(request, 'facturacion/productos_facturacion.html', {'productos': productos})
+
+@requerir_rol(["Admin", "Empleado"])
+def confirmar_venta(request):
+    if request.method != 'POST':
+        return JsonResponse({
+            'success': False,
+            'message': 'Método no permitido'
+        }, status=405)
+
+    try:
+        data = json.loads(request.body)
+
+        productos = data.get('productos', [])
+
+        descuento = Decimal(
+            str(data.get('descuento', 0))
+        )
+
+        nombre = data.get('nombre', '').strip()
+        correo = data.get('correo', '').strip()
+
+        if not productos:
+            return JsonResponse({
+                'success': False,
+                'message': 'El carrito está vacío'
+            })
+
+        if not nombre:
+            nombre = 'Cliente general'
+
+        if not correo:
+            correo = 'cliente@general.com'
+
+        with transaction.atomic():
+
+            cliente, creado = Cliente.objects.get_or_create(
+                correo=correo,
+                defaults={
+                    'nombre': nombre
+                }
+            )
+
+            total = Decimal('0.00')
+            productos_validos = []
+
+            for item in productos:
+
+                producto = Producto.objects.get(
+                    id=item['id']
+                )
+
+                cantidad = int(
+                    item['cantidad']
+                )
+
+                if cantidad <= 0:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f'Cantidad inválida para {producto.nombre}'
+                    })
+
+                if cantidad > producto.stock:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f'No hay suficiente stock de {producto.nombre}. Stock disponible: {producto.stock}'
+                    })
+
+                precio = Decimal(
+                    str(producto.precio)
+                )
+
+                subtotal = precio * cantidad
+
+                total += subtotal
+
+                productos_validos.append({
+                    'producto': producto,
+                    'cantidad': cantidad,
+                    'precio': precio,
+                    'subtotal': subtotal
+                })
+
+            valor_descuento = (
+                total *
+                descuento /
+                Decimal('100')
+            )
+
+            total_final = total - valor_descuento
+
+            usuario = request.session.get(
+                "logueado",
+                {}
+            ).get(
+                "nombre",
+                "Usuario"
+            )
+
+            factura = Factura.objects.create(
+                cliente=cliente,
+                usuario=usuario,
+                total=total_final,
+                descuento=valor_descuento
+            )
+
+            for item in productos_validos:
+
+                producto = item['producto']
+
+                DetalleFactura.objects.create(
+                    factura=factura,
+                    producto=producto,
+                    cantidad=item['cantidad'],
+                    precio=item['precio'],
+                    subtotal=item['subtotal']
+                )
+
+                producto.stock -= item['cantidad']
+                producto.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Venta realizada correctamente',
+            'factura_id': factura.id
+        })
+
+    except Producto.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Uno de los productos ya no existe'
+        }, status=400)
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)

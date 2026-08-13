@@ -1,89 +1,172 @@
 {% extends 'base.html' %}
 
-{% block title %} Facturación - Productos {% endblock %}
+{% block title %}Facturación - Productos{% endblock %}
 
-{% block content %} 
+{% block content %}
 
-<!-- Envoltura para controlar que el contenido no desborde hacia arriba -->
 <div style="padding: 0 20px; width: 100%; box-sizing: border-box;">
 
     <header class="facturacion-header">
         <h1>Gestión de facturación</h1>
-        <a href="{% url 'dashboard' %}"><i class="bg-secondary"></i></a>
+
+        <a href="{% url 'dashboard' %}">
+            <i class="bg-secondary"></i>
+        </a>
     </header>
 
-    <!-- Tu menú horizontal original intacto con tus clases nativas -->
     <div class="menu-horizontal">
-        <a href="{% url 'factura-list' %}">Facturas</a>
-        <a href="{% url 'clientes' %}">Clientes</a>
-        <a href="{% url 'productos_facturacion' %}" class="active">Productos</a>
+        <a href="{% url 'factura-list' %}">
+            Facturas
+        </a>
+
+        <a href="{% url 'clientes' %}">
+            Clientes
+        </a>
+
+        <a href="{% url 'productos_facturacion' %}" class="active">
+            Productos
+        </a>
     </div>
 
-    <!-- CONTENEDOR DEL LISTADO -->
     <section class="facturacion-container2" style="margin-top: 20px; clear: both;">
+
         <div class="facturacion-header">
             <div>
-                <h2>Inventario de Repuestos</h2>
-                <p>Control de stock y tirilla de ventas por artículo</p>
+                <h2>Productos vendidos</h2>
+
+                <p>
+                    Historial de productos vendidos
+                </p>
             </div>
         </div>
 
-        <!-- Contenedor de tarjetas -->
         <div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
-            {% for producto in productos %}
-            
-            <!-- Tarjeta optimizada en ancho para que no colapse con el zoom al 100% -->
-            <div class="tarjetas-facturacion" style="display: flex; justify-content: space-between; align-items: stretch; padding: 0; overflow: hidden; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff; min-height: 140px; width: 100%; box-sizing: border-box;">
-                
-                <!-- LADO IZQUIERDO: Información del Repuesto -->
+
+            {% for detalle in detalles %}
+
+            <div class="tarjetas-facturacion"
+                style="display: flex; justify-content: space-between; align-items: stretch; padding: 0; overflow: hidden; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff; min-height: 140px; width: 100%; box-sizing: border-box;">
+
                 <div style="flex: 1; padding: 20px; display: flex; flex-direction: column; justify-content: center;">
-                    <span style="font-size: 0.85em; text-transform: uppercase; color: #6c757d; font-weight: bold; letter-spacing: 0.5px;">Autoparte / Repuesto</span>
-                    <strong style="font-size: 1.2em; color: #212529; margin: 4px 0 10px 0;">{{ producto.nombre }}</strong>
-                    
-                    <div class="extra" style="display: flex; gap: 20px; margin: 0; padding: 0;">
-                        <span><strong style="color: #495057;">Precio:</strong> ${{ producto.precio|floatformat:0 }}</span>
-                        <span><strong style="color: #495057;">Stock:</strong> {{ producto.stock }} Unds</span>
+
+                    <span style="font-size: 0.85em; text-transform: uppercase; color: #6c757d; font-weight: bold; letter-spacing: 0.5px;">
+                        Producto vendido
+                    </span>
+
+                    <strong style="font-size: 1.2em; color: #212529; margin: 4px 0 10px 0;">
+                        {{ detalle.producto.nombre }}
+                    </strong>
+
+                    <div class="extra"
+                        style="display: flex; gap: 20px; margin: 0; padding: 0; flex-wrap: wrap;">
+
+                        <span>
+                            <strong style="color: #495057;">
+                                Cantidad:
+                            </strong>
+
+                            {{ detalle.cantidad }}
+                        </span>
+
+                        <span>
+                            <strong style="color: #495057;">
+                                Precio:
+                            </strong>
+
+                            ${{ detalle.precio|floatformat:0 }}
+                        </span>
+
+                        <span>
+                            <strong style="color: #495057;">
+                                Subtotal:
+                            </strong>
+
+                            ${{ detalle.subtotal|floatformat:0 }}
+                        </span>
+
                     </div>
+
                 </div>
 
-                <!-- LADO DERECHO: Resumen tipo tirilla de factura -->
-                {% if producto.comprador %}
-                <div style="width: 280px; min-width: 280px; background: #f8f9fa; border-left: 2px dashed #ced4da; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-sizing: border-box;">
-                    <!-- Decoración de círculos simulando corte de papel -->
-                    <div style="position: absolute; top: -5px; left: 0; right: 0; height: 10px; background-image: radial-gradient(circle, #fff 4px, transparent 5px); background-size: 12px 12px;"></div>
-                    
+                <div style="width: 280px; min-width: 280px; background: #f8f9fa; border-left: 2px dashed #ced4da; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+
                     <div>
+
                         <div style="display: flex; justify-content: space-between; font-size: 0.8em; font-weight: bold; color: #198754; margin-bottom: 8px;">
-                            <span>RECIBO DE VENTA</span>
-                            <span>#{{ producto.num_factura }}</span>
+
+                            <span>
+                                VENTA
+                            </span>
+
+                            <span>
+                                #{{ detalle.factura.id }}
+                            </span>
+
                         </div>
-                        <div style="font-size: 0.85em; color: #495057; display: flex; flex-direction: column; gap: 2px;">
-                            <span><strong>Cliente:</strong> {{ producto.comprador }}</span>
-                            <span><strong>Fecha:</strong> {{ producto.fecha_venta }}</span>
-                            <span><strong>Cant:</strong> {{ producto.cantidad_vendida }} Unidades</span>
+
+                        <div style="font-size: 0.85em; color: #495057; display: flex; flex-direction: column; gap: 4px;">
+
+                            <span>
+                                <strong>
+                                    Cliente:
+                                </strong>
+
+                                {{ detalle.factura.cliente.nombre }}
+                            </span>
+
+                            <span>
+                                <strong>
+                                    Vendedor:
+                                </strong>
+
+                                {{ detalle.factura.usuario }}
+                            </span>
+
+                            <span>
+                                <strong>
+                                    Fecha:
+                                </strong>
+
+                                {{ detalle.factura.fecha|date:"d/m/Y H:i" }}
+                            </span>
+
                         </div>
+
                     </div>
-                    
+
                     <div style="border-top: 1px dashed #ced4da; padding-top: 8px; margin-top: 8px; text-align: right;">
-                        <span style="font-size: 0.75em; color: #6c757d; display: block;">TOTAL GENERADO</span>
-                        <strong style="font-size: 1.15em; color: #212529;">${{ producto.subtotal_venta|floatformat:0 }}</strong>
+
+                        <span style="font-size: 0.75em; color: #6c757d; display: block;">
+                            TOTAL FACTURA
+                        </span>
+
+                        <strong style="font-size: 1.15em; color: #212529;">
+                            ${{ detalle.factura.total|floatformat:0 }}
+                        </strong>
+
                     </div>
+
                 </div>
-                {% else %}
-                <!-- Si no tiene ventas -->
-                <div style="width: 280px; min-width: 280px; background: #fafafa; border-left: 1px solid #e0e0e0; padding: 15px; display: flex; align-items: center; justify-content: center; text-align: center; box-sizing: border-box;">
-                    <span style="font-size: 0.85em; color: #adb5bd; font-style: italic;">Sin movimientos<br>recientes</span>
-                </div>
-                {% endif %}
 
             </div>
+
             {% empty %}
-            <div class="tarjetas-facturacion" style="padding: 20px; text-align: center;">
-                <p>No hay repuestos registrados en el inventario.</p>
+
+            <div class="tarjetas-facturacion"
+                style="padding: 20px; text-align: center;">
+
+                <p>
+                    Todavía no se han realizado ventas.
+                </p>
+
             </div>
+
             {% endfor %}
+
         </div>
+
     </section>
+
 </div>
 
 {% endblock %}

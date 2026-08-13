@@ -8,4 +8,6 @@ urlpatterns = [
     path('facturas/<int:pk>/', views.FacturaDetailView.as_view(), name='factura-detail'),
     path('clientes/', views.clientes_view, name='clientes'),
     path('productos/', views.productos_facturacion_view, name='productos_facturacion'),
+    path('pago/', views.pago, name='pago'),
+    path('confirmar-venta/', views.confirmar_venta, name='confirmar_venta'),
 ]

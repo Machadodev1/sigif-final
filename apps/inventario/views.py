@@ -3,7 +3,7 @@ from apps.productos.models import Producto
 
 from apps.configuracion.models import EmpresaConfig
 from core.decoradores import requerir_rol
-
+from apps.facturacion.models import DetalleFactura
 
 
 
@@ -31,15 +31,25 @@ def inventario(request):
 
 @requerir_rol(["Admin", "Empleado"])
 def inv_historial(request):
+    movimientos = Producto.objects.all()
 
-    movimientos = Producto.objects.order_by('-id')[:2]
     for movimiento in movimientos:
-        movimiento.total = movimiento.precio * movimiento.stock
-    contexto = {
-        'movimientos': movimientos,
-    }
+        movimiento.valor_total = movimiento.precio * movimiento.stock
 
-    return render(request, "inventario/inv_historial.html", contexto)
+    salidas = DetalleFactura.objects.select_related(
+        'producto',
+        'factura',
+        'factura__cliente'
+    ).order_by('-factura__fecha')[:20]
+
+    return render(
+        request,
+        'inventario/inv_historial.html',
+        {
+            'movimientos': movimientos,
+            'salidas': salidas
+        }
+    )
 
 @requerir_rol(["Admin", "Empleado"])
 def inv_control(request):

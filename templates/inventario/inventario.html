@@ -90,9 +90,9 @@
                     Total: $0
                 </h5>
             </div>
-            <button class="btn btn-dark btn-sm px-3">
-                Pagar
-            </button>
+            <button type="button" class="btn btn-success" id="btnPagar">
+    Pagar
+</button>
         </div>
     </div>
 </div>
@@ -271,11 +271,18 @@ document.getElementById("btnEliminar")
 });
 btndes.addEventListener("click", () => {
     const codigo = descuento.value.trim();
+
     if(codi[codigo]){
         porcentajeAplicado = codi[codigo];
     }else{
         porcentajeAplicado = 0;
     }
+
+    localStorage.setItem(
+        "porcentajeAplicado",
+        porcentajeAplicado
+    );
+
     renderCarrito();
 });
 function mostrarToast(){
@@ -285,6 +292,14 @@ function mostrarToast(){
         );
     toast.show();
 }
+document.getElementById("btnPagar").addEventListener("click", () => {
+    if(carrito.length === 0){
+        alert("El carrito está vacío");
+        return;
+    }
+
+    window.location.href = "/facturacion/pago/";
+});
 renderCarrito();
 </script>
 {% endblock %}
