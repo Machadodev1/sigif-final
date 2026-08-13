@@ -25,7 +25,7 @@
     </div>
 {% for producto in producto %}
 
-<div class="tarjetas-inv {% if producto.stock < 10 %}border border-danger border-3 bg-danger-subtle{% endif %}">
+<div class="tarjetas-inv {% if producto.stock < 5 %}border border-danger border-3 bg-danger-subtle{% endif %}">
     <div class="inv-info">
         <strong>{{ producto.nombre }}</strong>
         <div class="extra">
