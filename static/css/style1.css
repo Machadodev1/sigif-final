@@ -140,8 +140,8 @@ body {
     display: block;
     text-align: center;
     padding: 12px;
-    background: linear-gradient(135deg, #f56565, #c53030);
-    color: #fff;
+    background: linear-gradient(135deg, #e01e1e, #e00b0b);
+    color: #c62e2e;
     text-decoration: none;
     border-radius: 8px;
     font-weight: 500;
@@ -435,6 +435,11 @@ body {
     margin-bottom: 15px;
     transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
 .tarjetas-inv:hover, .tarjetas-usuario:hover, .tarjetas-productos:hover, .tarjeta-mov:hover, .tarjetas-facturacion:hover {
     border-color: var(--sidebar-active-bg);
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -528,6 +533,40 @@ body {
     font-size: 0.85rem;
     padding: 6px 12px;
     line-height: normal;
+}
+
+/* Estilo mejorado para botones de eliminar (clase .btn-logout) */
+.btn-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+.btn-logout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(239,68,68,0.18);
+    opacity: 0.98;
+}
+.btn-logout:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+.btn-logout.btn-sm {
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    border-radius: 6px;
+}
+.btn-logout .icon {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
 }
 
 /* =========================================

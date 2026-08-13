@@ -22,44 +22,36 @@
     
   </div>
 
-    <!-- TARJETAS DE USUARIOS -->
-  <table border="1" cellpadding="10">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Cargo</th>
-        <th>Telefono</th>
-        <th>Activo</th>
-        <th>Fecha de inicio</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for user in user %}
-      <tr>
-        <td>{{ user.id }}</td>
-        <td>{{ user.nombre }}</td>
-        <td>{{ user.cargo }}</td>
-        <td>{{ user.telefono }}</td>
-        <td>{{ user.activo }}</td>
-        <td>{{ user.fecha_inicio }}</td>
-        <td class="td-actions">
-          <a href="{% url 'editar_usuarios' user.id %}" class="btn-nuevo btn-sm">Editar</a>
-          
-          <form action="{% url 'eliminar_usuario' user.id %}" method="POST">
-            {% csrf_token %}
-            <button type="submit" class="btn-logout btn-sm">Eliminar</button>
-          </form>
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="8">No hay usuarios</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <!-- TARJETAS DE USUARIOS (cards) -->
+  <div class="cards-grid">
+    {% for user in user %}
+    <div class="tarjetas-usuario">
+      <div class="usu-info">
+        <strong>{{ user.nombre }}</strong>
+        <span class="rol {% if user.cargo|lower == 'admin' %}admin{% endif %}">{{ user.cargo }}</span>
+        <div class="extra">
+          <span>Tel: {{ user.telefono }}</span>
+          <span>Activo: {{ user.activo }}</span>
+          <span class="vl2">Inicio: {{ user.fecha_inicio }}</span>
+          <div style="margin-left: auto; display:flex; gap:8px; align-items:center;">
+            <a href="{% url 'editar_usuarios' user.id %}" class="btn-nuevo btn-sm">Editar</a>
+            <form id="delete-form-user-{{ user.id }}" action="{% url 'eliminar_usuario' user.id %}" method="POST" style="margin:0;">
+                {% csrf_token %}
+              </form>
+              <button type="button" class="btn-logout btn-sm btn-delete-trigger" data-form="#delete-form-user-{{ user.id }}" data-name="{{ user.nombre }}">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="tarjetas-usuario">
+      <div class="usu-info">
+        <strong>No hay usuarios</strong>
+        <p class="text-muted">Aún no se han registrado usuarios en el sistema.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
   <p style="text-align: center; margin-top: 16px;">Administra los usuarios del sistema</p>
   
 </section>

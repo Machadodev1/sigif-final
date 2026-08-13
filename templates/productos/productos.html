@@ -24,48 +24,39 @@ Productos
       <input type="text" class="buscar" placeholder="Buscar productos por nombre o ID" />
     </div>
   </div>
-  <table border="1" cellpadding="10">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Descripcion</th>
-        <th>Precio</th>
-        <th>Stock</th>
-        <th>Categoria</th>
-        <th>Activo</th>
-        <th>Fecha de creacion</th>
-        <th>Fecha de actualizacion</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for i in productos %}
-      <tr>
-        <td>{{ i.id }}</td>
-        <td>{{ i.nombre }}</td>
-        <td>{{ i.descripcion }}</td>
-        <td>{{ i.precio }}</td>
-        <td>{{ i.stock }}</td>
-        <td>{{ i.categoria }}</td>
-        <td>{{ i.activo }}</td>
-        <td>{{ i.fecha_creacion }}</td>
-        <td>{{ i.fecha_actualizacion }}</td>
-        <td class="td-actions">
-          <a href="{% url 'actualizar_productos' i.id %}" class="btn-nuevo btn-sm">Editar</a>
-          <form action="{% url 'eliminar_productos' i.id %}" method="POST">
-            {% csrf_token %}
-            <button type="submit" class="btn-logout btn-sm">Eliminar</button>
-          </form>
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="10">No hay productos</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-    </table>
+  <div class="cards-grid">
+    {% for i in productos %}
+    <div class="tarjetas-productos">
+      <div class="pro-info">
+        <strong>{{ i.nombre }}</strong>
+        <span class="extra">
+          <span class="precio">${{ i.precio }}</span>
+          <span>Stock: {{ i.stock }}</span>
+          <span class="vl2">{{ i.categoria }}</span>
+        </span>
+        <div style="padding-top:12px; color:var(--text-muted);">
+          {{ i.descripcion|truncatechars:100 }}
+        </div>
+        <div class="extra" style="padding-top:12px;">
+          <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+            <a href="{% url 'actualizar_productos' i.id %}" class="btn-nuevo btn-sm">Editar</a>
+            <form id="delete-form-product-{{ i.id }}" action="{% url 'eliminar_productos' i.id %}" method="POST" style="margin:0;">
+              {% csrf_token %}
+            </form>
+            <button type="button" class="btn-logout btn-sm btn-delete-trigger" data-form="#delete-form-product-{{ i.id }}" data-name="{{ i.nombre }}">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="tarjetas-productos">
+      <div class="pro-info">
+        <strong>No hay productos</strong>
+        <p class="text-muted">No hay productos registrados.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
 </section>
 {% endblock %}
 
