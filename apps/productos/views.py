@@ -1,15 +1,22 @@
 from .models import Producto
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Q
 from .form import ProductoForm
 from core.decoradores import requerir_rol
 from apps.auditoria.models import Auditoria
 
 
-# haidhasdhuyhasd
 @requerir_rol(["Admin", "Empleado"])
 def productos(request):
     productos = Producto.objects.all()
-    return render(request, 'productos/productos.html',  {'productos': productos})
+    q = request.GET.get('q', '').strip()
+    if q:
+        productos = productos.filter(
+            Q(nombre__icontains=q) | 
+            Q(descripcion__icontains=q) | 
+            Q(categoria__icontains=q)
+        )
+    return render(request, 'productos/productos.html', {'productos': productos, 'q': q})
 
 
 @requerir_rol(["Admin", "Empleado"])

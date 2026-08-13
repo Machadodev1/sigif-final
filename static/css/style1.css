@@ -438,7 +438,7 @@ body {
 .cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 16px;
+    gap: 10px;
 }
 .tarjetas-inv:hover, .tarjetas-usuario:hover, .tarjetas-productos:hover, .tarjeta-mov:hover, .tarjetas-facturacion:hover {
     border-color: var(--sidebar-active-bg);
@@ -459,7 +459,7 @@ body {
 .extra {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 16px;
     flex-wrap: wrap;
     padding-top: 15px;
     border-top: 1px solid #e2e8f0;
@@ -907,6 +907,48 @@ body.login-body {
     margin-bottom: 2px;
 }
 .tarjeta-crear-usuario span {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+/* Tarjeta Crear Producto */
+.tarjeta-crear-producto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 2px dashed #cbd5e1;
+    background-color: #f8fafc;
+    text-decoration: none;
+    min-height: 160px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-sizing: border-box;
+}
+.tarjeta-crear-producto:hover {
+    border-color: var(--sidebar-active-bg, #3a56e8);
+    background-color: #f0f4fe;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(58, 86, 228, 0.12);
+}
+.tarjeta-crear-producto .icon-plus {
+    font-size: 2.2rem;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--sidebar-active-bg, #3a56e8);
+    margin-bottom: 6px;
+    transition: transform 0.2s ease;
+}
+.tarjeta-crear-producto:hover .icon-plus {
+    transform: scale(1.2);
+}
+.tarjeta-crear-producto strong {
+    font-size: 1.1rem;
+    color: #1a202c;
+    margin-bottom: 2px;
+}
+.tarjeta-crear-producto span {
     font-size: 0.85rem;
     color: #64748b;
 }

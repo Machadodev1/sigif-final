@@ -17,14 +17,24 @@ Productos
       <h2>Productos Registrados</h2>
       <p>Lista de productos registrados en el sistema</p>
     </div>
-    <div style="display: flex; gap: 15px; align-items: center;">
-      <a href="{% url 'crear_productos' %}" class="btn-nuevo">
-        <span></span> Nuevo producto
-      </a>
-      <input type="text" class="buscar" placeholder="Buscar productos por nombre o ID" />
-    </div>
+    <form method="GET" action="{% url 'productos' %}" style="display: flex; gap: 10px; align-items: center;">
+      <input type="text" class="buscar" placeholder="Buscar productos por nombre, categoría..." name="q" value="{{ q|default:'' }}" />
+      <button type="submit" class="btn-nuevo">Buscar</button>
+      {% if q %}
+      <a href="{% url 'productos' %}" class="btn-nuevo" style="background-color: #64748b; text-decoration: none;">Limpiar</a>
+      {% endif %}
+    </form>
   </div>
   <div class="cards-grid">
+    <!-- TARJETA VACÍA PARA CREAR PRODUCTO -->
+    <a href="{% url 'crear_productos' %}" class="tarjetas-productos tarjeta-crear-producto">
+      <div class="tarjeta-crear-content">
+        <div class="icon-plus">+</div>
+        <strong>Crear producto</strong>
+        <span>Clic aquí para ingresar al formulario</span>
+      </div>
+    </a>
+
     {% for i in productos %}
     <div class="tarjetas-productos">
       <div class="pro-info">
@@ -49,12 +59,14 @@ Productos
       </div>
     </div>
     {% empty %}
-    <div class="tarjetas-productos">
+    {% if q %}
+    <div class="tarjetas-productos" style="grid-column: 1 / -1; text-align: center; padding: 25px;">
       <div class="pro-info">
-        <strong>No hay productos</strong>
-        <p class="text-muted">No hay productos registrados.</p>
+        <strong>No se encontraron productos</strong>
+        <p class="text-muted" style="margin-top: 5px;">No se encontraron coincidencias para "{{ q }}".</p>
       </div>
     </div>
+    {% endif %}
     {% endfor %}
   </div>
 </section>
