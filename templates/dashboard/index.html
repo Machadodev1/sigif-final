@@ -1,78 +1,114 @@
 {% extends 'base.html' %}
 
-{% block title %} Dashboard {% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
-    <header class="dashboard-header">
-        <h1>Dashboard</h1>
-        <p>Resumen general de tu negocio</p>
-    </header>
-    {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
+
+<header class="dashboard-header">
+    <h1>Dashboard</h1>
+    <p>Resumen general de tu negocio</p>
+</header>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
             {{ message }}
-            </div>
-            {% endfor %}
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% if low_stock > 0 %}
+    <div class="alert error">
+        Algunos productos están agotados o con stock bajo.
+        <a href="{% url 'inv_control' %}">Ver detalles</a>
+    </div>
+{% endif %}
+
+<section class="metricas">
+
+    <div class="tarjetas">
+        <h3>Usuarios Activos</h3>
+        <strong class="valor">{{ total }}</strong>
+    </div>
+
+    <div class="tarjetas">
+        <h3>Productos</h3>
+        <strong class="valor">{{ to }}</strong>
+    </div>
+
+    <div class="tarjetas">
+        <h3>Stock Bajo</h3>
+        <strong class="valor">{{ low_stock }}</strong>
+    </div>
+
+    <div class="tarjetas">
+        <h3>Ventas del Mes</h3>
+        <strong class="valor">
+            ${{ ventas_totales|floatformat:0 }}
+        </strong>
+    </div>
+
+</section>
+
+<section class="bottom-sections">
+
+    <!-- ACTIVIDAD REAL -->
+    <div class="Actividad-recientes">
+
+        <h2>Actividad Reciente</h2>
+
+        {% if actividades_recientes %}
+
+            <ul>
+                {% for actividad in actividades_recientes %}
+                    <li>
+                        <strong>{{ actividad.usuario }}</strong>
+                        {{ actividad.accion }}
+
+                        <small>
+                            {{ actividad.modulo }}
+                            -
+                            {{ actividad.fecha|date:"d/m/Y H:i" }}
+                        </small>
+                    </li>
+                {% endfor %}
+            </ul>
+
+        {% else %}
+
+            <p>
+                No hay actividades registradas todavía.
+            </p>
+
         {% endif %}
-    {% if low_stock > 0 %}
-        <div class="alert error">
-            Algunos productos están agotados o con stock bajo.
-            <a href="{% url 'inv_control' %}">Ver detalles</a>
-        </div> 
-    {% endif %}           
 
-    <section class="metricas">
-        <div class="tarjetas">
-            <h3>Usuarios Activos</h3>
-            <br>
-            <strong class="valor">{{ total }}</strong>
-        </div>
+    </div>
 
-        <div class="tarjetas">
-            <h3>Productos</h3>
-            <br>
-            <strong class="valor">{{ to }} </strong>
-        </div>
 
-        <div class="tarjetas">
-            <h3>Stock Bajo</h3>
-            <br>
-            <strong class="valor">{{ low_stock }}</strong>
-        </div>
+    <!-- ALERTAS REALES -->
+    <div class="alertas-sistemas">
 
-        <div class="tarjetas">
-            <h3>Ventas Totales</h3>
-            <br>
-            <strong class="valor">${{ ventas_totales }}</strong>
-        </div>
-    </section>
+        <h2>Alertas del Sistema</h2>
 
-    <section class="bottom-sections">
-        <div class="Actividad-recientes">
-            <h2>Actividad Reciente</h2>
+        {% if low_stock > 0 %}
+
             <ul>
-                {% for registro in actividad_reciente %}
                 <li>
-                    <span>{{ registro.accion }} — <em>{{ registro.usuario }}</em></span>
-                    <small style="margin-left: auto; font-size: 0.8rem; color: var(--text-muted);">{{ registro.fecha|date:"d/m H:i" }}</small>
+                    Hay {{ low_stock }} producto{{ low_stock|pluralize }}
+                    con stock bajo.
                 </li>
-                {% empty %}
-                <li>No hay actividad reciente registrada.</li>
-                {% endfor %}
             </ul>
-        </div>
 
-        <div class="alertas-sistemas">
-            <h2>Alertas del Sistema</h2>
-            <ul>
-                {% for producto in productos_bajo_stock %}
-                <li>
-                    <span>Stock crítico: <strong>{{ producto.nombre }}</strong> — {{ producto.stock }} unid. restantes</span>
-                </li>
-                {% empty %}
-                <li>No hay alertas de stock bajo. ✓</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </section>
+        {% else %}
+
+            <p>
+                No hay alertas de stock.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
 {% endblock %}
