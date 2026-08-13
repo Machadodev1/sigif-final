@@ -18,38 +18,73 @@
         <div class="usuarios-header">
             <div>
                 <h2>Historial de Movimientos</h2>
-                <p>Últimas entradas y salidas de inventario</p>
+                <p>Últimas entradas y registros de inventario</p>
             </div>
+            <form method="GET" action="{% url 'inv_historial' %}" style="display: flex; gap: 10px; align-items: center;">
+              <input type="text" class="buscar" placeholder="Buscar por ID, producto o categoría..." name="q" value="{{ q|default:'' }}" />
+              <button type="submit" class="btn-nuevo">Buscar</button>
+              {% if q %}
+              <a href="{% url 'inv_historial' %}" class="btn-nuevo" style="background-color: #64748b; text-decoration: none;">Limpiar</a>
+              {% endif %}
+            </form>
         </div>
 
-        <div class="movimientos-col">
-
-            <!-- ENTRADAS -->
-            <div class="columna">
-                <h3>Últimas Entradas</h3>
-
-                {% for movimiento in movimientos %}
-                <div class="tarjeta-mov">
-                    <div class="mov-info">
-                        <strong>{{ movimiento.nombre }}</strong>
-                        <p>Cantidad: {{ movimiento.stock }} unidades</p>
-                        <p>Precio unitario: ${{ movimiento.precio }}</p>
+        <!-- TARJETAS DE HISTORIAL DE MOVIMIENTOS -->
+        <div class="cards-grid">
+            {% for movimiento in movimientos %}
+            <div class="tarjetas-historial">
+                <div class="pro-info">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <div>
+                            <span class="badge-id">ID #{{ movimiento.id }}</span>
+                            <strong style="margin-top: 6px; font-size: 1.15rem; color: #1e293b;">{{ movimiento.nombre }}</strong>
+                        </div>
+                        <span class="badge-estado {% if movimiento.activo %}activo{% else %}inactivo{% endif %}">
+                            {% if movimiento.activo %}Activo{% else %}Inactivo{% endif %}
+                        </span>
                     </div>
 
-                    <div class="fw-bold text-success fs-5">
-                        ${{ movimiento.total }}
+                    <div class="historial-detalles">
+                        <div class="detalle-item">
+                            <span class="detalle-label">Categoría</span>
+                            <span class="detalle-val">{{ movimiento.categoria|default:"N/A" }}</span>
+                        </div>
+                        <div class="detalle-item">
+                            <span class="detalle-label">Stock Actual</span>
+                            <span class="detalle-val">{{ movimiento.stock }} unid.</span>
+                        </div>
+                        <div class="detalle-item">
+                            <span class="detalle-label">Precio Unit.</span>
+                            <span class="detalle-val">${{ movimiento.precio }}</span>
+                        </div>
+                        <div class="detalle-item">
+                            <span class="detalle-label">Valor Total</span>
+                            <span class="detalle-val destacada">${{ movimiento.total }}</span>
+                        </div>
+                    </div>
+
+                    <div class="extra" style="margin-top: auto; padding-top: 10px; font-size: 0.8rem; color: #64748b; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #cbd5e1;">
+                        <div>
+                            <span style="background:none; padding:0; font-weight: 600;">Reg:</span> {{ movimiento.fecha_creacion|date:"d/m/Y H:i"|default:"Reciente" }}
+                        </div>
+                        {% if movimiento.fecha_actualizacion %}
+                        <div>
+                            <span style="background:none; padding:0; font-weight: 600;">Actualizado:</span> {{ movimiento.fecha_actualizacion|date:"d/m/Y H:i" }}
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
-                {% empty %}
-                <p>No hay movimientos registrados.</p>
-                {% endfor %}
             </div>
-
-            <!-- SALIDAS -->
-            <div class="columna">
-                <h3>Últimas Salidas</h3>
+            {% empty %}
+            <div class="tarjetas-productos" style="grid-column: 1 / -1; text-align: center; padding: 30px;">
+                <div class="pro-info">
+                    <strong>No se encontraron registros en el historial</strong>
+                    <p class="text-muted" style="margin-top: 5px;">
+                        {% if q %}No coinciden resultados para "{{ q }}".{% else %}Aún no hay movimientos o productos registrados.{% endif %}
+                    </p>
+                </div>
             </div>
-
+            {% endfor %}
         </div>
     </section>
 

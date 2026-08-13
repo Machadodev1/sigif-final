@@ -1006,3 +1006,76 @@ body.login-body {
     font-size: 0.85rem;
     color: #64748b;
 }
+
+/* Estilos Novedosos para Historial de Inventario */
+.tarjeta-historial {
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+}
+.tarjeta-historial:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(58, 86, 228, 0.12);
+    border-color: var(--sidebar-active-bg, #3a56e8);
+}
+.badge-id {
+    display: inline-block;
+    padding: 3px 8px;
+    background-color: #e0e7ff;
+    color: #3730a3;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.badge-estado {
+    padding: 4px 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border-radius: 12px;
+    text-transform: uppercase;
+}
+.badge-estado.activo {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+.badge-estado.inactivo {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+.historial-detalles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 15px 0;
+    background: #ffffff;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #f1f5f9;
+}
+.detalle-item {
+    display: flex;
+    flex-direction: column;
+}
+.detalle-label {
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 500;
+}
+.detalle-val {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+.detalle-val.destacada {
+    color: #059669;
+}

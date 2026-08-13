@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.db.models import Q
 from apps.productos.models import Producto
 
 from apps.configuracion.models import EmpresaConfig
@@ -31,12 +32,22 @@ def inventario(request):
 
 @requerir_rol(["Admin", "Empleado"])
 def inv_historial(request):
+    q = request.GET.get('q', '').strip()
+    movimientos = Producto.objects.all().order_by('-fecha_actualizacion', '-id')
+    
+    if q:
+        movimientos = movimientos.filter(
+            Q(nombre__icontains=q) | 
+            Q(categoria__icontains=q) | 
+            Q(id__icontains=q)
+        )
 
-    movimientos = Producto.objects.order_by('-id')[:2]
     for movimiento in movimientos:
         movimiento.total = movimiento.precio * movimiento.stock
+
     contexto = {
         'movimientos': movimientos,
+        'q': q,
     }
 
     return render(request, "inventario/inv_historial.html", contexto)
