@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 
 from .models import EmpresaConfig
 from core.decoradores import requerir_rol
+from apps.usuarios.models import Usuarios
 
 
 @requerir_rol(["Admin"])
@@ -34,5 +35,5 @@ def configuracion(request):
 
 @requerir_rol(["Admin"])
 def backupypermisos(request):
-
-    return render(request, 'configuracion/backupypermisos.html')
+    user = Usuarios.objects.all()
+    return render(request, 'configuracion/backupypermisos.html', {'user': user})
