@@ -43,7 +43,7 @@
         <div class="tarjetas">
             <h3>Ventas del Mes</h3>
             <br>
-            <strong class="valor">${{ sales_this_month|default:"0.00" }}</strong>
+            <strong class="valor">${{ sales_this_month|floatformat:0 }}</strong>
         </div>
     </section>
 
@@ -51,19 +51,27 @@
         <div class="Actividad-recientes">
             <h2>Actividad Reciente</h2>
             <ul>
-                <li>Nuevo usuario registrado: Juan Pérez</li>
-                <li>Producto "aceite10w30" actualizado</li>
-                <li>Factura #2345 generada</li>
-                <li>Producto "llanta" agotado</li>
+                {% for registro in actividad_reciente %}
+                <li>
+                    <span>{{ registro.accion }} — <em>{{ registro.usuario }}</em></span>
+                    <small style="margin-left: auto; font-size: 0.8rem; color: var(--text-muted);">{{ registro.fecha|date:"d/m H:i" }}</small>
+                </li>
+                {% empty %}
+                <li>No hay actividad reciente registrada.</li>
+                {% endfor %}
             </ul>
         </div>
 
         <div class="alertas-sistemas">
             <h2>Alertas del Sistema</h2>
             <ul>
-                <li>Backup programado para esta noche.</li>
-                <li>Actualización de sistema disponible.</li>
-                <li>3 productos requieren reabastecimiento.</li>
+                {% for producto in productos_bajo_stock %}
+                <li>
+                    <span>Stock crítico: <strong>{{ producto.nombre }}</strong> — {{ producto.stock }} unid. restantes</span>
+                </li>
+                {% empty %}
+                <li>No hay alertas de stock bajo. ✓</li>
+                {% endfor %}
             </ul>
         </div>
     </section>
