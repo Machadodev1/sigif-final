@@ -140,8 +140,8 @@ body {
     display: block;
     text-align: center;
     padding: 12px;
-    background: linear-gradient(135deg, #e01e1e, #e00b0b);
-    color: #c62e2e;
+    background: linear-gradient(135deg, #f56565, #c53030);
+    color: #fff;
     text-decoration: none;
     border-radius: 8px;
     font-weight: 500;
@@ -547,8 +547,8 @@ body {
     line-height: normal;
 }
 
-/* Estilo mejorado para botones de eliminar (clase .btn-logout) */
-.btn-logout {
+/* Estilo mejorado para botones de eliminar (clase .btn-delete) */
+.btn-delete {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -561,21 +561,21 @@ body {
     cursor: pointer;
     transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
 }
-.btn-logout:hover {
+.btn-delete:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(239,68,68,0.18);
     opacity: 0.98;
 }
-.btn-logout:active {
+.btn-delete:active {
     transform: translateY(0);
     box-shadow: none;
 }
-.btn-logout.btn-sm {
+.btn-delete.btn-sm {
     padding: 6px 10px;
     font-size: 0.82rem;
     border-radius: 6px;
 }
-.btn-logout .icon {
+.btn-delete .icon {
     width: 14px;
     height: 14px;
     display: inline-block;
