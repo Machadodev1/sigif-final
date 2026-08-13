@@ -19,7 +19,7 @@
                 <form method="POST">
                     {% csrf_token %}
                     <div class="actions-container">
-                        <button type="submit" class="btn-guardar" style="background-color:var(--color-closed)">Sí, eliminar</button>
+                        <button type="submit" class="btn-delete">Sí, eliminar</button>
                         <a href="{% url 'usuarios' %}" class="btn-nuevo" style="margin-left:10px; background:#e6edf2; color:var(--text-main);">Cancelar</a>
                     </div>
                 </form>

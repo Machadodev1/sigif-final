@@ -36,9 +36,9 @@
           <div style="margin-left: auto; display:flex; gap:8px; align-items:center;">
             <a href="{% url 'editar_usuarios' user.id %}" class="btn-nuevo btn-sm">Editar</a>
             <form id="delete-form-user-{{ user.id }}" action="{% url 'eliminar_usuario' user.id %}" method="POST" style="margin:0;">
-                {% csrf_token %}
-              </form>
-              <button type="button" class="btn-logout btn-sm btn-delete-trigger" data-form="#delete-form-user-{{ user.id }}" data-name="{{ user.nombre }}">Eliminar</button>
+              {% csrf_token %}
+            </form>
+            <button type="button" class="btn-delete btn-sm btn-delete-trigger" data-form="#delete-form-user-{{ user.id }}" data-name="{{ user.nombre }}">Eliminar</button>
           </div>
         </div>
       </div>

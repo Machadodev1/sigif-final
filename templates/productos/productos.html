@@ -43,7 +43,7 @@ Productos
             <form id="delete-form-product-{{ i.id }}" action="{% url 'eliminar_productos' i.id %}" method="POST" style="margin:0;">
               {% csrf_token %}
             </form>
-            <button type="button" class="btn-logout btn-sm btn-delete-trigger" data-form="#delete-form-product-{{ i.id }}" data-name="{{ i.nombre }}">Eliminar</button>
+            <button type="button" class="btn-delete btn-sm btn-delete-trigger" data-form="#delete-form-product-{{ i.id }}" data-name="{{ i.nombre }}">Eliminar</button>
           </div>
         </div>
       </div>
