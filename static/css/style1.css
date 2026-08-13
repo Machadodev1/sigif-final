@@ -734,6 +734,26 @@ td a[href*="eliminar"]:hover {
     color: #1a202c;
     font-weight: 600;
 }
+.form-title-brand h2 {
+    margin: 0 0 6px 0;
+    font-size: 1.4rem;
+    color: #12263a;
+}
+.form-title-brand .brand-sub {
+    display: inline-block;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+.field-help {
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+.field-with-meta .alert.error {
+    margin-top: 8px;
+}
+.header-actions { display: flex; gap: 10px; align-items: center; }
 .form-body {
     padding: 25px;
 }

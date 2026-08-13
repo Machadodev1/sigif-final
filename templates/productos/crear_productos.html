@@ -2,12 +2,17 @@
 {% block title %}Crear Producto{% endblock %}
 {% block content %}
 
-<div class="usuarios-header">
+<div class="usuarios-header productos-header">
   <div>
-    <h2>Crear Producto</h2>
-    <p>Registra un nuevo producto en el sistema</p>
+    <div class="form-title-brand">
+      <h2>Crear Producto</h2>
+      <span class="brand-sub">SIGIF — Catálogo</span>
+      <p>Registra un nuevo producto en el sistema</p>
+    </div>
   </div>
-  <a href="{% url 'productos' %}" class="btn-nuevo">Volver</a>
+  <div class="header-actions">
+    <a href="{% url 'productos' %}" class="btn-nuevo">Volver</a>
+  </div>
 </div>
 
 <div class="contenedor-formularios">
@@ -31,24 +36,25 @@
         </div>
       {% endif %}
 
-      <form method="POST">
+      <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
 
         {% for field in form.visible_fields %}
-          <div class="inv-info">
+          <div class="inv-info field-with-meta">
             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
             {{ field }}
+            {% if field.help_text %}
+              <div class="field-help">{{ field.help_text }}</div>
+            {% endif %}
             {% if field.errors %}
-              <div class="alert error">
-                {{ field.errors|join:", " }}
-              </div>
+              <div class="alert error">{{ field.errors|join:", " }}</div>
             {% endif %}
           </div>
         {% endfor %}
 
         <div class="actions-container">
-          <button type="submit" class="btn-guardar">Crear Producto</button>
-          <a href="{% url 'productos' %}" class="btn-nuevo">Cancelar</a>
+          <a href="{% url 'productos' %}" class="btn-nuevo btn-sm">Cancelar</a>
+          <button type="submit" class="btn-guardar">Crear producto</button>
         </div>
 
       </form>

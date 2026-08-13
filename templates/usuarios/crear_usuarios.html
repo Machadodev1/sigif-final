@@ -7,10 +7,15 @@
 
     <div class="usuarios-header">
         <div>
-            <h2>Crear Usuario</h2>
-            <p>Ingrese la información para crear un nuevo usuario</p>
+            <div class="form-title-brand">
+                <h2>Crear Usuario</h2>
+                <span class="brand-sub">SIGIF — Gestión integrada</span>
+                <p>Ingrese la información para crear un nuevo usuario</p>
+            </div>
         </div>
-        <a href="{% url 'usuarios' %}" class="btn-nuevo">Volver</a>
+        <div class="header-actions">
+            <a href="{% url 'usuarios' %}" class="btn-nuevo">Volver</a>
+        </div>
     </div>
 
     <div class="contenedor-formularios">
@@ -38,9 +43,12 @@
                     {% csrf_token %}
 
                     {% for field in form.visible_fields %}
-                        <div class="inv-info">
-                            <label>{{ field.label }}</label>
+                        <div class="inv-info field-with-meta">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                             {{ field }}
+                            {% if field.help_text %}
+                                <div class="field-help">{{ field.help_text }}</div>
+                            {% endif %}
                             {% if field.errors %}
                                 <div class="alert error">{{ field.errors|join:", " }}</div>
                             {% endif %}
@@ -48,7 +56,8 @@
                     {% endfor %}
 
                     <div class="actions-container">
-                        <button type="submit" class="btn-guardar">Guardar</button>
+                        <a href="{% url 'usuarios' %}" class="btn-nuevo btn-sm">Cancelar</a>
+                        <button type="submit" class="btn-guardar">Guardar usuario</button>
                     </div>
                 </form>
 
