@@ -120,11 +120,12 @@
                             Rol a Usuario</label>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
 
-                            <select name="usuario_id" class="form-input" style="flex: 2; min-width: 180px;" required>
-                                <option value="" disabled selected>Selecciona un usuario...</option>
-                                {% for u in usuarios %}
-                                <option value="{{ u.id }}">{{ u.username }} ({% if u.email %}{{ u.email }}{% else %}Sin
-                                    correo{% endif %})</option>
+                            <select name="user_id" class="form-input" style="flex: 2; min-width: 180px;" required>
+
+                                {% for u in user %}
+                                <option value="{{ u.id }}">{{ u.nombre }}</option>
+                                {% empty %}
+                                <option value="" disabled>No hay usuarios disponibles</option>
                                 {% endfor %}
                             </select>
 

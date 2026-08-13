@@ -569,6 +569,44 @@ body {
     display: inline-block;
 }
 
+/* Botón de eliminar: estilo similar a editar pero en rojo */
+.btn-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    gap: 8px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+.btn-delete, button.btn-delete, .td-actions .btn-delete, .btn-delete.btn-sm {
+    /* increase specificity to override bootstrap or other rules */
+    border-radius: 8px !important;
+    background: linear-gradient(135deg, #f87171, #ef4444) !important;
+    color: #fff !important;
+    border: none !important;
+}
+.btn-delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(239,68,68,0.18);
+    opacity: 0.98;
+}
+.btn-delete:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+.btn-delete.btn-sm {
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    border-radius: 6px;
+}
+
 /* =========================================
    TABLES
    ========================================= */
