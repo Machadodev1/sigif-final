@@ -1007,58 +1007,109 @@ body.login-body {
     color: #64748b;
 }
 
-/* Estilos Novedosos para Historial de Inventario */
+/* =========================================
+   NUEVO HISTORIAL DE MOVIMIENTOS (TARJETAS)
+   ========================================= */
+.movimientos-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-top: 15px;
+}
+@media (max-width: 900px) {
+    .movimientos-grid-layout {
+        grid-template-columns: 1fr;
+    }
+}
+.columna-movimientos {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.columna-header {
+    margin-bottom: 5px;
+}
+.columna-header h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.cards-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
 .tarjeta-historial {
-    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 14px;
     padding: 20px;
-    position: relative;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
 }
 .tarjeta-historial:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(58, 86, 228, 0.12);
-    border-color: var(--sidebar-active-bg, #3a56e8);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+.tarjeta-historial.entrada-card {
+    border-left: 5px solid #059669;
+}
+.tarjeta-historial.salida-card {
+    border-left: 5px solid #ef4444;
+}
+.tarjeta-historial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.titulo-producto {
+    display: block;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-top: 4px;
+}
+.badge-tipo {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.badge-tipo.entrada {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+.badge-tipo.salida {
+    background-color: #fee2e2;
+    color: #991b1b;
 }
 .badge-id {
     display: inline-block;
     padding: 3px 8px;
-    background-color: #e0e7ff;
-    color: #3730a3;
+    background-color: #f1f5f9;
+    color: #475569;
     font-size: 0.75rem;
     font-weight: 700;
     border-radius: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-.badge-estado {
-    padding: 4px 10px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    border-radius: 12px;
-    text-transform: uppercase;
-}
-.badge-estado.activo {
-    background-color: #d1fae5;
-    color: #065f46;
-}
-.badge-estado.inactivo {
-    background-color: #fee2e2;
-    color: #991b1b;
 }
 .historial-detalles {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin: 15px 0;
-    background: #ffffff;
-    padding: 12px;
+    gap: 12px;
+    margin: 10px 0 15px;
+    background: #f8fafc;
+    padding: 14px;
     border-radius: 10px;
     border: 1px solid #f1f5f9;
 }
@@ -1069,13 +1120,41 @@ body.login-body {
 .detalle-label {
     font-size: 0.78rem;
     color: #64748b;
-    font-weight: 500;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
 }
 .detalle-val {
     font-size: 0.95rem;
     font-weight: 700;
     color: #1e293b;
+    margin-top: 2px;
 }
-.detalle-val.destacada {
+.detalle-val.destacada-entrada {
     color: #059669;
+    font-size: 1.05rem;
+}
+.detalle-val.destacada-salida {
+    color: #dc2626;
+    font-size: 1.05rem;
+}
+.tarjeta-historial-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px dashed #e2e8f0;
+    font-size: 0.82rem;
+    color: #64748b;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.fecha-creacion strong, .vendedor-info strong {
+    color: #334155;
+}
+.empty-card {
+    text-align: center;
+    padding: 30px;
+    color: #64748b;
+    font-weight: 500;
 }
