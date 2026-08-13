@@ -1,7 +1,12 @@
+# pyrefly: ignore [missing-import]
 from django.shortcuts import render, redirect, get_object_or_404
+# pyrefly: ignore [missing-import]
 from django.contrib import messages
+# pyrefly: ignore [missing-import]
+from django.db.models import Q
 from .forms import UsuarioForm
 from .models import Usuarios
+# pyrefly: ignore [missing-import]
 from apps.auditoria.models import Auditoria
 from core.decoradores import requerir_rol
 
@@ -33,7 +38,14 @@ def login_view(request):
 @requerir_rol(["Admin"])
 def usuarios(request):
     user = Usuarios.objects.all()
-    return render(request, 'usuarios/usuarios.html', {'user': user})
+    q = request.GET.get('q', '').strip()
+    if q:
+        user = user.filter(
+            Q(nombre__icontains=q) | 
+            Q(cargo__icontains=q) | 
+            Q(telefono__icontains=q)
+        )
+    return render(request, 'usuarios/usuarios.html', {'user': user, 'q': q})
 
 
 @requerir_rol(["Admin"])

@@ -900,3 +900,51 @@ body.login-body {
     color: #055160;
     border: 1px solid #b6effb;
 }
+
+/* Tarjeta Crear Usuario */
+.tarjeta-crear-usuario {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 2px dashed #cbd5e1;
+    background-color: #f8fafc;
+    text-decoration: none;
+    min-height: 140px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-sizing: border-box;
+}
+.tarjeta-crear-usuario:hover {
+    border-color: var(--sidebar-active-bg, #3a56e8);
+    background-color: #f0f4fe;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(58, 86, 228, 0.12);
+}
+.tarjeta-crear-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.tarjeta-crear-usuario .icon-plus {
+    font-size: 2.2rem;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--sidebar-active-bg, #3a56e8);
+    margin-bottom: 6px;
+    transition: transform 0.2s ease;
+}
+.tarjeta-crear-usuario:hover .icon-plus {
+    transform: scale(1.2);
+}
+.tarjeta-crear-usuario strong {
+    font-size: 1.1rem;
+    color: #1a202c;
+    margin-bottom: 2px;
+}
+.tarjeta-crear-usuario span {
+    font-size: 0.85rem;
+    color: #64748b;
+}
