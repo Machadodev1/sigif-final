@@ -8,6 +8,13 @@
 <header class="inventario-header">
     <h1>Backups y Permisos del Sistema</h1>
 </header>
+{% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
 
 <div class="menu-horizontal">
     <a href="{% url 'configuracion' %}">General y Empresa</a>
@@ -113,28 +120,46 @@
 
                 <form action="" method="POST"
                     style="box-shadow: none; padding: 0; max-width: 100%; margin-bottom: 25px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px;">
+
                     {% csrf_token %}
+
                     <div class="tarjetas-inv" style="gap: 10px;">
-                        <label
-                            style="color: #64748b; font-size: 0.85rem; font-weight: 500; text-transform: uppercase;">Asignar
-                            Rol a Usuario</label>
+
+                        <label style="color: #64748b; font-size: 0.85rem; font-weight: 500; text-transform: uppercase;">
+                            Asignar Rol a Usuario
+                        </label>
+
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
 
                             <select name="user_id" class="form-input" style="flex: 2; min-width: 180px;" required>
 
-                                {% for u in user %}
-                                <option value="{{ u.id }}">{{ u.nombre }}</option>
+                                <option value="" disabled selected>
+                                    Selecciona un usuario...
+                                </option>
+
+                                {% for u in usuarios %}
+                                <option value="{{ u.id }}">
+                                    {{ u.nombre }}
+                                </option>
                                 {% empty %}
-                                <option value="" disabled>No hay usuarios disponibles</option>
+                                <option value="" disabled>
+                                    No hay usuarios disponibles
+                                </option>
                                 {% endfor %}
+
                             </select>
 
                             <select name="rol_asignar" class="form-input" style="flex: 1; min-width: 130px;" required>
+
                                 <option value="admin">Administrador</option>
                                 <option value="empleado">Empleado</option>
+
                             </select>
 
-                            <button type="submit" class="btn-guardar" style="padding: 10px 15px;">Aplicar</button>
+                            <button type="submit" class="btn-guardar" style="padding: 10px 15px;">
+                                Aplicar
+                            </button>
+
                         </div>
                     </div>
                 </form>

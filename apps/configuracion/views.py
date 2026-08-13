@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
-
+from django.contrib import messages
+from apps.usuarios.models import Usuarios
 from .models import EmpresaConfig
 from core.decoradores import requerir_rol
-from apps.usuarios.models import Usuarios
 
 
 @requerir_rol(["Admin"])
@@ -35,5 +35,41 @@ def configuracion(request):
 
 @requerir_rol(["Admin"])
 def backupypermisos(request):
-    user = Usuarios.objects.all()
-    return render(request, 'configuracion/backupypermisos.html', {'user': user})
+
+    usuarios = Usuarios.objects.all()
+
+    if request.method == "POST":
+        user_id = request.POST.get("user_id")
+        cargo = request.POST.get("rol_asignar")
+
+        print("USER ID:", user_id)
+        print("CARGO RECIBIDO:", cargo)
+
+        try:
+            usuario = Usuarios.objects.get(id=user_id)
+
+            print("USUARIO:", usuario.nombre)
+            print("CARGO ANTES:", usuario.cargo)
+
+            usuario.cargo = cargo
+            usuario.save()
+
+            usuario.refresh_from_db()
+
+            print("CARGO DESPUÉS:", usuario.cargo)
+
+            messages.success(
+                request,
+                f"El cargo de {usuario.nombre} fue actualizado a {usuario.cargo}."
+            )
+
+        except Usuarios.DoesNotExist:
+            messages.error(request, "El usuario seleccionado no existe.")
+
+        return redirect("backupypermisos")
+
+    return render(
+        request,
+        "configuracion/backupypermisos.html",
+        {"usuarios": usuarios}
+    )
