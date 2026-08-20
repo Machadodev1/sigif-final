@@ -54,7 +54,10 @@ def actualizar_producto(request, id):
 
     return render(request, 'productos/actualizar_productos.html', {'form': form})
 
-@requerir_rol_accion(["Admin"], "productos")
+@requerir_rol_accion(
+    ["SuperAdmin", "Admin"],
+    "productos"
+)
 def activar_desactivar_producto(request, id):
 
     producto = get_object_or_404(Producto, id=id)
@@ -64,12 +67,17 @@ def activar_desactivar_producto(request, id):
         producto.activo = not producto.activo
         producto.save()
 
-        estado = "ACTIVÓ" if producto.activo else "DESACTIVÓ"
+        estado = "ACTIVO" if producto.activo else "INACTIVO"
 
         Auditoria.objects.create(
             usuario=request.session["logueado"]["nombre"],
             accion=f"{estado} EL PRODUCTO: {producto.nombre}",
             modulo="PRODUCTOS"
         )
+
+        return redirect("productos")
+
+    # Si alguien intenta entrar directamente a la URL mediante GET
+    return redirect("productos")
 
 

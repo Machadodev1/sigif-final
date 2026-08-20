@@ -5,7 +5,7 @@ from .models import EmpresaConfig
 from core.decoradores import requerir_rol
 
 
-@requerir_rol(["Admin"])
+@requerir_rol(["SuperAdmin", "Admin"])
 def configuracion(request):
 
     config = EmpresaConfig.objects.get (id=1)
@@ -33,7 +33,7 @@ def configuracion(request):
 
 
 
-@requerir_rol(["Admin"])
+@requerir_rol(["SuperAdmin", "Admin"])
 def backupypermisos(request):
 
     usuarios = Usuarios.objects.all()
