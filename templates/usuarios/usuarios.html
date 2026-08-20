@@ -5,6 +5,19 @@
 <header class="usuarios-header">
   <h1>Gestión de usuarios</h1>
 </header>
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert 
+            {% if message.tags == 'success' %}
+                alert-success
+            {% elif message.tags == 'error' %}
+                alert-danger
+            {% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
 
 <!-- CONTENEDOR DEL LISTADO -->
 <section class="usuarios-container2">
@@ -13,14 +26,17 @@
       <h2>Lista de usuarios</h2>
       <p>Usuarios registrados en el sistema</p>
     </div>
+
     <form method="GET" action="{% url 'usuarios' %}" style="display: flex; gap: 10px; align-items: center;">
-      <input type="text" class="buscar" placeholder="Buscar usuarios por nombre, rol o teléfono..." name="q" value="{{ q|default:'' }}" />
+      <input type="text" class="buscar" placeholder="Buscar usuarios por nombre, rol o teléfono..." name="q"
+        value="{{ q|default:'' }}" />
       <button type="submit" class="btn-nuevo">Buscar</button>
       {% if q %}
-      <a href="{% url 'usuarios' %}" class="btn-nuevo" style="background-color: #64748b; text-decoration: none;">Limpiar</a>
+      <a href="{% url 'usuarios' %}" class="btn-nuevo"
+        style="background-color: #64748b; text-decoration: none;">Limpiar</a>
       {% endif %}
     </form>
-    
+
   </div>
 
   <!-- TARJETAS DE USUARIOS (cards) -->
@@ -44,12 +60,27 @@
           <span>Activo: {{ user.activo }}</span>
           <span class="vl2">Inicio: {{ user.fecha_inicio }}</span>
           <div style="margin-left: auto; display:flex; gap:8px; align-items:center;">
-            <a href="{% url 'editar_usuarios' user.id %}" class="btn-nuevo btn-sm">Editar</a>
-            <form id="delete-form-user-{{ user.id }}" action="{% url 'eliminar_usuario' user.id %}" method="POST" style="margin:0;">
+
+            <a href="{% url 'editar_usuarios' user.id %}" class="btn-nuevo btn-sm">
+              Editar
+            </a>
+
+            <form action="{% url 'cambiar_estado_usuario' user.id %}" method="POST" style="margin:0;">
               {% csrf_token %}
+
+              {% if user.activo %}
+              <button type="submit" class="btn-delete btn-sm">
+                Desactivar
+              </button>
+              {% else %}
+              <button type="submit" class="btn-nuevo btn-sm">
+                Activar
+              </button>
+              {% endif %}
             </form>
-            <button type="button" class="btn-delete btn-sm btn-delete-trigger" data-form="#delete-form-user-{{ user.id }}" data-name="{{ user.nombre }}">Eliminar</button>
+
           </div>
+
         </div>
       </div>
     </div>
@@ -65,6 +96,6 @@
     {% endfor %}
   </div>
   <p style="text-align: center; margin-top: 16px;">Administra los usuarios del sistema</p>
-  
+
 </section>
 {% endblock %}

@@ -17,7 +17,7 @@ def inv_configuracion(request):
 
 
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def inventario(request):
 
     producto = Producto.objects.all()
@@ -29,7 +29,7 @@ def inventario(request):
 
     return render(request, "inventario/inventario.html", contexto)
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def inv_historial(request):
     movimientos = Producto.objects.all()
 
@@ -51,7 +51,7 @@ def inv_historial(request):
         }
     )
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def inv_control(request):
     producto = Producto.objects.all()
 

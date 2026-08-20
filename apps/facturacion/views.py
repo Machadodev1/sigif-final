@@ -30,13 +30,13 @@ class FacturaDetailView(DetailView):
         return requerir_rol(["Admin", "Empleado"])(super().dispatch)(request, *args, **kwargs)
 
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def clientes_view(request):
     clientes = Cliente.objects.all()
     return render(request, 'facturacion/cliente.html', {'clientes': clientes})
 
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def productos_facturacion_view(request):
     detalles = DetalleFactura.objects.select_related(
         'producto',
@@ -51,7 +51,7 @@ def productos_facturacion_view(request):
     )
 
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def factura_generada(request, pk):
     factura = get_object_or_404(Factura, pk=pk)
     return render(
@@ -61,12 +61,12 @@ def factura_generada(request, pk):
     )
 
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def pago(request):
     return render(request, 'facturacion/pago.html')
 
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def confirmar_venta(request):
     if request.method != 'POST':
         return JsonResponse({

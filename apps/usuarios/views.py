@@ -8,7 +8,7 @@ from .forms import UsuarioForm
 from .models import Usuarios
 # pyrefly: ignore [missing-import]
 from apps.auditoria.models import Auditoria
-from core.decoradores import requerir_rol
+from core.decoradores import requerir_rol, impedir_crear_superadmin
 
 
 
@@ -17,25 +17,93 @@ def login_view(request):
         usuario = request.POST.get("user")
         contra = request.POST.get("clave")
         try:
-            t = Usuarios.objects.get(nombre = usuario, contra = contra)
+            t = Usuarios.objects.get(
+                nombre=usuario,
+                contra=contra
+            )
+
+            # Verificar si el usuario está activo
+            if not t.activo:
+                messages.error(
+                    request,
+                    "Tu usuario está inactivo. Comunícate con un administrador."
+                )
+                request.session["logueado"] = None
+                return redirect("login")
+
             messages.success(request, "Bienvenido al sistema")
+
             request.session["logueado"] = {
-                "id":t.id,
-                "nombre": f"{t.nombre}",
-                "rol":t.cargo
+                "id": t.id,
+                "nombre": t.nombre,
+                "rol": t.cargo
             }
-            return redirect("dashboard")  
+
+            return redirect("dashboard")
+
         except Usuarios.DoesNotExist:
-            messages.error(request, "Usuario o contraseña incorrecto")
+            messages.error(
+                request,
+                "Usuario o contraseña incorrecto"
+            )
             request.session["logueado"] = None
-            return redirect('login')     
+            return redirect("login")
+
     else:
         if request.session.get("logueado", False):
-            return redirect('dashboard')
+            return redirect("dashboard")
         else:
             return render(request, "usuarios/login.html")
 
-@requerir_rol(["Admin"])
+
+
+@requerir_rol(["SuperAdmin", "Admin"])
+def cambiar_estado_usuario(request, id):
+    usuario = get_object_or_404(Usuarios, id=id)
+
+    # El SuperAdmin no se puede desactivar
+    if usuario.cargo == "SuperAdmin":
+        messages.error(
+            request,
+            "El SuperAdmin no puede ser desactivado."
+        )
+        return redirect("usuarios")
+
+    # No permitir que el usuario se desactive a sí mismo
+    if usuario.id == request.session["logueado"]["id"]:
+        messages.error(
+            request,
+            "No puedes desactivar tu propio usuario."
+        )
+        return redirect("usuarios")
+
+    if request.method == "POST":
+        usuario.activo = not usuario.activo
+        usuario.save()
+
+        estado = "ACTIVO" if usuario.activo else "INACTIVO"
+
+        Auditoria.objects.create(
+            usuario=request.session["logueado"]["nombre"],
+            accion=f"CAMBIO ESTADO USUARIO: {usuario.nombre} → {estado}",
+            modulo="USUARIOS"
+        )
+
+        if usuario.activo:
+         messages.success(
+        request,
+        f"El usuario {usuario.nombre} ahora está activo."
+    )
+        else:
+            messages.error(
+        request,
+        f"El usuario {usuario.nombre} ahora está inactivo."
+    )
+
+    return redirect("usuarios")
+
+
+@requerir_rol(["SuperAdmin", "Admin"])
 def usuarios(request):
     user = Usuarios.objects.all()
     q = request.GET.get('q', '').strip()
@@ -48,11 +116,12 @@ def usuarios(request):
     return render(request, 'usuarios/usuarios.html', {'user': user, 'q': q})
 
 
-@requerir_rol(["Admin"])
+@requerir_rol(["SuperAdmin", "Admin"])
+@impedir_crear_superadmin
 def crear_usuarios(request):
     if request.method == 'POST':
         form = UsuarioForm (request.POST)
-        if form.is_valid():
+        if form.is_valid():  
             usuarios = form.save()
             Auditoria.objects.create(
                 usuario=request.session["logueado"]["nombre"],
@@ -66,7 +135,8 @@ def crear_usuarios(request):
     return render(request, "usuarios/crear_usuarios.html",  {'form': form})
 
 
-@requerir_rol(["Admin"])
+@requerir_rol(["SuperAdmin", "Admin"])
+@impedir_crear_superadmin
 def editar_usuarios(request, id):
     usuarios = get_object_or_404(Usuarios, id=id)
     if request.method == 'POST':
@@ -83,12 +153,28 @@ def editar_usuarios(request, id):
         form = UsuarioForm(instance=usuarios)
     return render(request, 'usuarios/editar_usuarios.html', {'form': form})
 
-@requerir_rol(["Admin"])
+@requerir_rol(["SuperAdmin", "Admin"])
 def eliminar_usuario(request, id):
-    usuarios = get_object_or_404(Usuarios, id=id)
+    usuario = get_object_or_404(Usuarios, id=id)
+
+
+    if usuario.cargo == "SuperAdmin":
+        messages.error(
+            request,
+            "No se puede eliminar al Superadmin."
+        )
+        return redirect("usuarios")
+
+    if usuario.nombre == request.session["logueado"]["nombre"]:
+        messages.error(
+            request,
+            "No puedes eliminar tu propio usuario."
+        )
+        return redirect("usuarios")
+
     if request.method == 'POST':
-        nombre = usuarios.nombre 
-        usuarios.delete()
+        nombre = usuario.nombre 
+        usuario.delete()
         Auditoria.objects.create(
                 usuario=request.session["logueado"]["nombre"],
                 accion=f"ELIMINO USUARIO: {nombre}",

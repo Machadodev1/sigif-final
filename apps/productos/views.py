@@ -6,7 +6,7 @@ from core.decoradores import requerir_rol
 from apps.auditoria.models import Auditoria
 
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def productos(request):
     productos = Producto.objects.all()
     q = request.GET.get('q', '').strip()
@@ -19,7 +19,7 @@ def productos(request):
     return render(request, 'productos/productos.html', {'productos': productos, 'q': q})
 
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def crear_producto(request): 
     if request.method == "POST":
         form = ProductoForm(request.POST)
@@ -35,7 +35,7 @@ def crear_producto(request):
         form = ProductoForm()
     return render(request, 'productos/crear_productos.html', {'form': form})
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def actualizar_producto(request, id):
     producto = get_object_or_404(Producto, id=id)
 
@@ -58,6 +58,26 @@ def actualizar_producto(request, id):
 def activar_desactivar_producto(request, id):
 
     producto = get_object_or_404(Producto, id=id)
+
+    if request.method == "POST":
+
+        producto.activo = not producto.activo
+        producto.save()
+
+        estado = "Activo" if producto.activo else "Inactivo"
+
+        Auditoria.objects.create(
+            usuario=request.session["logueado"]["nombre"],
+            accion=f"{estado} EL PRODUCTO: {producto.nombre}",
+            modulo="PRODUCTOS"
+        )
+
+    return redirect("productos")
+
+
+@requerir_rol(["SuperAdmin","Admin", "Empleado"])
+def eliminar_producto(request, id):
+    producto = get_object_or_404(Producto, id = id)
 
     if request.method == "POST":
 

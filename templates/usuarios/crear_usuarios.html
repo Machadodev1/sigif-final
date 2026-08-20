@@ -5,64 +5,57 @@
 
 {% block content %}
 
-    <div class="usuarios-header">
-        <div>
-            <div class="form-title-brand">
-                <h2>Crear Usuario</h2>
-                <span class="brand-sub">SIGIF — Gestión integrada</span>
-                <p>Ingrese la información para crear un nuevo usuario</p>
-            </div>
-        </div>
-        <div class="header-actions">
-            <a href="{% url 'usuarios' %}" class="btn-nuevo">Volver</a>
+<div class="usuarios-header">
+    <div>
+        <div class="form-title-brand">
+            <h2>Crear Usuario</h2>
+            <span class="brand-sub">SIGIF — Gestión integrada</span>
+            <p>Ingrese la información para crear un nuevo usuario</p>
         </div>
     </div>
+    <div class="header-actions">
+        <a href="{% url 'usuarios' %}" class="btn-nuevo">Volver</a>
+    </div>
+</div>
 
-    <div class="contenedor-formularios">
-        <div class="form-configuracion">
-            <h3>Datos del usuario</h3>
-            <div class="form-body">
+   {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-danger">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
 
-                {% if form.errors %}
-                    <div class="alert error">
-                        <strong>Errores:</strong>
-                        <ul>
-                            {% for field in form %}
-                                {% for error in field.errors %}
-                                    <li>{{ field.label }}: {{ error }}</li>
-                                {% endfor %}
-                            {% endfor %}
-                            {% for error in form.non_field_errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% endif %}
+<div class="contenedor-formularios">
+    <div class="form-configuracion">
+        <h3>Datos del usuario</h3>
+        <div class="form-body">
 
-                <form method="POST">
-                    {% csrf_token %}
 
-                    {% for field in form.visible_fields %}
-                        <div class="inv-info field-with-meta">
-                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.help_text %}
-                                <div class="field-help">{{ field.help_text }}</div>
-                            {% endif %}
-                            {% if field.errors %}
-                                <div class="alert error">{{ field.errors|join:", " }}</div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
+            <form method="POST">
+                {% csrf_token %}
 
-                    <div class="actions-container">
-                        <a href="{% url 'usuarios' %}" class="btn-nuevo btn-sm">Cancelar</a>
-                        <button type="submit" class="btn-guardar">Guardar usuario</button>
-                    </div>
-                </form>
+                {% for field in form.visible_fields %}
+                <div class="inv-info field-with-meta">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <div class="field-help">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% if field.errors %}
+                    <div class="alert error">{{ field.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
 
-            </div>
+                <div class="actions-container">
+                    <a href="{% url 'usuarios' %}" class="btn-nuevo btn-sm">Cancelar</a>
+                    <button type="submit" class="btn-guardar">Guardar usuario</button>
+                </div>
+            </form>
+
         </div>
     </div>
+</div>
 
 {% endblock %}

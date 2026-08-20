@@ -7,6 +7,7 @@ class Usuarios (models.Model):
     activo = models.BooleanField(default=True)
     fecha_inicio = models.DateField(null=True, blank=True)
     CARGOS = (
+        ("SuperAdmin", "SUPERADMIN"),
         ("Admin", "ADMIN"),
         ("Empleado", "EMPLEADO"),
     )

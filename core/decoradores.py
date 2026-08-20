@@ -37,3 +37,22 @@ def requerir_rol(roles_permitidos):
 
     return decorator
 
+def impedir_crear_superadmin(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+
+        if request.method == "POST":
+            cargo = request.POST.get("cargo")
+
+            cargo_actual = request.session["logueado"].get("cargo")
+
+            if cargo == "SuperAdmin" and cargo_actual != "SuperAdmin":
+                messages.error(
+                    request,
+                    "Solo el SuperAdmin puede crear otro SuperAdmin."
+                )
+                return redirect("crear_usuarios")
+
+        return view_func(request, *args, **kwargs)
+
+    return wrapper

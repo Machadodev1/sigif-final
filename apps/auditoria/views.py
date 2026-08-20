@@ -5,7 +5,7 @@ from django.db import models
 from datetime import datetime
 
 
-@requerir_rol(["Admin"])
+@requerir_rol(["SuperAdmin","Admin"])
 def auditoria(request):
 
     modulo = request.GET.get("modulo")
