@@ -1,3 +1,5 @@
+from django.db import migrations, models
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -16,4 +18,3 @@ class Migration(migrations.Migration):
             ),
         ),
     ]
-
