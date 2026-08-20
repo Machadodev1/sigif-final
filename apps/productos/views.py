@@ -2,7 +2,7 @@ from .models import Producto
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from .form import ProductoForm
-from core.decoradores import requerir_rol
+from core.decoradores import requerir_rol, requerir_rol_accion
 from apps.auditoria.models import Auditoria
 
 
@@ -54,7 +54,7 @@ def actualizar_producto(request, id):
 
     return render(request, 'productos/actualizar_productos.html', {'form': form})
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol_accion(["Admin"], "productos")
 def activar_desactivar_producto(request, id):
 
     producto = get_object_or_404(Producto, id=id)
@@ -64,7 +64,7 @@ def activar_desactivar_producto(request, id):
         producto.activo = not producto.activo
         producto.save()
 
-        estado = "Activo" if producto.activo else "Inactivo"
+        estado = "ACTIVÓ" if producto.activo else "DESACTIVÓ"
 
         Auditoria.objects.create(
             usuario=request.session["logueado"]["nombre"],
@@ -72,24 +72,4 @@ def activar_desactivar_producto(request, id):
             modulo="PRODUCTOS"
         )
 
-    return redirect("productos")
 
-
-@requerir_rol(["SuperAdmin","Admin", "Empleado"])
-def eliminar_producto(request, id):
-    producto = get_object_or_404(Producto, id = id)
-
-    if request.method == "POST":
-
-        producto.activo = not producto.activo
-        producto.save()
-
-        estado = "Activo" if producto.activo else "Inactivo"
-
-        Auditoria.objects.create(
-            usuario=request.session["logueado"]["nombre"],
-            accion=f"{estado} EL PRODUCTO: {producto.nombre}",
-            modulo="PRODUCTOS"
-        )
-
-    return redirect('productos')

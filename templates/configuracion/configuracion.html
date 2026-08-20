@@ -7,6 +7,18 @@
     <h1>Configuración del Sistema</h1>
 </header>
 
+{# Mensajes específicos del módulo 'configuracion' #}
+{% if messages %}
+    {% for message in messages %}
+        {% if 'module-configuracion' in message.tags %}
+            <div class="alert {% if 'error' in message.tags %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show {{ message.tags }}" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
 <div class="menu-horizontal">
     <a href="{% url 'configuracion' %}" class="active">General y Empresa</a>
     <a href="{% url 'backupypermisos' %}">Backups y Permisos</a>

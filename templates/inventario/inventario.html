@@ -10,6 +10,18 @@
         </div>
     </header>
 
+        {# Mensajes específicos del módulo 'inventario' #}
+        {% if messages %}
+            {% for message in messages %}
+                {% if 'module-inventario' in message.tags %}
+                    <div class="alert {% if 'error' in message.tags %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show {{ message.tags }}" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
     <div class="menu-horizontal">
         <a href="{% url 'inv_control' %}" class="{% if request.resolver_match.url_name == 'inv_control' %}active{% endif %}">Control de stock</a>
         <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Catálogo de ventas</a>

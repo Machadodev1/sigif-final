@@ -784,6 +784,9 @@ td a[href*="eliminar"]:hover {
     margin-left: auto;
 }
 
+/* Estilos para mensajes con etiqueta de módulo (p. ej. module-productos) */
+/* messaging styles are intentionally left to existing CSS in templates */
+
 /* =========================================
    LOGIN
    ========================================= */

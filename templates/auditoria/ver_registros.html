@@ -10,6 +10,17 @@
 </header>
 
 <section class="auditoria-container2">
+        {# Mensajes específicos del módulo 'auditoria' #}
+        {% if messages %}
+            {% for message in messages %}
+                {% if 'module-auditoria' in message.tags %}
+                    <div class="alert {% if 'error' in message.tags %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show {{ message.tags }}" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
     <form method="GET" class="filter-form" style="margin-bottom:20px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
         <input type="search" name="q" class="buscar" placeholder="Buscar por usuario o acción" value="{{ q|default_if_none:'' }}">
 

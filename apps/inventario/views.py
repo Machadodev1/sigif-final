@@ -20,12 +20,11 @@ def inv_configuracion(request):
 @requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def inventario(request):
 
-    producto = Producto.objects.all()
+    productos = Producto.objects.filter(activo=True)
 
     contexto = {
-        'producto': producto
+        'producto': productos
     }
-
 
     return render(request, "inventario/inventario.html", contexto)
 

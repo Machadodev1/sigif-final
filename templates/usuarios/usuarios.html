@@ -21,6 +21,17 @@
 
 <!-- CONTENEDOR DEL LISTADO -->
 <section class="usuarios-container2">
+  {# Mensajes específicos del módulo 'usuarios' #}
+  {% if messages %}
+    {% for message in messages %}
+      {% if 'module-usuarios' in message.tags %}
+        <div class="alert {% if 'error' in message.tags %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show {{ message.tags }}" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
   <div class="usuarios-header">
     <div>
       <h2>Lista de usuarios</h2>
