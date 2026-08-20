@@ -1,40 +1,197 @@
 {% extends 'base.html' %}
 
-{% block title %} Historial {% endblock %}
+{% block title %}Control de Stock{% endblock %}
 
-{% block content %} 
+{% block content %}
 
- <header class="inventario-header">
-    <h1>Gestión de inventario</h1>
-</header>
-<div class="menu-horizontal">
-    <a href="{% url 'inv_control' %}" class="{% if request.resolver_match.url_name == 'inv_control' %}active{% endif %}">Control de stock</a>
-    <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Catalogo de ventas</a>
-    <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">Historial de movimientos</a>
-</div>
-<section class="inventario-container2">
-    <div class="usuarios-header">
+<div class="main-content-wrapper">
+
+    <header class="inventario-header">
         <div>
-            <h2>Catalogo de Stock</h2>
-            <p>revisa el estado de tu inventario</p>
+            <h1>Gestión de inventario</h1>
         </div>
-        <input
-            type="text"
-            class="buscar"
-            placeholder="Buscar productos por nombre o ID"/>
-    </div>
-{% for producto in producto %}
+    </header>
 
-<div class="tarjetas-inv {% if producto.stock < 5 %}border border-danger border-3 bg-danger-subtle{% endif %}">
-    <div class="inv-info">
-        <strong>{{ producto.nombre }}</strong>
-        <div class="extra">
-            <span>Cantidad: {{ producto.stock }} Unidades.</span>
-        </div>
+    <div class="menu-horizontal">
+        <a href="{% url 'inv_control' %}" class="{% if request.resolver_match.url_name == 'inv_control' %}active{% endif %}">Control de stock</a>
+        <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Catálogo de ventas</a>
+        <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">Historial de movimientos</a>
     </div>
+
+    <section class="inventario-container2">
+
+        <div class="cv-toolbar">
+            <div class="cv-toolbar-left">
+                <h2 class="cv-title">Control de Stock</h2>
+                <p class="cv-subtitle">Revisa el estado actual de tu inventario</p>
+            </div>
+            <div class="cv-toolbar-right">
+                <div class="cv-search-wrapper">
+                    <i class="bi bi-search cv-search-icon"></i>
+                    <input type="text" id="buscadorStock" class="cv-search-input" placeholder="Buscar por nombre o ID…">
+                </div>
+                <div class="cs-filtros">
+                    <button class="cs-filtro-btn active" data-filtro="todos">Todos</button>
+                    <button class="cs-filtro-btn" data-filtro="ok">En stock</button>
+                    <button class="cs-filtro-btn" data-filtro="bajo">Stock bajo</button>
+                    <button class="cs-filtro-btn" data-filtro="agotado">Agotado</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen rápido -->
+        <div class="cs-resumen">
+            <div class="cs-resumen-card cs-total">
+                <i class="bi bi-grid-3x3-gap cs-resumen-icon"></i>
+                <div>
+                    <span class="cs-resumen-num" id="totalProductos">{{ producto|length }}</span>
+                    <span class="cs-resumen-label">Total productos</span>
+                </div>
+            </div>
+            <div class="cs-resumen-card cs-disponible">
+                <i class="bi bi-check-circle cs-resumen-icon"></i>
+                <div>
+                    <span class="cs-resumen-num" id="totalOk">–</span>
+                    <span class="cs-resumen-label">Con stock</span>
+                </div>
+            </div>
+            <div class="cs-resumen-card cs-alerta">
+                <i class="bi bi-exclamation-triangle cs-resumen-icon"></i>
+                <div>
+                    <span class="cs-resumen-num" id="totalBajo">–</span>
+                    <span class="cs-resumen-label">Stock bajo (&lt;5)</span>
+                </div>
+            </div>
+            <div class="cs-resumen-card cs-agotado">
+                <i class="bi bi-x-circle cs-resumen-icon"></i>
+                <div>
+                    <span class="cs-resumen-num" id="totalAgotado">–</span>
+                    <span class="cs-resumen-label">Agotados</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cards-grid" id="stockGrid">
+            {% for producto in producto %}
+            <div class="tarjeta-stock
+                {% if producto.stock == 0 %}ts-agotado
+                {% elif producto.stock < 5 %}ts-bajo
+                {% else %}ts-ok{% endif %}"
+                data-nombre="{{ producto.nombre|lower }}"
+                data-id="{{ producto.id }}"
+                data-estado="{% if producto.stock == 0 %}agotado{% elif producto.stock < 5 %}bajo{% else %}ok{% endif %}">
+
+                <div class="ts-header">
+                    <span class="ts-id">ID #{{ producto.id }}</span>
+                    {% if producto.stock == 0 %}
+                        <span class="ts-badge ts-badge-agotado"><i class="bi bi-x-circle-fill"></i> Agotado</span>
+                    {% elif producto.stock < 5 %}
+                        <span class="ts-badge ts-badge-bajo"><i class="bi bi-exclamation-triangle-fill"></i> Stock bajo</span>
+                    {% else %}
+                        <span class="ts-badge ts-badge-ok"><i class="bi bi-check-circle-fill"></i> Disponible</span>
+                    {% endif %}
+                </div>
+
+                <div class="ts-body">
+                    <div class="ts-icon-wrap
+                        {% if producto.stock == 0 %}ts-icon-agotado
+                        {% elif producto.stock < 5 %}ts-icon-bajo
+                        {% else %}ts-icon-ok{% endif %}">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <strong class="ts-nombre">{{ producto.nombre }}</strong>
+                    {% if producto.categoria %}
+                    <span class="ts-categoria">{{ producto.categoria }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="ts-stock-visual">
+                    <div class="ts-stock-info">
+                        <span class="ts-stock-num
+                            {% if producto.stock == 0 %}ts-num-agotado
+                            {% elif producto.stock < 5 %}ts-num-bajo
+                            {% else %}ts-num-ok{% endif %}">
+                            {{ producto.stock }}
+                        </span>
+                        <span class="ts-stock-unit">unidades</span>
+                    </div>
+                    <div class="ts-barra-wrap">
+                        {% if producto.stock >= 50 %}
+                            {% with nivel=100 %}
+                            <div class="ts-barra ts-barra-ok" style="width:{{ nivel }}%;"></div>
+                            {% endwith %}
+                        {% elif producto.stock >= 20 %}
+                            <div class="ts-barra ts-barra-ok" style="width:{{ producto.stock }}%;"></div>
+                        {% elif producto.stock >= 5 %}
+                            <div class="ts-barra ts-barra-medio" style="width:{{ producto.stock|floatformat:0 }}%;"></div>
+                        {% elif producto.stock > 0 %}
+                            <div class="ts-barra ts-barra-bajo" style="width:{{ producto.stock }}%;"></div>
+                        {% else %}
+                            <div class="ts-barra ts-barra-agotado" style="width:100%;"></div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if producto.precio %}
+                <div class="ts-footer">
+                    <span class="ts-footer-label">Precio unitario</span>
+                    <span class="ts-precio">${{ producto.precio }}</span>
+                </div>
+                {% endif %}
+
+            </div>
+            {% empty %}
+            <div class="cv-empty">
+                <i class="bi bi-archive cv-empty-icon"></i>
+                <p>No hay productos en el inventario.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+    </section>
 </div>
 
-{% endfor %}
+<script>
+/* ---- Buscador ---- */
+const buscador = document.getElementById('buscadorStock');
+const grid     = document.getElementById('stockGrid');
+let filtroActual = 'todos';
 
-</section>
+buscador.addEventListener('input', aplicarFiltros);
+
+/* ---- Filtros ---- */
+document.querySelectorAll('.cs-filtro-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.cs-filtro-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filtroActual = btn.dataset.filtro;
+        aplicarFiltros();
+    });
+});
+
+function aplicarFiltros() {
+    const q = buscador.value.toLowerCase().trim();
+    document.querySelectorAll('.tarjeta-stock').forEach(card => {
+        const nombreMatch = card.dataset.nombre.includes(q) || card.dataset.id.includes(q);
+        const estadoMatch  = filtroActual === 'todos' || card.dataset.estado === filtroActual;
+        card.style.display = (nombreMatch && estadoMatch) ? '' : 'none';
+    });
+}
+
+/* ---- Contadores resumen ---- */
+(function() {
+    const cards = document.querySelectorAll('.tarjeta-stock');
+    let ok = 0, bajo = 0, agotado = 0;
+    cards.forEach(c => {
+        if (c.dataset.estado === 'ok')      ok++;
+        else if (c.dataset.estado === 'bajo') bajo++;
+        else if (c.dataset.estado === 'agotado') agotado++;
+    });
+    document.getElementById('totalOk').textContent      = ok;
+    document.getElementById('totalBajo').textContent    = bajo;
+    document.getElementById('totalAgotado').textContent = agotado;
+    document.getElementById('totalProductos').textContent = cards.length;
+})();
+</script>
+
 {% endblock %}

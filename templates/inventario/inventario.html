@@ -1,305 +1,319 @@
 {% extends 'base.html' %}
 
-{% block title %} inventario {% endblock %}
+{% block title %}Catálogo de Ventas{% endblock %}
 
 {% block content %}
 
-<header class="inventario-header">
-    <h1>Gestión de inventario</h1>
-</header>
-<div class="menu-horizontal">
-    <a href="{% url 'inv_control' %}">Control de stock</a>
-    <a href="{% url 'inventario' %}">Catalogo de ventas</a>
-    <a href="{% url 'inv_historial' %}">Historial de movimientos</a>
-</div>
-<section class="inventario-container2">
-    <div class="usuarios-header">
+<div class="main-content-wrapper">
+
+    <header class="inventario-header">
         <div>
-            <h2>Catalogo de ventas</h2>
-            <p>selecciona productos</p>
+            <h1>Gestión de inventario</h1>
         </div>
-        <div style="display: flex; gap: 15px; align-items: center;">
-            <button
-                id="btnCarrito"
-                class="btn btn-primary"
-                data-bs-toggle="offcanvas"
-                data-bs-target="#carritoPanel">
-                <i class="bi bi-cart3"></i>
-            </button>
-            <input
-                type="text"
-                class="buscar"
-                placeholder="Buscar productos por nombre o ID"/>
-        </div>
+    </header>
+
+    <div class="menu-horizontal">
+        <a href="{% url 'inv_control' %}" class="{% if request.resolver_match.url_name == 'inv_control' %}active{% endif %}">Control de stock</a>
+        <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Catálogo de ventas</a>
+        <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">Historial de movimientos</a>
     </div>
-    {% for producto in producto %}
-    <div class="tarjetas-inv">
-        <div class="inv-info">
-            <strong>{{ producto.nombre }}</strong>
-            <div class="extra">
-                <span>Cantidad: {{ producto.stock }} Unidades.</span>
-                <span>Precio Unitario:</span>
-                <span class="vl1">
-                    ${{ producto.precio }}
-                </span>
-                <button
-                    class="agregar btn btn-dark btn-sm"
-                    data-id="{{ producto.id }}"
-                    data-title="{{ producto.nombre }}"
-                    data-price="{{ producto.precio }}"
-                    data-stock="{{ producto.stock }}">
-                    Agregar al carrito
+
+    <section class="inventario-container2">
+
+        <div class="cv-toolbar">
+            <div class="cv-toolbar-left">
+                <h2 class="cv-title">Catálogo de Ventas</h2>
+                <p class="cv-subtitle">Selecciona productos para agregar al carrito</p>
+            </div>
+            <div class="cv-toolbar-right">
+                <div class="cv-search-wrapper">
+                    <i class="bi bi-search cv-search-icon"></i>
+                    <input type="text" id="buscadorProductos" class="cv-search-input" placeholder="Buscar por nombre o ID…">
+                </div>
+                <button id="btnCarrito" class="cv-cart-btn" data-bs-toggle="offcanvas" data-bs-target="#carritoPanel">
+                    <i class="bi bi-cart3"></i>
+                    <span class="cv-cart-label">Carrito</span>
+                    <span id="cartBadge" class="cv-cart-badge" style="display:none;">0</span>
                 </button>
             </div>
         </div>
-    </div>
-    {% endfor %}
-</section>
+
+        <div class="cards-grid" id="productosGrid">
+            {% for producto in producto %}
+            <div class="tarjeta-producto-venta {% if producto.stock == 0 %}sin-stock{% elif producto.stock < 5 %}stock-bajo{% endif %}"
+                 data-nombre="{{ producto.nombre|lower }}"
+                 data-id="{{ producto.id }}">
+
+                <div class="tpv-header">
+                    <span class="tpv-id">ID #{{ producto.id }}</span>
+                    {% if producto.stock == 0 %}
+                        <span class="tpv-badge agotado">Agotado</span>
+                    {% elif producto.stock < 5 %}
+                        <span class="tpv-badge stock-critico">Stock bajo</span>
+                    {% else %}
+                        <span class="tpv-badge disponible">Disponible</span>
+                    {% endif %}
+                </div>
+
+                <div class="tpv-body">
+                    <div class="tpv-icon-wrap">
+                        <i class="bi bi-box-seam tpv-icon"></i>
+                    </div>
+                    <strong class="tpv-nombre">{{ producto.nombre }}</strong>
+                    {% if producto.categoria %}
+                    <span class="tpv-categoria">{{ producto.categoria }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="tpv-footer">
+                    <div class="tpv-stats">
+                        <div class="tpv-stat">
+                            <span class="tpv-stat-label">Stock</span>
+                            <span class="tpv-stat-value {% if producto.stock < 5 %}valor-alerta{% endif %}">{{ producto.stock }} uds.</span>
+                        </div>
+                        <div class="tpv-stat">
+                            <span class="tpv-stat-label">Precio</span>
+                            <span class="tpv-stat-value tpv-precio">${{ producto.precio }}</span>
+                        </div>
+                    </div>
+                    <button
+                        class="tpv-add-btn agregar {% if producto.stock == 0 %}tpv-add-disabled{% endif %}"
+                        data-id="{{ producto.id }}"
+                        data-title="{{ producto.nombre }}"
+                        data-price="{{ producto.precio }}"
+                        data-stock="{{ producto.stock }}"
+                        {% if producto.stock == 0 %}disabled{% endif %}>
+                        {% if producto.stock == 0 %}
+                            <i class="bi bi-x-circle"></i> Sin stock
+                        {% else %}
+                            <i class="bi bi-cart-plus"></i> Agregar
+                        {% endif %}
+                    </button>
+                </div>
+
+            </div>
+            {% empty %}
+            <div class="cv-empty">
+                <i class="bi bi-box-seam cv-empty-icon"></i>
+                <p>No hay productos disponibles.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+    </section>
+
+</div>
+
+<!-- ===== PANEL CARRITO ===== -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="carritoPanel">
-    <div class="offcanvas-header">
-        <h5>Carrito</h5>
-        <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="offcanvas">
-        </button>
-    </div>
-    <div class="offcanvas-body d-flex flex-column">
-        <div id="listaCarrito" class="flex-grow-1 overflow-auto"></div>
-        <div class="d-flex align-items-center gap-2">
-            <input
-                type="text"
-                id="descuento"
-                class="form-control form-control-sm"
-                placeholder="CodDescuento">
-            <button
-                class="btn btn-dark btn-sm"
-                id="btn-des">
-                Aplicar
-            </button>
+    <div class="offcanvas-header carrito-header">
+        <div>
+            <h5 class="offcanvas-title">🛒 Tu carrito</h5>
+            <span id="carritoCount" class="carrito-count">0 productos</span>
         </div>
-        <div class="d-flex justify-content-between align-items-center mt-3">
-            <div>
-                <h6 id="pre" class="mb-0">
-                    PreTotal: $0
-                </h6>
-                <h6 id="des" class="mb-0">
-                    Descuento: 0%
-                </h6>
-                <h5 id="total" class="mb-0">
-                    Total: $0
-                </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body carrito-body d-flex flex-column">
+        <div id="listaCarrito" class="carrito-lista flex-grow-1 overflow-auto"></div>
+
+        <div class="carrito-descuento">
+            <input type="text" id="descuento" class="carrito-desc-input" placeholder="Código de descuento">
+            <button class="carrito-desc-btn" id="btn-des">Aplicar</button>
+        </div>
+
+        <div class="carrito-resumen">
+            <div class="resumen-row">
+                <span>Subtotal</span>
+                <span id="pre">$0.00</span>
             </div>
-            <button type="button" class="btn btn-success" id="btnPagar">
-    Pagar
-</button>
+            <div class="resumen-row descuento-row" id="des-row" style="display:none;">
+                <span id="des">Descuento (0%)</span>
+                <span id="des-monto" class="color-descuento">-$0.00</span>
+            </div>
+            <div class="resumen-row resumen-total">
+                <span>Total</span>
+                <span id="total">$0.00</span>
+            </div>
+            <button type="button" class="carrito-pagar-btn" id="btnPagar">
+                <i class="bi bi-credit-card"></i> Proceder al pago
+            </button>
         </div>
     </div>
 </div>
-<div class="position-fixed bottom-0 end-0 p-3">
-    <div
-        id="toastAdd"
-        class="toast align-items-center text-bg-success border-0">
+
+<!-- Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+    <div id="toastAdd" class="toast align-items-center text-bg-success border-0" role="alert">
         <div class="d-flex">
-            <div class="toast-body">
-                Producto agregado al carrito
-            </div>
-            <button
-                type="button"
-                class="btn-close btn-close-white me-2"
-                data-bs-dismiss="toast">
-            </button>
+            <div class="toast-body"><i class="bi bi-check-circle-fill me-2"></i>Producto agregado al carrito</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
     </div>
 </div>
+
+<!-- Modal Eliminar -->
 <div class="modal fade" id="modalAviso" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    Confirmación
-                </h5>
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal">
-                </button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content cv-modal">
+            <div class="modal-header cv-modal-header">
+                <h5 class="modal-title">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                 ¿Seguro que quieres eliminar este producto del carrito?
+            <div class="modal-body cv-modal-body">
+                ¿Deseas eliminar este producto del carrito?
             </div>
-            <div class="modal-footer">
-                <button
-                    class="btn btn-secondary"
-                    data-bs-dismiss="modal">
-                    Cancelar
-                </button>
-                <button
-                    class="btn btn-danger"
-                    id="btnEliminar">
-                    Eliminar
-                </button>
+            <div class="modal-footer cv-modal-footer">
+                <button class="cv-modal-cancel" data-bs-dismiss="modal">Cancelar</button>
+                <button class="cv-modal-confirm" id="btnEliminar">Eliminar</button>
             </div>
         </div>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-const listaCarrito = document.getElementById('listaCarrito');
-const totalTexto = document.getElementById('total');
-const descuento = document.getElementById('descuento');
-const btndes = document.getElementById('btn-des');
-const descu = document.getElementById('des');
-const pret = document.getElementById('pre');
-const codi = {
-    Yamaha : 20,
-    Motul : 30,
-    CRC: 50
-};
-let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-let porcentajeAplicado = 0;
+/* ---- DOM refs ---- */
+const listaCarrito   = document.getElementById('listaCarrito');
+const totalTexto     = document.getElementById('total');
+const preTexto       = document.getElementById('pre');
+const desTexto       = document.getElementById('des');
+const desMonto       = document.getElementById('des-monto');
+const desRow         = document.getElementById('des-row');
+const descInput      = document.getElementById('descuento');
+const btndes         = document.getElementById('btn-des');
+const carritoCount   = document.getElementById('carritoCount');
+const cartBadge      = document.getElementById('cartBadge');
+const buscador       = document.getElementById('buscadorProductos');
+const productosGrid  = document.getElementById('productosGrid');
+
+const codi = { Yamaha: 20, Motul: 30, CRC: 50 };
+let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+let porcentajeAplicado = parseInt(localStorage.getItem('porcentajeAplicado')) || 0;
 let productoAEliminar = null;
-function guardarCarrito(){
-    localStorage.setItem("carrito", JSON.stringify(carrito));
-}
+
+/* ---- Search ---- */
+buscador.addEventListener('input', () => {
+    const q = buscador.value.toLowerCase().trim();
+    document.querySelectorAll('.tarjeta-producto-venta').forEach(card => {
+        const match = card.dataset.nombre.includes(q) || card.dataset.id.includes(q);
+        card.style.display = match ? '' : 'none';
+    });
+});
+
+/* ---- Add to cart ---- */
 document.querySelectorAll('.agregar').forEach(btn => {
     btn.addEventListener('click', () => {
         const producto = {
-            id: parseInt(btn.dataset.id),
-            title: btn.dataset.title,
-            price: parseFloat(btn.dataset.price),
-            stock: parseInt(btn.dataset.stock),
+            id:       parseInt(btn.dataset.id),
+            title:    btn.dataset.title,
+            price:    parseFloat(btn.dataset.price),
+            stock:    parseInt(btn.dataset.stock),
             cantidad: 1
         };
         agregarAlCarrito(producto);
     });
 });
-function agregarAlCarrito(producto){
-    const existe = carrito.find(
-        p => p.id === producto.id
-    );
-    if(existe){
-        if(existe.cantidad < existe.stock){
-            existe.cantidad++;
-        }
-    }else{
+
+function agregarAlCarrito(producto) {
+    const existe = carrito.find(p => p.id === producto.id);
+    if (existe) {
+        if (existe.cantidad < existe.stock) existe.cantidad++;
+    } else {
         carrito.push(producto);
     }
     guardarCarrito();
     mostrarToast();
     renderCarrito();
 }
-function renderCarrito(){
-    listaCarrito.innerHTML = "";
+
+function guardarCarrito() {
+    localStorage.setItem('carrito', JSON.stringify(carrito));
+}
+
+function renderCarrito() {
+    listaCarrito.innerHTML = '';
     let total = 0;
+
+    if (carrito.length === 0) {
+        listaCarrito.innerHTML = '<div class="carrito-vacio"><i class="bi bi-cart-x carrito-vacio-icon"></i><p>Tu carrito está vacío</p></div>';
+    }
+
     carrito.forEach(producto => {
         total += producto.price * producto.cantidad;
         const div = document.createElement('div');
-        div.className = "mb-3";
+        div.className = 'carrito-item';
         div.innerHTML = `
-        <div class="card h-100 text-center p-2">
-            <strong>${producto.title}</strong>
-            <h6>
-                Stock disponible:
-                ${producto.stock}
-            </h6>
-            $${producto.price} x ${producto.cantidad}
-            <div class="mt-2">
-                <button class="btn btn-sm btn-success">
-                    +
-                </button>
-                <button class="btn btn-sm btn-info">
-                    -
-                </button>
-                <button
-                    class="btn btn-sm btn-danger"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalAviso">
-                    eliminar todos
+            <div class="carrito-item-info">
+                <strong class="carrito-item-nombre">${producto.title}</strong>
+                <span class="carrito-item-precio">$${producto.price.toFixed(0)} c/u</span>
+            </div>
+            <div class="carrito-item-controls">
+                <button class="ctrl-btn ctrl-minus">−</button>
+                <span class="ctrl-qty">${producto.cantidad}</span>
+                <button class="ctrl-btn ctrl-plus">+</button>
+                <button class="ctrl-btn ctrl-del" data-bs-toggle="modal" data-bs-target="#modalAviso">
+                    <i class="bi bi-trash3"></i>
                 </button>
             </div>
-        </div>
+            <div class="carrito-item-subtotal">$${(producto.price * producto.cantidad).toFixed(0)}</div>
         `;
-        const botones = div.querySelectorAll("button");
-        botones[0].addEventListener("click", () => {
-            if(producto.cantidad < producto.stock){
-                producto.cantidad++;
-                guardarCarrito();
-                renderCarrito();
-            }
+        div.querySelector('.ctrl-plus').addEventListener('click', () => {
+            if (producto.cantidad < producto.stock) { producto.cantidad++; guardarCarrito(); renderCarrito(); }
         });
-        botones[1].addEventListener("click", () => {
+        div.querySelector('.ctrl-minus').addEventListener('click', () => {
             producto.cantidad--;
-            if(producto.cantidad <= 0){
-                carrito = carrito.filter(
-                    p => p.id !== producto.id
-                );
-            }
-            guardarCarrito();
-            renderCarrito();
+            if (producto.cantidad <= 0) carrito = carrito.filter(p => p.id !== producto.id);
+            guardarCarrito(); renderCarrito();
         });
-        botones[2].addEventListener("click", () => {
-            productoAEliminar = producto;
-        });
+        div.querySelector('.ctrl-del').addEventListener('click', () => { productoAEliminar = producto; });
         listaCarrito.appendChild(div);
     });
+
     let des = total * (porcentajeAplicado / 100);
     let final = total - des;
-    pret.innerText =
-        "PreTotal: $" + total.toFixed(2);
-    descu.innerText =
-        `Descuento: ${porcentajeAplicado}% (-$${des.toFixed(2)})`;
-    totalTexto.innerText =
-        "Total: $" + final.toFixed(2);
-    guardarCarrito();
+
+    preTexto.textContent  = `$${total.toFixed(0)}`;
+    totalTexto.textContent = `$${final.toFixed(0)}`;
+
+    if (porcentajeAplicado > 0) {
+        desRow.style.display = '';
+        desTexto.textContent  = `Descuento (${porcentajeAplicado}%)`;
+        desMonto.textContent  = `-$${des.toFixed(0)}`;
+    } else {
+        desRow.style.display = 'none';
+    }
+
+    const totalItems = carrito.reduce((acc, p) => acc + p.cantidad, 0);
+    carritoCount.textContent = `${totalItems} producto${totalItems !== 1 ? 's' : ''}`;
+    cartBadge.textContent = totalItems;
+    cartBadge.style.display = totalItems > 0 ? 'flex' : 'none';
 }
-document.getElementById("btnEliminar")
-.addEventListener("click", () => {
-    if(productoAEliminar){
-        carrito = carrito.filter(
-            p => p.id !== productoAEliminar.id
-        );
-        guardarCarrito();
-        renderCarrito();
-        productoAEliminar = null;
+
+document.getElementById('btnEliminar').addEventListener('click', () => {
+    if (productoAEliminar) {
+        carrito = carrito.filter(p => p.id !== productoAEliminar.id);
+        guardarCarrito(); renderCarrito(); productoAEliminar = null;
     }
-    bootstrap.Modal
-        .getInstance(
-            document.getElementById("modalAviso")
-        )
-        .hide();
+    bootstrap.Modal.getInstance(document.getElementById('modalAviso')).hide();
 });
-btndes.addEventListener("click", () => {
-    const codigo = descuento.value.trim();
 
-    if(codi[codigo]){
-        porcentajeAplicado = codi[codigo];
-    }else{
-        porcentajeAplicado = 0;
-    }
-
-    localStorage.setItem(
-        "porcentajeAplicado",
-        porcentajeAplicado
-    );
-
+btndes.addEventListener('click', () => {
+    const codigo = descInput.value.trim();
+    porcentajeAplicado = codi[codigo] || 0;
+    localStorage.setItem('porcentajeAplicado', porcentajeAplicado);
     renderCarrito();
 });
-function mostrarToast(){
-    const toast =
-        new bootstrap.Toast(
-            document.getElementById('toastAdd')
-        );
-    toast.show();
-}
-document.getElementById("btnPagar").addEventListener("click", () => {
-    if(carrito.length === 0){
-        alert("El carrito está vacío");
-        return;
-    }
 
-    window.location.href = "/facturacion/pago/";
+function mostrarToast() {
+    new bootstrap.Toast(document.getElementById('toastAdd')).show();
+}
+
+document.getElementById('btnPagar').addEventListener('click', () => {
+    if (carrito.length === 0) { alert('El carrito está vacío'); return; }
+    window.location.href = '/facturacion/pago/';
 });
+
 renderCarrito();
 </script>
+
 {% endblock %}
