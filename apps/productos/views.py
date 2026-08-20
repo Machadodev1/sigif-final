@@ -64,7 +64,7 @@ def activar_desactivar_producto(request, id):
         producto.activo = not producto.activo
         producto.save()
 
-        estado = "ACTIVÓ" if producto.activo else "DESACTIVÓ"
+        estado = "Activo" if producto.activo else "Inactivo"
 
         Auditoria.objects.create(
             usuario=request.session["logueado"]["nombre"],

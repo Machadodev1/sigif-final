@@ -19,9 +19,8 @@
     <div class="logo">
       <img src="{% static 'img/logo123.png' %}" alt="">
     </div>
-    <div class="user-Info">
-      <h3>Administrativo</h3>
-      <p>Oficina central</p>
+    <div class="user-Info" style="padding-bottom: 0;">
+      <!-- Usuario removido de aquí para colocarlo a la derecha -->
     </div>
     <nav class="menu">
       <ul>
@@ -41,6 +40,20 @@
   </aside>
 
   <div class="main-container">
+    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 25px;">
+        <div style="display: flex; align-items: center; gap: 12px; background: #fff; padding: 6px 20px 6px 8px; border-radius: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e8eef8;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #3a56e4, #5c7cfa); color: #fff; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 1rem;">
+                {{ request.session.logueado.nombre|default:"U"|first|upper }}
+            </div>
+            <div style="display: flex; flex-direction: column; justify-content: center;">
+                <span style="font-size: 0.88rem; font-weight: 700; color: #1e293b; line-height: 1.1;">{{ request.session.logueado.nombre|default:"Usuario Activo"|title }}</span>
+                <span style="font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 2px;">
+                    {{ request.session.logueado.rol|default:"Operador" }}
+                </span>
+            </div>
+        </div>
+    </div>
+    
     {% block content %}
     {% endblock %}
   </div>
