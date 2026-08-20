@@ -5,136 +5,122 @@
 {% block content %}
 
 <header class="facturacion-header">
-    <h1>Gestión de facturación</h1>
-    <a href="{% url 'dashboard' %}">
-        <i class="bg-secondary"></i>
-    </a>
+    <div>
+        <h1>Gestión de facturación</h1>
+    </div>
 </header>
 
 <div class="menu-horizontal">
-    <a href="{% url 'factura-list' %}">Facturas</a>
-    <a href="{% url 'clientes' %}" class="active">Clientes</a>
-    <a href="{% url 'productos_facturacion' %}">Productos</a>
+    <a href="{% url 'factura-list' %}" class="{% if request.resolver_match.url_name == 'factura-list' %}active{% endif %}">Facturas</a>
+    <a href="{% url 'clientes' %}" class="{% if request.resolver_match.url_name == 'clientes' %}active{% endif %}">Clientes</a>
+    <a href="{% url 'productos_facturacion' %}" class="{% if request.resolver_match.url_name == 'productos_facturacion' %}active{% endif %}">Productos</a>
 </div>
 
 <section class="facturacion-container2">
 
-    <div class="facturacion-header">
+    <div class="fac-toolbar">
         <div>
-            <h2>Clientes Registrados</h2>
-            <p>Listado de clientes y su historial de facturación</p>
+            <h2 class="cv-title">Clientes Registrados</h2>
+            <p class="cv-subtitle">Listado de clientes y su historial de facturación</p>
+        </div>
+        <div class="fac-resumen-pills">
+            <span class="fac-pill fac-pill-total">
+                <i class="bi bi-people-fill"></i>
+                {{ clientes|length }} cliente{{ clientes|length|pluralize:"s" }}
+            </span>
         </div>
     </div>
 
-    {% for cliente in clientes %}
+    <div class="fac-grid">
 
-        <div class="tarjetas-facturacion">
-            <div class="facturacion-info">
+        {% for cliente in clientes %}
+        <div class="tarjeta-factura">
 
-                <strong>{{ cliente.nombre }}</strong>
+            <!-- Cabecera de tarjeta: Cliente -->
+            <div class="tf-header">
+                <div class="tf-header-left">
+                    <div class="tf-icon-wrap" style="background: linear-gradient(135deg, #0f172a, #334155);">
+                        <i class="bi bi-person-circle tf-icon"></i>
+                    </div>
+                    <div>
+                        <span class="tf-num">Cliente <strong>#{{ cliente.id }}</strong></span>
+                        <span class="tf-num"><strong style="font-size: 1.15rem;">{{ cliente.nombre }}</strong></span>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <span class="tf-footer-label" style="display:block; margin-bottom: 3px;">Total Compras</span>
+                    <span class="tf-total-badge" style="background: linear-gradient(135deg, #3a56e4, #5c7cfa); padding: 5px 12px;">${{ cliente.get_total_gastado|default:0|floatformat:0 }}</span>
+                </div>
+            </div>
 
-                <div class="extra">
-                    <span>Correo: {{ cliente.correo }}</span>
-                    <span>Total Facturado: ${{ cliente.get_total_gastado }}</span>
-                    <span>Última Compra: {{ cliente.get_ultima_fecha|date:"d/m/Y" }}</span>
+            <!-- Cuerpo: Datos -->
+            <div class="tf-body">
+                <div class="tf-meta-row">
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-envelope-fill"></i> Correo</span>
+                        <span class="tf-meta-val">{{ cliente.correo|default:"Sin correo" }}</span>
+                    </div>
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-calendar-check-fill"></i> Última Compra</span>
+                        <span class="tf-meta-val">
+                            {% if cliente.get_ultima_fecha %}
+                                {{ cliente.get_ultima_fecha|date:"d/m/Y" }}
+                            {% else %}
+                                Nunca
+                            {% endif %}
+                        </span>
+                    </div>
                 </div>
 
-                <hr>
-
-                <strong>Historial de compras</strong>
-
-                {% for factura in cliente.factura_set.all %}
-
-                    <div class="extra">
-
-                        <span>
-                            Factura #{{ factura.id }}
-                        </span>
-
-                        <span>
-                            Fecha:
-                            {{ factura.fecha|date:"d/m/Y H:i" }}
-                        </span>
-
-                        <span>
-                            Vendedor:
-                            {{ factura.usuario }}
-                        </span>
-
-                        <span>
-                            Descuento:
-                            ${{ factura.descuento }}
-                        </span>
-
-                        <span>
-                            Total:
-                            ${{ factura.total }}
-                        </span>
-
-                    </div>
-
-                    <strong>Productos comprados</strong>
-
-                    {% for detalle in factura.detalles.all %}
-
-                        <div class="extra">
-
-                            <span>
-                                Producto:
-                                {{ detalle.producto.nombre }}
-                            </span>
-
-                            <span>
-                                Cantidad:
-                                {{ detalle.cantidad }}
-                            </span>
-
-                            <span>
-                                Precio:
-                                ${{ detalle.precio }}
-                            </span>
-
-                            <span>
-                                Subtotal:
-                                ${{ detalle.subtotal }}
-                            </span>
-
+                <!-- Historial de compras -->
+                <div class="tf-productos">
+                    <span class="tf-productos-label">Historial de Facturas</span>
+                    <div class="tf-productos-lista" style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
+                        {% for factura in cliente.factura_set.all|dictsortreversed:"fecha" %}
+                        <div class="tf-detalle-item" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+                                <div class="tf-detalle-info">
+                                    <i class="bi bi-receipt tf-detalle-icon" style="color: #64748b;"></i>
+                                    <strong style="font-size: 0.9rem;">Factura #{{ factura.id }}</strong>
+                                </div>
+                                <span class="tf-detalle-precio" style="color: #059669;">${{ factura.total|floatformat:0 }}</span>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #64748b;">
+                                <span><i class="bi bi-calendar3"></i> {{ factura.fecha|date:"d/m/Y H:i" }}</span>
+                                <span><i class="bi bi-person-badge"></i> {{ factura.usuario }}</span>
+                            </div>
+                            
+                            {% if factura.detalles.all %}
+                                <div style="font-size: 0.78rem; background: #e2e8f0; padding: 6px; border-radius: 6px; margin-top: 4px;">
+                                    {% for detalle in factura.detalles.all %}
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                            <span>x{{ detalle.cantidad }} {{ detalle.producto.nombre }}</span>
+                                            <span>${{ detalle.subtotal|floatformat:0 }}</span>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
-
-                    {% empty %}
-
-                        <div class="extra">
-                            <span>
-                                No hay productos registrados.
-                            </span>
+                        {% empty %}
+                        <div class="tf-detalle-empty">
+                            <i class="bi bi-cart-x" style="font-size: 1.5rem; display: block; margin-bottom: 5px; color: #cbd5e1;"></i>
+                            Este cliente no ha realizado compras
                         </div>
-
-                    {% endfor %}
-
-                    <hr>
-
-                {% empty %}
-
-                    <div class="extra">
-                        <span>
-                            Este cliente todavía no ha realizado compras.
-                        </span>
+                        {% endfor %}
                     </div>
-
-                {% endfor %}
-
+                </div>
             </div>
+
         </div>
-
-    {% empty %}
-
-        <div class="tarjetas-facturacion">
-            <div class="facturacion-info">
-                <p>No hay clientes registrados en el sistema.</p>
-            </div>
+        {% empty %}
+        <div class="fac-empty">
+            <i class="bi bi-people fac-empty-icon"></i>
+            <p>No hay clientes registrados en el sistema.</p>
         </div>
+        {% endfor %}
 
-    {% endfor %}
+    </div>
 
 </section>
 
