@@ -1,12 +1,15 @@
 import json
 from decimal import Decimal
-
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView
 from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse
-
 from apps.facturacion.models import Factura, Cliente, DetalleFactura
 from apps.productos.models import Producto
 from core.decoradores import requerir_rol
@@ -202,3 +205,74 @@ def confirmar_venta(request):
             'success': False,
             'message': str(e)
         }, status=400)
+
+@requerir_rol(["Admin", "Empleado"])
+def exportar_factura_pdf(request, pk):
+    # 1. Obtener la factura o retornar 404 si no existe
+    factura = get_object_or_404(Factura, pk=pk)
+    
+    # 2. Configurar la respuesta HTTP para PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="factura_{factura.id}.pdf"'
+    
+    # 3. Configurar el documento PDF
+    doc = SimpleDocTemplate(response, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    elementos = []
+    
+    estilos = getSampleStyleSheet()
+    
+    # Estítulo personalizado
+
+    estilo_titulo = ParagraphStyle(
+        'TituloFactura',
+        parent=estilos['Heading1'] if 'Heading1' in estilos else estilos['Normal'],
+        fontSize=16,
+        spaceAfter=12,
+        textColor=colors.HexColor('#1A365D')
+    )
+    
+    # Datos generales de la factura
+    elementos.append(Paragraph(f"Factura de Venta N° {factura.id}", estilo_titulo))
+    elementos.append(Paragraph(f"<b>Cliente:</b> {factura.cliente.nombre}", estilos['Normal']))
+    elementos.append(Paragraph(f"<b>Correo:</b> {factura.cliente.correo}", estilos['Normal']))
+    elementos.append(Paragraph(f"<b>Fecha:</b> {factura.fecha if hasattr(factura, 'fecha') else 'N/A'}", estilos['Normal']))
+    elementos.append(Paragraph(f"<b>Atendido por:</b> {factura.usuario}", estilos['Normal']))
+    elementos.append(Spacer(1, 15))
+    
+    # 4. Construir los datos de la tabla de productos
+    data = [["Producto", "Cantidad", "Precio Unit.", "Subtotal"]]
+    
+    # Obtenemos los detalles relacionados a esta factura
+    detalles = factura.detallefactura_set.all() if hasattr(factura, 'detallefactura_set') else DetalleFactura.objects.filter(factura=factura)
+    
+    for detalle in detalles:
+        data.append([
+            detalle.producto.nombre,
+            str(detalle.cantidad),
+            f"${detalle.precio}",
+            f"${detalle.subtotal}"
+        ])
+        
+    # Añadir filas de totales
+    data.append(["", "", "Descuento:", f"${factura.descuento}"])
+    data.append(["", "", "Total Final:", f"${factura.total}"])
+
+    # 5. Estilizar la tabla
+    tabla = Table(data, colWidths=[200, 70, 100, 100])
+    tabla.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2B6CB0')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F7FAFC')),
+        ('GRID', (0, 0), (-1, -3), 0.5, colors.HexColor('#CBD5E0')),
+        ('FONTNAME', (0, -2), (-1, -1), 'Helvetica-Bold'), # Resaltar totales
+    ]))
+
+    elementos.append(tabla)
+
+    # 6. Compilar y retornar el PDF
+    doc.build(elementos)
+    return response        

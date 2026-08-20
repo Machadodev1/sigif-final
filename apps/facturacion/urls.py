@@ -10,4 +10,5 @@ urlpatterns = [
     path('productos/', views.productos_facturacion_view, name='productos_facturacion'),
     path('pago/', views.pago, name='pago'),
     path('confirmar-venta/', views.confirmar_venta, name='confirmar_venta'),
+    path('factura/pdf/<int:pk>/', views.exportar_factura_pdf, name='exportar_factura_pdf'),
 ]
