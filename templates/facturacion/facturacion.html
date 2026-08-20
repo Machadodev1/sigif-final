@@ -5,68 +5,115 @@
 {% block content %}
 
 <header class="facturacion-header">
-    <h1>Gestión de facturación</h1>
-    <a href="{% url 'dashboard' %}">
-        <i class="bg-secondary"></i>
-    </a>
+    <div>
+        <h1>Gestión de facturación</h1>
+    </div>
 </header>
 
 <div class="menu-horizontal">
-    <a href="{% url 'factura-list' %}" class="active">Facturas</a>
-    <a href="{% url 'clientes' %}">Clientes</a>
-    <a href="{% url 'productos_facturacion' %}">Productos</a>
+    <a href="{% url 'factura-list' %}" class="{% if request.resolver_match.url_name == 'factura-list' %}active{% endif %}">Facturas</a>
+    <a href="{% url 'clientes' %}" class="{% if request.resolver_match.url_name == 'clientes' %}active{% endif %}">Clientes</a>
+    <a href="{% url 'productos_facturacion' %}" class="{% if request.resolver_match.url_name == 'productos_facturacion' %}active{% endif %}">Productos</a>
 </div>
 
 <section class="facturacion-container2">
-    <div class="facturacion-header">
+
+    <div class="fac-toolbar">
         <div>
-            <h2>Facturas recientes</h2>
-            <p>Listado de las últimas facturas generadas</p>
+            <h2 class="cv-title">Facturas recientes</h2>
+            <p class="cv-subtitle">Listado de todas las ventas generadas</p>
+        </div>
+        <div class="fac-resumen-pills">
+            <span class="fac-pill fac-pill-total">
+                <i class="bi bi-receipt"></i>
+                {{ facturas|length }} factura{{ facturas|length|pluralize:"s" }}
+            </span>
         </div>
     </div>
 
-    {% for factura in facturas %}
-        <div class="tarjetas-facturacion">
-            <div class="facturacion-info">
-                <strong>Factura #{{ factura.id }}</strong>
+    <div class="fac-grid">
 
-                <div class="extra">
-                    <span>Cliente: {{ factura.cliente.nombre }}</span>
-                    <span>Correo: {{ factura.cliente.correo }}</span>
-                    <span>Vendido por: {{ factura.usuario }}</span>
-                    <span>Fecha: {{ factura.fecha|date:"d/m/Y H:i" }}</span>
-                    <span>Descuento: ${{ factura.descuento }}</span>
-                    <span>Total: ${{ factura.total }}</span>
+        {% for factura in facturas %}
+        <div class="tarjeta-factura">
+
+            <!-- Cabecera de tarjeta -->
+            <div class="tf-header">
+                <div class="tf-header-left">
+                    <div class="tf-icon-wrap">
+                        <i class="bi bi-receipt-cutoff tf-icon"></i>
+                    </div>
+                    <div>
+                        <span class="tf-num">Factura <strong>#{{ factura.id }}</strong></span>
+                        <span class="tf-fecha">
+                            <i class="bi bi-calendar3"></i>
+                            {{ factura.fecha|date:"d/m/Y H:i" }}
+                        </span>
+                    </div>
+                </div>
+                <span class="tf-total-badge">${{ factura.total|floatformat:0 }}</span>
+            </div>
+
+            <!-- Cuerpo: cliente y vendedor -->
+            <div class="tf-body">
+                <div class="tf-meta-row">
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-person-fill"></i> Cliente</span>
+                        <span class="tf-meta-val">{{ factura.cliente.nombre }}</span>
+                    </div>
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-envelope-fill"></i> Correo</span>
+                        <span class="tf-meta-val">{{ factura.cliente.correo }}</span>
+                    </div>
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-person-badge-fill"></i> Vendedor</span>
+                        <span class="tf-meta-val">{{ factura.usuario }}</span>
+                    </div>
+                    {% if factura.descuento and factura.descuento > 0 %}
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-tag-fill"></i> Descuento</span>
+                        <span class="tf-meta-val tf-descuento">-${{ factura.descuento|floatformat:0 }}</span>
+                    </div>
+                    {% endif %}
                 </div>
 
-                <hr>
-
-                <strong>Productos vendidos</strong>
-
-                {% for detalle in factura.detalles.all %}
-                    <div class="extra">
-                        <span>Producto: {{ detalle.producto.nombre }}</span>
-                        <span>Cantidad: {{ detalle.cantidad }}</span>
-                        <span>Precio: ${{ detalle.precio }}</span>
-                        <span>Subtotal: ${{ detalle.subtotal }}</span>
+                <!-- Productos vendidos -->
+                <div class="tf-productos">
+                    <span class="tf-productos-label">Productos vendidos</span>
+                    <div class="tf-productos-lista">
+                        {% for detalle in factura.detalles.all %}
+                        <div class="tf-detalle-item">
+                            <div class="tf-detalle-info">
+                                <i class="bi bi-box-seam tf-detalle-icon"></i>
+                                <span class="tf-detalle-nombre">{{ detalle.producto.nombre }}</span>
+                            </div>
+                            <div class="tf-detalle-nums">
+                                <span class="tf-detalle-qty">x{{ detalle.cantidad }}</span>
+                                <span class="tf-detalle-precio">${{ detalle.subtotal|floatformat:0 }}</span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="tf-detalle-empty">Sin productos registrados</div>
+                        {% endfor %}
                     </div>
-                {% empty %}
-                    <div class="extra">
-                        <span>No hay productos registrados en esta factura.</span>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    {% empty %}
-        <div class="tarjetas-facturacion">
-            <div class="facturacion-info">
-                <strong>No hay facturas</strong>
-                <div class="extra">
-                    <span>Todavía no se han realizado ventas.</span>
                 </div>
             </div>
+
+            <!-- Footer con total final -->
+            <div class="tf-footer">
+                <span class="tf-footer-label">Total de la factura</span>
+                <span class="tf-footer-total">${{ factura.total|floatformat:0 }}</span>
+            </div>
+
         </div>
-    {% endfor %}
+        {% empty %}
+        <div class="fac-empty">
+            <i class="bi bi-receipt fac-empty-icon"></i>
+            <p>Todavía no se han generado facturas.</p>
+        </div>
+        {% endfor %}
+
+    </div>
+
 </section>
 
 {% endblock %}
