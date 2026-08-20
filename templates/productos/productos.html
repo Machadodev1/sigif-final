@@ -1,7 +1,8 @@
-{% extends 'base.html' %} 
-{% block title %} 
-Productos 
-{% endblock %} 
+{% extends 'base.html' %}
+
+{% block title %}
+Productos
+{% endblock %}
 
 {% block content %}
 
@@ -11,65 +12,199 @@ Productos
     <p>Administra el catálogo de productos</p>
   </div>
 </header>
+
 <section class="usuarios-container2">
+
   <div class="usuarios-header">
     <div>
       <h2>Productos Registrados</h2>
       <p>Lista de productos registrados en el sistema</p>
     </div>
+
     <form method="GET" action="{% url 'productos' %}" style="display: flex; gap: 10px; align-items: center;">
-      <input type="text" class="buscar" placeholder="Buscar productos por nombre, categoría..." name="q" value="{{ q|default:'' }}" />
-      <button type="submit" class="btn-nuevo">Buscar</button>
+
+      <input
+        type="text"
+        class="buscar"
+        placeholder="Buscar productos por nombre, categoría..."
+        name="q"
+        value="{{ q|default:'' }}"
+      />
+
+      <button type="submit" class="btn-nuevo">
+        Buscar
+      </button>
+
       {% if q %}
-      <a href="{% url 'productos' %}" class="btn-nuevo" style="background-color: #64748b; text-decoration: none;">Limpiar</a>
+        <a
+          href="{% url 'productos' %}"
+          class="btn-nuevo"
+          style="background-color: #64748b; text-decoration: none;"
+        >
+          Limpiar
+        </a>
       {% endif %}
+
     </form>
   </div>
+
+
   <div class="cards-grid">
-    <!-- TARJETA VACÍA PARA CREAR PRODUCTO -->
-    <a href="{% url 'crear_productos' %}" class="tarjetas-productos tarjeta-crear-producto">
+
+    <!-- TARJETA PARA CREAR PRODUCTO -->
+
+    <a
+      href="{% url 'crear_productos' %}"
+      class="tarjetas-productos tarjeta-crear-producto"
+    >
       <div class="tarjeta-crear-content">
-        <div class="icon-plus">+</div>
-        <strong>Crear producto</strong>
-        <span>Clic aquí para ingresar al formulario</span>
+
+        <div class="icon-plus">
+          +
+        </div>
+
+        <strong>
+          Crear producto
+        </strong>
+
+        <span>
+          Clic aquí para ingresar al formulario
+        </span>
+
       </div>
     </a>
 
+
+    <!-- LISTA DE PRODUCTOS -->
+
     {% for i in productos %}
-    <div class="tarjetas-productos">
-      <div class="pro-info">
-        <strong>{{ i.nombre }}</strong>
-        <span class="extra">
-          <span class="precio">${{ i.precio }}</span>
-          <span>Stock: {{ i.stock }}</span>
-          <span class="vl2">{{ i.categoria }}</span>
-        </span>
-        <div style="padding-top:12px; color:var(--text-muted);">
-          {{ i.descripcion|truncatechars:100 }}
-        </div>
-        <div class="extra" style="padding-top:12px;">
-          <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
-            <a href="{% url 'actualizar_productos' i.id %}" class="btn-nuevo btn-sm">Editar</a>
-            <form id="delete-form-product-{{ i.id }}" action="{% url 'eliminar_productos' i.id %}" method="POST" style="margin:0;">
-              {% csrf_token %}
-            </form>
-            <button type="button" class="btn-delete btn-sm btn-delete-trigger" data-form="#delete-form-product-{{ i.id }}" data-name="{{ i.nombre }}">Eliminar</button>
+
+      <div class="tarjetas-productos">
+
+        <div class="pro-info">
+
+          <!-- NOMBRE -->
+
+          <strong>
+            {{ i.nombre }}
+          </strong>
+
+
+          <!-- INFORMACIÓN DEL PRODUCTO -->
+
+          <span class="extra">
+
+            <span class="precio">
+              ${{ i.precio }}
+            </span>
+
+            <span>
+              Stock: {{ i.stock }}
+            </span>
+
+            <span class="vl2">
+              {{ i.categoria }}
+            </span>
+
+          </span>
+
+
+          <!-- DESCRIPCIÓN -->
+
+          <div style="padding-top:12px; color:var(--text-muted);">
+            {{ i.descripcion|truncatechars:100 }}
           </div>
+
+
+          <!-- ESTADO -->
+
+          <div class="extra" style="padding-top:12px;">
+
+            <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+
+              <!-- EDITAR -->
+
+              <a
+                href="{% url 'actualizar_productos' i.id %}"
+                class="btn-nuevo btn-sm"
+              >
+                Editar
+              </a>
+
+
+              <!-- ACTIVAR / DESACTIVAR -->
+
+              <form
+                method="POST"
+                action="{% url 'activar_desactivar_producto' i.id %}"
+                style="display:inline;"
+              >
+
+                {% csrf_token %}
+
+                {% if i.activo %}
+
+                  <button
+                    type="submit"
+                    class="btn-delete btn-sm"
+                  >
+                    DESACTIVAR
+                  </button>
+
+                {% else %}
+
+                  <button
+                    type="submit"
+                    class="btn-nuevo btn-sm"
+                  >
+                    ACTIVAR
+                  </button>
+
+                {% endif %}
+
+              </form>
+
+            </div>
+
+          </div>
+
         </div>
+
       </div>
-    </div>
+
+
     {% empty %}
-    {% if q %}
-    <div class="tarjetas-productos" style="grid-column: 1 / -1; text-align: center; padding: 25px;">
-      <div class="pro-info">
-        <strong>No se encontraron productos</strong>
-        <p class="text-muted" style="margin-top: 5px;">No se encontraron coincidencias para "{{ q }}".</p>
-      </div>
-    </div>
-    {% endif %}
+
+      {% if q %}
+
+        <div
+          class="tarjetas-productos"
+          style="grid-column: 1 / -1; text-align: center; padding: 25px;"
+        >
+
+          <div class="pro-info">
+
+            <strong>
+              No se encontraron productos
+            </strong>
+
+            <p
+              class="text-muted"
+              style="margin-top: 5px;"
+            >
+              No se encontraron coincidencias para "{{ q }}".
+            </p>
+
+          </div>
+
+        </div>
+
+      {% endif %}
+
     {% endfor %}
+
   </div>
+
 </section>
+
 {% endblock %}
-
-

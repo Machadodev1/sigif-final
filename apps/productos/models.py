@@ -12,7 +12,7 @@ class Producto (models.Model):
 )
     stock = models.IntegerField(
     default=0,
-    validators=[MinValueValidator(0,message="Debe haber minimo un producto en el stock")])
+    validators=[MinValueValidator(0,message="El stock no puede ser negativo.")])
     categoria = models.CharField(max_length=100)
     activo = models.BooleanField(default=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)

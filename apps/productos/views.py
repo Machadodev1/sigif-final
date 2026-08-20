@@ -55,16 +55,21 @@ def actualizar_producto(request, id):
     return render(request, 'productos/actualizar_productos.html', {'form': form})
 
 @requerir_rol(["Admin", "Empleado"])
-def eliminar_producto(request, id):
-    producto = get_object_or_404(Producto, id = id)
+def activar_desactivar_producto(request, id):
+
+    producto = get_object_or_404(Producto, id=id)
+
     if request.method == "POST":
-        nombre = producto.nombre
-        producto.delete()
+
+        producto.activo = not producto.activo
+        producto.save()
+
+        estado = "ACTIVÓ" if producto.activo else "DESACTIVÓ"
+
         Auditoria.objects.create(
-                usuario=request.session["logueado"]["nombre"],
-                accion=f"ELIMINO UN PRODUCTO: {nombre}",
-                modulo="PRODUCTOS"
-            )
-        return redirect('productos')
-    else:
-        return render(request, 'productos/eliminar_productos.html', {'producto': producto})
+            usuario=request.session["logueado"]["nombre"],
+            accion=f"{estado} EL PRODUCTO: {producto.nombre}",
+            modulo="PRODUCTOS"
+        )
+
+    return redirect('productos')
