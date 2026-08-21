@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{%load humanize %}
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
@@ -44,7 +44,7 @@
     <div class="tarjetas">
         <h3>Ventas del Mes</h3>
         <strong class="valor">
-            ${{ ventas_totales|floatformat:0 }}
+            ${{ ventas_totales|floatformat:0|intcomma }}
         </strong>
     </div>
 

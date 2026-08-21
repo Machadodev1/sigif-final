@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}Catálogo de Ventas{% endblock %}
 
 {% block content %}
@@ -79,11 +79,11 @@
                     <div class="tpv-stats">
                         <div class="tpv-stat">
                             <span class="tpv-stat-label">Stock</span>
-                            <span class="tpv-stat-value {% if producto.stock < 5 %}valor-alerta{% endif %}">{{ producto.stock }} uds.</span>
+                            <span class="tpv-stat-value {% if producto.stock < 5 %}valor-alerta{% endif %}">{{ producto.stock }}uds.</span>
                         </div>
                         <div class="tpv-stat">
                             <span class="tpv-stat-label">Precio</span>
-                            <span class="tpv-stat-value tpv-precio">${{ producto.precio }}</span>
+                            <span class="tpv-stat-value tpv-precio">${{ producto.precio|intcomma }}</span>
                         </div>
                     </div>
                     <button
@@ -253,7 +253,7 @@ function renderCarrito() {
         div.innerHTML = `
             <div class="carrito-item-info">
                 <strong class="carrito-item-nombre">${producto.title}</strong>
-                <span class="carrito-item-precio">$${producto.price.toFixed(0)} c/u</span>
+               <span class="carrito-item-precio">$ ${producto.price.toLocaleString('es-CO')} c/u</span>
             </div>
             <div class="carrito-item-controls">
                 <button class="ctrl-btn ctrl-minus">−</button>
@@ -263,7 +263,7 @@ function renderCarrito() {
                     <i class="bi bi-trash3"></i>
                 </button>
             </div>
-            <div class="carrito-item-subtotal">$${(producto.price * producto.cantidad).toFixed(0)}</div>
+           <div class="carrito-item-subtotal">${(producto.price * producto.cantidad).   toLocaleString('es-CO')}</div>
         `;
         div.querySelector('.ctrl-plus').addEventListener('click', () => {
             if (producto.cantidad < producto.stock) { producto.cantidad++; guardarCarrito(); renderCarrito(); }
@@ -280,13 +280,13 @@ function renderCarrito() {
     let des = total * (porcentajeAplicado / 100);
     let final = total - des;
 
-    preTexto.textContent  = `$${total.toFixed(0)}`;
-    totalTexto.textContent = `$${final.toFixed(0)}`;
+    preTexto.textContent  = `$${total.toLocaleString('es-CO')}`;
+    totalTexto.textContent = `$${final.toLocaleString('es-CO')}`;
 
     if (porcentajeAplicado > 0) {
         desRow.style.display = '';
         desTexto.textContent  = `Descuento (${porcentajeAplicado}%)`;
-        desMonto.textContent  = `-$${des.toFixed(0)}`;
+        desMonto.textContent  = `-$${des.toLocaleString('es-CO')}`;
     } else {
         desRow.style.display = 'none';
     }

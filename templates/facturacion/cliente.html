@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{%load humanize %}
 {% block title %}Facturación - Clientes{% endblock %}
 
 {% block content %}
@@ -49,7 +49,7 @@
                 </div>
                 <div style="text-align: right;">
                     <span class="tf-footer-label" style="display:block; margin-bottom: 3px;">Total Compras</span>
-                    <span class="tf-total-badge" style="background: linear-gradient(135deg, #3a56e4, #5c7cfa); padding: 5px 12px;">${{ cliente.get_total_gastado|default:0|floatformat:0 }}</span>
+                    <span class="tf-total-badge" style="background: linear-gradient(135deg, #3a56e4, #5c7cfa); padding: 5px 12px;">${{ cliente.get_total_gastado|default:0|floatformat:0|intcomma }}</span>
                 </div>
             </div>
 
@@ -83,7 +83,7 @@
                                     <i class="bi bi-receipt tf-detalle-icon" style="color: #64748b;"></i>
                                     <strong style="font-size: 0.9rem;">Factura #{{ factura.id }}</strong>
                                 </div>
-                                <span class="tf-detalle-precio" style="color: #059669;">${{ factura.total|floatformat:0 }}</span>
+                                <span class="tf-detalle-precio" style="color: #059669;">${{ factura.total|floatformat:0|intcomma }}</span>
                             </div>
                             
                             <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #64748b;">
@@ -96,7 +96,7 @@
                                     {% for detalle in factura.detalles.all %}
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
                                             <span>x{{ detalle.cantidad }} {{ detalle.producto.nombre }}</span>
-                                            <span>${{ detalle.subtotal|floatformat:0 }}</span>
+                                            <span>${{ detalle.subtotal|floatformat:0|intcomma }}</span>
                                         </div>
                                     {% endfor %}
                                 </div>

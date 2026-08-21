@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{%load humanize %}
 {% block title %}Facturación - Productos{% endblock %}
 
 {% block content %}
@@ -51,7 +51,7 @@
                 </div>
                 <div style="text-align: right;">
                     <span class="tf-footer-label" style="display:block; margin-bottom: 3px;">Subtotal</span>
-                    <span class="tf-total-badge" style="padding: 5px 12px;">${{ detalle.subtotal|floatformat:0 }}</span>
+                    <span class="tf-total-badge" style="padding: 5px 12px;">${{ detalle.subtotal|floatformat:0|intcomma }}</span>
                 </div>
             </div>
 
@@ -61,7 +61,7 @@
                 <div class="tf-meta-row" style="margin-bottom: 8px;">
                     <div class="tf-meta-item">
                         <span class="tf-meta-label"><i class="bi bi-tag-fill"></i> Precio Unit.</span>
-                        <span class="tf-meta-val">${{ detalle.precio|floatformat:0 }}</span>
+                        <span class="tf-meta-val">${{ detalle.precio|floatformat:0|intcomma }}</span>
                     </div>
                     <div class="tf-meta-item">
                         <span class="tf-meta-label"><i class="bi bi-hash"></i> Cantidad</span>
@@ -99,7 +99,7 @@
             <!-- Footer: Total de la factura asociada -->
             <div class="tf-footer" style="background: #f1f5f9;">
                 <span class="tf-footer-label">Total de esta Factura</span>
-                <span class="tf-footer-total" style="color: #475569; font-size: 1rem;">${{ detalle.factura.total|floatformat:0 }}</span>
+                <span class="tf-footer-total" style="color: #475569; font-size: 1rem;">${{ detalle.factura.total|floatformat:0|intcomma }}</span>
             </div>
 
         </div>

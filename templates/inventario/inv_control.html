@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{%load humanize %}
 {% block title %}Control de Stock{% endblock %}
 
 {% block content %}
@@ -132,8 +132,7 @@
 
                 {% if producto.precio %}
                 <div class="ts-footer">
-                    <span class="ts-footer-label">Precio unitario</span>
-                    <span class="ts-precio">${{ producto.precio }}</span>
+                    <span class="ts-precio">${{ producto.precio|intcomma }}</span>
                 </div>
                 {% endif %}
 

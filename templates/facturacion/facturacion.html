@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
 {% block title %}Facturación{% endblock %}
 
@@ -62,7 +63,7 @@
                         </span>
                     </div>
                 </div>
-                <span class="tf-total-badge">${{ factura.total|floatformat:0 }}</span>
+                <span class="tf-total-badge">$ {{ factura.total|floatformat:0|intcomma }}</span>
             </div>
 
             <!-- Cuerpo: cliente y vendedor -->
@@ -103,7 +104,7 @@
                             </div>
                             <div class="tf-detalle-nums">
                                 <span class="tf-detalle-qty">x{{ detalle.cantidad }}</span>
-                                <span class="tf-detalle-precio">${{ detalle.subtotal|floatformat:0 }}</span>
+                                <span class="tf-detalle-precio">${{ detalle.subtotal|floatformat:0|intcomma}}</span>
                             </div>
                         </div>
                         {% empty %}
@@ -116,7 +117,7 @@
             <!-- Footer con total final -->
             <div class="tf-footer">
                 <span class="tf-footer-label">Total de la factura</span>
-                <span class="tf-footer-total">${{ factura.total|floatformat:0 }}</span>
+                <span class="tf-footer-total">${{ factura.total|floatformat:0|intcomma }}</span>
             </div>
 
         </div>

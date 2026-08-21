@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
+{%load humanize %}
+{%block title %}Historial{% endblock %}
 
-{% block title %}Historial{% endblock %}
-
-{% block content %}
+{%block content %}  
 
 <header class="inventario-header">
     <h1>Gestión de inventario</h1>
@@ -62,11 +62,11 @@
                         </div>
                         <div class="detalle-item">
                             <span class="detalle-label">Precio Unit.</span>
-                            <span class="detalle-val">${{ movimiento.precio|floatformat:0 }}</span>
+                            <span class="detalle-val">${{ movimiento.precio|floatformat:0|intcomma }}</span>
                         </div>
                         <div class="detalle-item">
                             <span class="detalle-label">Valor Total</span>
-                            <span class="detalle-val destacada-entrada">${{ movimiento.valor_total|floatformat:0 }}</span>
+                            <span class="detalle-val destacada-entrada">${{ movimiento.valor_total|floatformat:0|intcomma }}</span>
                         </div>
                     </div>
 
@@ -108,7 +108,7 @@
                         </div>
                         <div class="detalle-item">
                             <span class="detalle-label">Cantidad Vendida</span>
-                            <span class="detalle-val">{{ salida.cantidad }} unid.</span>
+                            <span class="detalle-val">{{ salida.cantidad|floatformat:0|intcomma }} unid.</span>
                         </div>
                         <div class="detalle-item">
                             <span class="detalle-label">Cliente</span>
@@ -116,7 +116,7 @@
                         </div>
                         <div class="detalle-item">
                             <span class="detalle-label">Total Venta</span>
-                            <span class="detalle-val destacada-salida">${{ salida.subtotal|floatformat:0 }}</span>
+                            <span class="detalle-val destacada-salida">${{ salida.subtotal|floatformat:0|intcomma }}</span>
                         </div>
                     </div>
 
