@@ -66,7 +66,8 @@ def factura_generada(request, pk):
 
 @requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def pago(request):
-    return render(request, 'facturacion/pago.html')
+    clientes = Cliente.objects.all()
+    return render(request, 'facturacion/pago.html', {'clientes': clientes})
 
 
 @requerir_rol(["SuperAdmin","Admin", "Empleado"])
@@ -86,6 +87,8 @@ def confirmar_venta(request):
             str(data.get('descuento', 0))
         )
 
+        cliente_id = data.get('cliente_id')
+
         nombre = data.get('nombre', '').strip()
         correo = data.get('correo', '').strip()
 
@@ -103,12 +106,15 @@ def confirmar_venta(request):
 
         with transaction.atomic():
 
-            cliente, creado = Cliente.objects.get_or_create(
-                correo=correo,
-                defaults={
-                    'nombre': nombre
-                }
-            )
+            if cliente_id:
+                cliente = Cliente.objects.get(pk=int(cliente_id))
+            else:
+                cliente, creado = Cliente.objects.get_or_create(
+                    correo=correo,
+                    defaults={
+                        'nombre': nombre
+                    }
+                )
 
             total = Decimal('0.00')
             productos_validos = []
