@@ -652,6 +652,11 @@ td a[href*="eliminar"]:hover {
     color: #fff;
 }
 
+.rol.superadmin {
+    background-color: #047857;
+    color: #fff;
+}
+
 /* =========================================
    FORMS & INPUTS
    ========================================= */
