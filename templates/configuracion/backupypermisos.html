@@ -111,58 +111,7 @@
             </div>
         </div>
 
-        <div class="form-configuracion" style="max-width: 600px;">
-            <h3>Gestión de Permisos y Roles</h3>
-            <div class="form-body">
-                <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 15px;">
-                    Controla los accesos generales del sistema según el rol asignado a cada miembro del equipo.
-                </p>
-
-                <form action="" method="POST"
-                    style="box-shadow: none; padding: 0; max-width: 100%; margin-bottom: 25px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px;">
-
-                    {% csrf_token %}
-
-                    <div class="tarjetas-inv" style="gap: 10px;">
-
-                        <label style="color: #64748b; font-size: 0.85rem; font-weight: 500; text-transform: uppercase;">
-                            Asignar Rol a Usuario
-                        </label>
-
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-
-                            <select name="user_id" class="form-input" style="flex: 2; min-width: 180px;" required>
-
-                                <option value="" disabled selected>
-                                    Selecciona un usuario...
-                                </option>
-
-                                {% for u in usuarios %}
-                                <option value="{{ u.id }}">
-                                    {{ u.nombre }}
-                                </option>
-                                {% empty %}
-                                <option value="" disabled>
-                                    No hay usuarios disponibles
-                                </option>
-                                {% endfor %}
-
-                            </select>
-
-                            <select name="rol_asignar" class="form-input" style="flex: 1; min-width: 130px;" required>
-
-                                <option value="admin">Administrador</option>
-                                <option value="empleado">Empleado</option>
-
-                            </select>
-
-                            <button type="submit" class="btn-guardar" style="padding: 10px 15px;">
-                                Aplicar
-                            </button>
-
-                        </div>
-                    </div>
-                </form>
+        
 
                 <div class="tarjetas-inv">
                     <label

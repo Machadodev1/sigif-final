@@ -10,14 +10,14 @@
 
     <div class="login-card">
         <h1>Inicio de sesión</h1>
-        <p>Ingrese su usuario y contraseña</p>
+        <p>Ingrese su correo y contraseña</p>
 
         <form action="{% url 'login' %}" method="post">
             {% csrf_token %}
 
             <div class="input-group">
-                <label>Usuario</label>
-                <input type="text" name="user" required>
+                <label>Correo electrónico</label>
+                <input type="email" name="correo" required>
             </div>
 
             <div class="input-group">

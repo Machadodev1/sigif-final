@@ -93,19 +93,6 @@ let porcentajeAplicado =
         localStorage.getItem("porcentajeAplicado")
     ) || 0;
 
-// Si se selecciona un cliente existente, ocultamos el formulario de datos
-const clienteSelect = document.getElementById('clienteSelect');
-const clienteForm = document.getElementById('clienteForm');
-if(clienteSelect){
-    clienteSelect.addEventListener('change', (e) => {
-        if(e.target.value){
-            clienteForm.style.display = 'none';
-        } else {
-            clienteForm.style.display = 'block';
-        }
-    });
-}
-
 const productosFactura =
     document.getElementById("productosFactura");
 
@@ -194,8 +181,6 @@ document.getElementById("btnConfirmar")
 
         telefono:
             document.getElementById("telefono").value,
-
-        cliente_id: (document.getElementById('clienteSelect') && document.getElementById('clienteSelect').value) ? document.getElementById('clienteSelect').value : null,
 
         productos: carrito,
 

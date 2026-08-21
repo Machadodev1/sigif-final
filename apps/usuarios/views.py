@@ -14,11 +14,11 @@ from core.decoradores import requerir_rol, impedir_crear_superadmin
 
 def login_view(request):
     if request.method == "POST":
-        usuario = request.POST.get("user")
+        correo = (request.POST.get("correo") or "").strip().lower()
         contra = request.POST.get("clave")
         try:
             t = Usuarios.objects.get(
-                nombre=usuario,
+                correo__iexact=correo,
                 contra=contra
             )
 

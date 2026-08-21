@@ -35,8 +35,13 @@
           {% csrf_token %}
 
           <div class="inv-info">
-            <label>Nombre</label>
+            <label>Nombre del empleado</label>
             {{ form.nombre }}
+          </div>
+
+          <div class="inv-info">
+            <label>Correo electrónico</label>
+            {{ form.correo }}
           </div>
 
           <div class="inv-info">

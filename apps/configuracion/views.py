@@ -50,7 +50,7 @@ def backupypermisos(request):
 
             print("USUARIO:", usuario.nombre)
             print("CARGO ANTES:", usuario.cargo)
-
+    
             usuario.cargo = cargo
             usuario.save()
 
