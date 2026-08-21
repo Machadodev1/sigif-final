@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}
 Productos
 {% endblock %}
@@ -107,7 +107,7 @@ Productos
           <span class="extra">
 
             <span class="precio">
-              ${{ i.precio }}
+              ${{ i.precio|intcomma  }}
             </span>
 
             <span>

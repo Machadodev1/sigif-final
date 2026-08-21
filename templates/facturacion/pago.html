@@ -129,12 +129,12 @@ if(carrito.length === 0){
 
                     <small class="text-muted">
                         ${producto.cantidad} x
-                        $${producto.price.toFixed(2)}
+                        $${producto.price.toLocaleString("es-CO")}
                     </small>
                 </div>
 
                 <strong>
-                    $${subtotalProducto.toFixed(2)}
+                    $${subtotalProducto.toLocaleString("es-CO")}
                 </strong>
 
             </div>
@@ -149,13 +149,13 @@ const total =
     subtotal - valorDescuento;
 
 document.getElementById("subtotal").innerText =
-    "$" + subtotal.toFixed(2);
+    "$" + subtotal.toLocaleString("es-CO");
 
 document.getElementById("descuentoFactura").innerText =
-    "-$" + valorDescuento.toFixed(2);
+    "-$" + valorDescuento.toLocaleString("es-CO");
 
 document.getElementById("totalFactura").innerText =
-    "$" + total.toFixed(2);
+    "$" + total.toLocaleString("es-CO");
 
 
 document.getElementById("btnConfirmar")
