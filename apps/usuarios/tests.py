@@ -12,6 +12,24 @@ class UsuarioAuthFormTests(TestCase):
         self.assertEqual(form.fields['nombre'].label, 'Nombre del empleado')
         self.assertEqual(form.fields['correo'].label, 'Correo electrónico')
 
+    def test_formulario_muestra_mensaje_de_campo_obligatorio(self):
+        form = UsuarioForm(data={})
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('El nombre del empleado es obligatorio para continuar.', form.errors['nombre'])
+        self.assertIn('El correo electrónico es obligatorio para continuar.', form.errors['correo'])
+
+    def test_crear_usuario_con_datos_invalidos_muestra_alerta(self):
+        session = self.client.session
+        session['logueado'] = {'id': 1, 'nombre': 'Admin', 'rol': 'Admin'}
+        session.save()
+
+        response = self.client.post(reverse('crear_usuarios'), data={})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Falta información obligatoria para crear el usuario.')
+        self.assertContains(response, 'El nombre del empleado es obligatorio para continuar.')
+
     def test_editar_usuario_muestra_campo_correo_en_el_formulario(self):
         usuario = Usuarios.objects.create(
             nombre='Ana García',

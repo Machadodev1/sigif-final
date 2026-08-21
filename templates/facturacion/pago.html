@@ -170,17 +170,15 @@ document.getElementById("btnConfirmar")
 
     const datos = {
 
-        nombre:
-            document.getElementById("nombre").value,
+        cliente_id: clienteSelect ? clienteSelect.value : null,
 
-        documento:
-            document.getElementById("documento").value,
+        nombre: document.getElementById("nombre").value,
 
-        correo:
-            document.getElementById("correo").value,
+        documento: document.getElementById("documento").value,
 
-        telefono:
-            document.getElementById("telefono").value,
+        correo: document.getElementById("correo").value,
+
+        telefono: document.getElementById("telefono").value,
 
         productos: carrito,
 
@@ -257,6 +255,27 @@ function getCookie(name){
 
     return cookieValue;
 }
+
+// Mostrar/ocultar formulario de registro de cliente según selección
+const clienteSelect = document.getElementById("clienteSelect");
+const clienteForm = document.getElementById("clienteForm");
+
+function toggleClienteForm(){
+    if(!clienteForm || !clienteSelect) return;
+
+    // Si hay un cliente seleccionado (valor no vacío) ocultar el formulario
+    if(clienteSelect.value){
+        clienteForm.style.display = "none";
+    }else{
+        clienteForm.style.display = ""; // volver a mostrar
+    }
+}
+
+// Estado inicial
+toggleClienteForm();
+
+// Escuchar cambios en el select
+clienteSelect && clienteSelect.addEventListener("change", toggleClienteForm);
 
 </script>
 

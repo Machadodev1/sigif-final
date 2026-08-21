@@ -120,19 +120,21 @@ def usuarios(request):
 @impedir_crear_superadmin
 def crear_usuarios(request):
     if request.method == 'POST':
-        form = UsuarioForm (request.POST)
-        if form.is_valid():  
+        form = UsuarioForm(request.POST)
+        if form.is_valid():
             usuarios = form.save()
             Auditoria.objects.create(
                 usuario=request.session["logueado"]["nombre"],
                 accion=f"CREO USUARIO: {usuarios.nombre}",
                 modulo="USUARIOS"
             )
-
             return redirect('usuarios')
-    else:
-        form = UsuarioForm ()
-    return render(request, "usuarios/crear_usuarios.html",  {'form': form})
+
+        messages.error(request, "Falta información obligatoria para crear el usuario.")
+        return render(request, "usuarios/crear_usuarios.html", {'form': form})
+
+    form = UsuarioForm()
+    return render(request, "usuarios/crear_usuarios.html", {'form': form})
 
 
 @requerir_rol(["SuperAdmin", "Admin"])
@@ -141,7 +143,7 @@ def editar_usuarios(request, id):
     usuarios = get_object_or_404(Usuarios, id=id)
     if request.method == 'POST':
         form = UsuarioForm(request.POST, instance=usuarios)
-        if  form.is_valid():
+        if form.is_valid():
             usuarios = form.save()
             Auditoria.objects.create(
                 usuario=request.session["logueado"]["nombre"],
@@ -149,8 +151,11 @@ def editar_usuarios(request, id):
                 modulo="USUARIOS"
             )
             return redirect('usuarios')
-    else:
-        form = UsuarioForm(instance=usuarios)
+
+        messages.error(request, "Falta información obligatoria para actualizar el usuario.")
+        return render(request, 'usuarios/editar_usuarios.html', {'form': form})
+
+    form = UsuarioForm(instance=usuarios)
     return render(request, 'usuarios/editar_usuarios.html', {'form': form})
 
 @requerir_rol(["SuperAdmin", "Admin"])

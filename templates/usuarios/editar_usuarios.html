@@ -16,12 +16,12 @@
       <div class="form-body">
 
         {% if form.errors %}
-          <div class="alert error">
-            <strong>Errores:</strong>
+          <div class="alert alert-danger">
+            <strong>Por favor corrige los siguientes datos:</strong>
             <ul>
               {% for field in form %}
                 {% for error in field.errors %}
-                  <li>{{ field.label }}: {{ error }}</li>
+                  <li><strong>{{ field.label }}:</strong> {{ error }}</li>
                 {% endfor %}
               {% endfor %}
               {% for error in form.non_field_errors %}
