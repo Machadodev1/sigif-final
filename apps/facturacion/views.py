@@ -21,7 +21,7 @@ class FacturaListView(ListView):
     context_object_name = 'facturas'
 
     def dispatch(self, request, *args, **kwargs):
-        return requerir_rol(["Admin", "Empleado"])(super().dispatch)(request, *args, **kwargs)
+        return requerir_rol(["SuperAdmin","Admin", "Empleado"])(super().dispatch)(request, *args, **kwargs)
 
 
 class FacturaDetailView(DetailView):
@@ -206,7 +206,7 @@ def confirmar_venta(request):
             'message': str(e)
         }, status=400)
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def exportar_factura_pdf(request, pk):
     # 1. Obtener la factura o retornar 404 si no existe
     factura = get_object_or_404(Factura, pk=pk)
