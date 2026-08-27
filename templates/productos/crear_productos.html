@@ -2,65 +2,149 @@
 {% block title %}Crear Producto{% endblock %}
 {% block content %}
 
-<div class="usuarios-header productos-header">
-  <div>
-    <div class="form-title-brand">
-      <h2>Crear Producto</h2>
-      <span class="brand-sub">SIGIF — Catálogo</span>
-      <p>Registra un nuevo producto en el sistema</p>
+<header class="inventario-header">
+    <div>
+        <h1>Gestión de productos</h1>
     </div>
-  </div>
-  <div class="header-actions">
-    <a href="{% url 'productos' %}" class="btn-nuevo">Volver</a>
-  </div>
-</div>
+</header>
 
-<div class="contenedor-formularios">
-  <div class="form-configuracion">
-    <h3>Datos del producto</h3>
-    <div class="form-body">
+<section class="inventario-container2">
 
-      {% if form.errors %}
-        <div class="alert error">
-          <strong>Errores:</strong>
-          <ul>
+    <div class="cv-toolbar mb-4">
+        <div class="cv-toolbar-left">
+            <h2 class="cv-title">Crear nuevo producto</h2>
+            <p class="cv-subtitle">Completa la información del producto para agregarlo al catálogo y control de inventario</p>
+        </div>
+        <div class="cv-toolbar-right">
+            <a href="{% url 'productos' %}" class="cs-filtro-btn" style="padding: 9px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #cbd5e1; color: #475569; font-weight: 600;">
+                <i class="bi bi-arrow-left"></i> Volver a la lista
+            </a>
+        </div>
+    </div>
+
+    {% if form.errors %}
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <strong>Por favor corrige los siguientes errores:</strong>
+        </div>
+        <ul class="mb-0 mt-2">
             {% for field in form %}
-              {% for error in field.errors %}
-                <li>{{ field.label }}: {{ error }}</li>
-              {% endfor %}
+                {% for error in field.errors %}
+                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                {% endfor %}
             {% endfor %}
             {% for error in form.non_field_errors %}
-              <li>{{ error }}</li>
+                <li>{{ error }}</li>
             {% endfor %}
-          </ul>
-        </div>
-      {% endif %}
-
-      <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-
-        {% for field in form.visible_fields %}
-          <div class="inv-info field-with-meta">
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.help_text %}
-              <div class="field-help">{{ field.help_text }}</div>
-            {% endif %}
-            {% if field.errors %}
-              <div class="alert error">{{ field.errors|join:", " }}</div>
-            {% endif %}
-          </div>
-        {% endfor %}
-
-        <div class="actions-container">
-          <a href="{% url 'productos' %}" class="btn-nuevo btn-sm">Cancelar</a>
-          <button type="submit" class="btn-guardar">Crear producto</button>
-        </div>
-
-      </form>
-
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-  </div>
-</div>
+    {% endif %}
+
+    <div class="form-card-responsive">
+        <div class="form-card-header">
+            <div class="form-card-header-left">
+                <div class="form-card-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <div>
+                    <h3 class="form-card-title">Información del Producto</h3>
+                    <span class="form-card-subtitle">Ingresa los datos comerciales, stock y categoría</span>
+                </div>
+            </div>
+        </div>
+
+        <form method="POST" class="form-card-body">
+            {% csrf_token %}
+
+            <div class="row g-3 g-md-4">
+                <!-- Nombre -->
+                <div class="col-12 col-md-7">
+                    <label for="{{ form.nombre.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                        <i class="bi bi-tag me-1 text-primary"></i> {{ form.nombre.label }} <span class="text-danger">*</span>
+                    </label>
+                    {{ form.nombre }}
+                    {% if form.nombre.errors %}
+                        <div class="text-danger small mt-1">{{ form.nombre.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Categoría -->
+                <div class="col-12 col-md-5">
+                    <label for="{{ form.categoria.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                        <i class="bi bi-folder2 me-1 text-primary"></i> {{ form.categoria.label }} <span class="text-danger">*</span>
+                    </label>
+                    {{ form.categoria }}
+                    {% if form.categoria.errors %}
+                        <div class="text-danger small mt-1">{{ form.categoria.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Precio -->
+                <div class="col-12 col-sm-6">
+                    <label for="{{ form.precio.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                        <i class="bi bi-currency-dollar me-1 text-success"></i> {{ form.precio.label }} <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-success fw-bold">$</span>
+                        {{ form.precio }}
+                    </div>
+                    {% if form.precio.errors %}
+                        <div class="text-danger small mt-1">{{ form.precio.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Stock -->
+                <div class="col-12 col-sm-6">
+                    <label for="{{ form.stock.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                        <i class="bi bi-boxes me-1 text-primary"></i> {{ form.stock.label }} <span class="text-danger">*</span>
+                    </label>
+                    {{ form.stock }}
+                    {% if form.stock.errors %}
+                        <div class="text-danger small mt-1">{{ form.stock.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Descripción -->
+                <div class="col-12">
+                    <label for="{{ form.descripcion.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                        <i class="bi bi-card-text me-1 text-secondary"></i> {{ form.descripcion.label }}
+                    </label>
+                    {{ form.descripcion }}
+                    <small class="text-muted d-block mt-1">Breve resumen de especificaciones o detalles técnicos del producto.</small>
+                    {% if form.descripcion.errors %}
+                        <div class="text-danger small mt-1">{{ form.descripcion.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Activo Switch -->
+                <div class="col-12">
+                    <div class="form-card-switch-wrap">
+                        <div class="form-check form-switch mb-0 d-flex align-items-center">
+                            {{ form.activo }}
+                            <label class="form-check-label ms-2 fw-semibold text-dark cursor-pointer" for="{{ form.activo.id_for_label }}">
+                                {{ form.activo.label }}
+                            </label>
+                        </div>
+                        <span class="text-muted small">Disponible para facturación y visualización en el inventario.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="form-card-actions">
+                <a href="{% url 'productos' %}" class="form-btn-cancel">
+                    Cancelar
+                </a>
+                <button type="submit" class="form-btn-submit">
+                    <i class="bi bi-check2-circle"></i> Guardar Producto
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+</section>
 
 {% endblock %}

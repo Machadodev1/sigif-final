@@ -1931,3 +1931,161 @@ body.login-body {
 }
 .tf-footer-label { font-size: 0.78rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
 .tf-footer-total { font-size: 1.15rem; font-weight: 800; color: #059669; }
+
+/* =========================================
+   RESPONSIVE FORM CARDS (Crear / Actualizar)
+   ========================================= */
+.form-card-responsive {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    overflow: hidden;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+}
+.form-card-header {
+    background: linear-gradient(135deg, #f8faff 0%, #eff4ff 100%);
+    padding: 20px 24px;
+    border-bottom: 1px solid #e8eef8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+.form-card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.form-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3a56e4, #5c7cfa);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+}
+.form-card-title {
+    margin: 0;
+    font-size: 1.18rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+.form-card-subtitle {
+    font-size: 0.84rem;
+    color: #64748b;
+    margin-top: 2px;
+    display: block;
+}
+.form-card-body {
+    padding: clamp(18px, 4vw, 32px);
+}
+.form-card-switch-wrap {
+    padding: 16px 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.form-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+}
+.form-btn-cancel {
+    padding: 10px 24px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: #475569;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.form-btn-cancel:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+.form-btn-submit {
+    padding: 10px 28px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #3a56e4, #5c7cfa);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(58, 86, 228, 0.25);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.form-btn-submit:hover {
+    opacity: 0.95;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(58, 86, 228, 0.35);
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    .main-container {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 16px !important;
+    }
+    .inventario-container2, .usuarios-container2, .facturacion-container2 {
+        padding: 16px !important;
+    }
+    .cv-toolbar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 16px !important;
+    }
+    .cv-toolbar-right {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .cv-search-wrapper, .cv-search-input {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    .cs-filtros {
+        overflow-x: auto !important;
+        padding-bottom: 4px !important;
+        width: 100% !important;
+    }
+    .form-card-actions {
+        flex-direction: column-reverse !important;
+        width: 100% !important;
+    }
+    .form-btn-cancel, .form-btn-submit {
+        width: 100% !important;
+        text-align: center !important;
+    }
+    .form-card-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+}

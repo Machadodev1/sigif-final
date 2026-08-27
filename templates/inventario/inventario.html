@@ -173,8 +173,6 @@
 
     </section>
 
-</div>
-
 <!-- ===== PANEL CARRITO ===== -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="carritoPanel">
     <div class="offcanvas-header carrito-header">
@@ -239,8 +237,21 @@
             </div>
         </div>
     </div>
+</div>
 
 <script>
+/* ---- Variables globales del carrito ---- */
+let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+let porcentajeAplicado = parseFloat(localStorage.getItem('porcentajeAplicado')) || 0;
+let productoAEliminar = null;
+const codi = {
+    'DESC10': 10,
+    'DESCUENTO10': 10,
+    'PROMO20': 20,
+    'OFERTA50': 50,
+    'SUPER30': 30
+};
+
 /* ---- DOM refs ---- */
 const listaCarrito   = document.getElementById('listaCarrito');
 const totalTexto     = document.getElementById('total');
@@ -273,7 +284,7 @@ document.querySelectorAll('.cs-filtro-btn').forEach(btn => {
 function aplicarFiltros() {
     const q = buscador ? buscador.value.toLowerCase().trim() : '';
     document.querySelectorAll('.tarjeta-producto-venta').forEach(card => {
-        const nombreMatch = card.dataset.nombre.includes(q) || card.dataset.id.includes(q);
+        const nombreMatch = (card.dataset.nombre || '').includes(q) || (card.dataset.id || '').includes(q);
         const estadoMatch  = filtroActual === 'todos' || card.dataset.estado === filtroActual;
         card.style.display = (nombreMatch && estadoMatch) ? '' : 'none';
     });
@@ -301,11 +312,18 @@ function aplicarFiltros() {
 /* ---- Add to cart ---- */
 document.querySelectorAll('.agregar').forEach(btn => {
     btn.addEventListener('click', () => {
+        const id = parseInt(btn.dataset.id);
+        const stock = parseInt(btn.dataset.stock) || 0;
+        const price = parseFloat(btn.dataset.price) || 0;
+        const title = btn.dataset.title;
+
+        if (stock <= 0) return;
+
         const producto = {
-            id:       parseInt(btn.dataset.id),
-            title:    btn.dataset.title,
-            price:    parseFloat(btn.dataset.price),
-            stock:    parseInt(btn.dataset.stock),
+            id:       id,
+            title:    title,
+            price:    price,
+            stock:    stock,
             cantidad: 1
         };
         agregarAlCarrito(producto);
@@ -315,7 +333,12 @@ document.querySelectorAll('.agregar').forEach(btn => {
 function agregarAlCarrito(producto) {
     const existe = carrito.find(p => p.id === producto.id);
     if (existe) {
-        if (existe.cantidad < existe.stock) existe.cantidad++;
+        if (existe.cantidad < existe.stock) {
+            existe.cantidad++;
+        } else {
+            alert('No hay más unidades disponibles de este producto.');
+            return;
+        }
     } else {
         carrito.push(producto);
     }
@@ -329,6 +352,7 @@ function guardarCarrito() {
 }
 
 function renderCarrito() {
+    if (!listaCarrito) return;
     listaCarrito.innerHTML = '';
     let total = 0;
 
@@ -343,73 +367,110 @@ function renderCarrito() {
         div.innerHTML = `
             <div class="carrito-item-info">
                 <strong class="carrito-item-nombre">${producto.title}</strong>
-               <span class="carrito-item-precio">$ ${producto.price.toLocaleString('es-CO')} c/u</span>
+               <span class="carrito-item-precio">$${producto.price.toLocaleString('es-CO')} c/u</span>
             </div>
             <div class="carrito-item-controls">
-                <button class="ctrl-btn ctrl-minus">−</button>
+                <button type="button" class="ctrl-btn ctrl-minus">−</button>
                 <span class="ctrl-qty">${producto.cantidad}</span>
-                <button class="ctrl-btn ctrl-plus">+</button>
-                <button class="ctrl-btn ctrl-del" data-bs-toggle="modal" data-bs-target="#modalAviso">
+                <button type="button" class="ctrl-btn ctrl-plus">+</button>
+                <button type="button" class="ctrl-btn ctrl-del" data-bs-toggle="modal" data-bs-target="#modalAviso">
                     <i class="bi bi-trash3"></i>
                 </button>
             </div>
-           <div class="carrito-item-subtotal">${(producto.price * producto.cantidad).   toLocaleString('es-CO')}</div>
+           <div class="carrito-item-subtotal">$${(producto.price * producto.cantidad).toLocaleString('es-CO')}</div>
         `;
         div.querySelector('.ctrl-plus').addEventListener('click', () => {
-            if (producto.cantidad < producto.stock) { producto.cantidad++; guardarCarrito(); renderCarrito(); }
+            if (producto.cantidad < producto.stock) {
+                producto.cantidad++;
+                guardarCarrito();
+                renderCarrito();
+            } else {
+                alert('Has alcanzado el límite de stock disponible.');
+            }
         });
         div.querySelector('.ctrl-minus').addEventListener('click', () => {
             producto.cantidad--;
-            if (producto.cantidad <= 0) carrito = carrito.filter(p => p.id !== producto.id);
-            guardarCarrito(); renderCarrito();
+            if (producto.cantidad <= 0) {
+                carrito = carrito.filter(p => p.id !== producto.id);
+            }
+            guardarCarrito();
+            renderCarrito();
         });
-        div.querySelector('.ctrl-del').addEventListener('click', () => { productoAEliminar = producto; });
+        div.querySelector('.ctrl-del').addEventListener('click', () => {
+            productoAEliminar = producto;
+        });
         listaCarrito.appendChild(div);
     });
 
     let des = total * (porcentajeAplicado / 100);
     let final = total - des;
 
-    preTexto.textContent  = `$${total.toLocaleString('es-CO')}`;
-    totalTexto.textContent = `$${final.toLocaleString('es-CO')}`;
+    if (preTexto) preTexto.textContent = `$${total.toLocaleString('es-CO')}`;
+    if (totalTexto) totalTexto.textContent = `$${final.toLocaleString('es-CO')}`;
 
     if (porcentajeAplicado > 0) {
-        desRow.style.display = '';
-        desTexto.textContent  = `Descuento (${porcentajeAplicado}%)`;
-        desMonto.textContent  = `-$${des.toLocaleString('es-CO')}`;
+        if (desRow) desRow.style.display = '';
+        if (desTexto) desTexto.textContent = `Descuento (${porcentajeAplicado}%)`;
+        if (desMonto) desMonto.textContent = `-$${des.toLocaleString('es-CO')}`;
     } else {
-        desRow.style.display = 'none';
+        if (desRow) desRow.style.display = 'none';
     }
 
     const totalItems = carrito.reduce((acc, p) => acc + p.cantidad, 0);
-    carritoCount.textContent = `${totalItems} producto${totalItems !== 1 ? 's' : ''}`;
-    cartBadge.textContent = totalItems;
-    cartBadge.style.display = totalItems > 0 ? 'flex' : 'none';
+    if (carritoCount) carritoCount.textContent = `${totalItems} producto${totalItems !== 1 ? 's' : ''}`;
+    if (cartBadge) {
+        cartBadge.textContent = totalItems;
+        cartBadge.style.display = totalItems > 0 ? 'flex' : 'none';
+    }
 }
 
-document.getElementById('btnEliminar').addEventListener('click', () => {
-    if (productoAEliminar) {
-        carrito = carrito.filter(p => p.id !== productoAEliminar.id);
-        guardarCarrito(); renderCarrito(); productoAEliminar = null;
-    }
-    bootstrap.Modal.getInstance(document.getElementById('modalAviso')).hide();
-});
+const btnEliminar = document.getElementById('btnEliminar');
+if (btnEliminar) {
+    btnEliminar.addEventListener('click', () => {
+        if (productoAEliminar) {
+            carrito = carrito.filter(p => p.id !== productoAEliminar.id);
+            guardarCarrito();
+            renderCarrito();
+            productoAEliminar = null;
+        }
+        const modalEl = document.getElementById('modalAviso');
+        if (modalEl) {
+            const modalInstance = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+            modalInstance.hide();
+        }
+    });
+}
 
-btndes.addEventListener('click', () => {
-    const codigo = descInput.value.trim();
-    porcentajeAplicado = codi[codigo] || 0;
-    localStorage.setItem('porcentajeAplicado', porcentajeAplicado);
-    renderCarrito();
-});
+if (btndes && descInput) {
+    btndes.addEventListener('click', () => {
+        const codigo = descInput.value.trim().toUpperCase();
+        porcentajeAplicado = codi[codigo] || 0;
+        if (codigo && !(codigo in codi)) {
+            alert('Código de descuento no válido');
+        }
+        localStorage.setItem('porcentajeAplicado', porcentajeAplicado);
+        renderCarrito();
+    });
+}
 
 function mostrarToast() {
-    new bootstrap.Toast(document.getElementById('toastAdd')).show();
+    const toastEl = document.getElementById('toastAdd');
+    if (toastEl && window.bootstrap) {
+        const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+        toast.show();
+    }
 }
 
-document.getElementById('btnPagar').addEventListener('click', () => {
-    if (carrito.length === 0) { alert('El carrito está vacío'); return; }
-    window.location.href = '/facturacion/pago/';
-});
+const btnPagar = document.getElementById('btnPagar');
+if (btnPagar) {
+    btnPagar.addEventListener('click', () => {
+        if (carrito.length === 0) {
+            alert('El carrito está vacío');
+            return;
+        }
+        window.location.href = '/facturacion/pago/';
+    });
+}
 
 renderCarrito();
 </script>

@@ -1,81 +1,174 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Usuario{% endblock %}
 
 {% block content %}
 
-  <div class="usuarios-header">
+<header class="inventario-header">
     <div>
-      <h2>Editar Usuario</h2>
-      <p>Actualiza los datos del usuario</p>
+        <h1>Gestión de usuarios</h1>
     </div>
-    <a href="{% url 'usuarios' %}" class="btn-nuevo">Volver</a>
-  </div>
+</header>
 
-  <div class="contenedor-formularios">
-    <div class="form-configuracion">
-      <h3>Datos del usuario</h3>
-      <div class="form-body">
+<section class="inventario-container2">
 
-        {% if form.errors %}
-          <div class="alert alert-danger">
-            <strong>Por favor corrige los siguientes datos:</strong>
-            <ul>
-              {% for field in form %}
+    <div class="cv-toolbar mb-4">
+        <div class="cv-toolbar-left">
+            <h2 class="cv-title">Actualizar usuario</h2>
+            <p class="cv-subtitle">Modifica la información personal, credenciales, permisos y estado del usuario</p>
+        </div>
+        <div class="cv-toolbar-right">
+            <a href="{% url 'usuarios' %}" class="cs-filtro-btn" style="padding: 9px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #cbd5e1; color: #475569; font-weight: 600;">
+                <i class="bi bi-arrow-left"></i> Volver a la lista
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert {% if 'error' in message.tags or message.tags == 'error' %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags or message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show mb-4" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if form.errors %}
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <strong>Por favor corrige los siguientes errores:</strong>
+        </div>
+        <ul class="mb-0 mt-2">
+            {% for field in form %}
                 {% for error in field.errors %}
-                  <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
                 {% endfor %}
-              {% endfor %}
-              {% for error in form.non_field_errors %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
                 <li>{{ error }}</li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
-
-        <form method="POST">
-          {% csrf_token %}
-
-          <div class="inv-info">
-            <label>Nombre del empleado</label>
-            {{ form.nombre }}
-          </div>
-
-          <div class="inv-info">
-            <label>Correo electrónico</label>
-            {{ form.correo }}
-          </div>
-
-          <div class="inv-info">
-            <label>Contraseña</label>
-            {{ form.contra }}
-          </div>
-
-          <div class="inv-info">
-            <label>Teléfono</label>
-            {{ form.telefono }}
-          </div>
-
-          <div class="inv-info">
-            <label>Activo</label>
-            {{ form.activo }}
-          </div>
-
-          <div class="inv-info">
-            <label>Fecha de inicio</label>
-            {{ form.fecha_inicio }}
-          </div>
-
-          <div class="inv-info">
-            <label>Cargo</label>
-            {{ form.cargo }}
-          </div>
-
-          <div class="actions-container">
-            <button type="submit" class="btn-guardar">Guardar</button>
-          </div>
-        </form>
-
-      </div>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-  </div>
+    {% endif %}
+
+    <div class="form-card-responsive">
+        <div class="form-card-header">
+            <div class="form-card-header-left">
+                <div class="form-card-icon">
+                    <i class="bi bi-person-gear"></i>
+                </div>
+                <div>
+                    <h3 class="form-card-title">Editar Perfil de Usuario</h3>
+                    <span class="form-card-subtitle">Actualiza los campos necesarios y confirma los cambios</span>
+                </div>
+            </div>
+            {% if form.instance.id %}
+            <span class="ts-id" style="font-size: 0.85rem; font-weight: 700; color: #3a56e4; background: #e0e7ff; padding: 5px 14px; border-radius: 20px;">
+                ID #{{ form.instance.id }}
+            </span>
+            {% endif %}
+        </div>
+
+        <form method="POST" class="form-card-body">
+            {% csrf_token %}
+
+            <div class="row g-3 g-md-4">
+                <!-- Nombre -->
+                <div class="col-12 col-md-6">
+                    <label for="{{ form.nombre.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                        <i class="bi bi-person me-1 text-primary"></i> {{ form.nombre.label }} <span class="text-danger">*</span>
+                    </label>
+                    {{ form.nombre }}
+                    {% if form.nombre.errors %}
+                        <div class="text-danger small mt-1">{{ form.nombre.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Correo -->
+                <div class="col-12 col-md-6">
+                    <label for="{{ form.correo.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                        <i class="bi bi-envelope me-1 text-primary"></i> {{ form.correo.label }} <span class="text-danger">*</span>
+                    </label>
+                    {{ form.correo }}
+                    {% if form.correo.errors %}
+                        <div class="text-danger small mt-1">{{ form.correo.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Contraseña -->
+                <div class="col-12 col-md-6">
+                    <label for="{{ form.contra.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                        <i class="bi bi-key me-1 text-primary"></i> {{ form.contra.label }} <span class="text-danger">*</span>
+                    </label>
+                    {{ form.contra }}
+                    {% if form.contra.errors %}
+                        <div class="text-danger small mt-1">{{ form.contra.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Teléfono -->
+                <div class="col-12 col-md-6">
+                    <label for="{{ form.telefono.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                        <i class="bi bi-telephone me-1 text-primary"></i> {{ form.telefono.label }} <span class="text-danger">*</span>
+                    </label>
+                    {{ form.telefono }}
+                    {% if form.telefono.errors %}
+                        <div class="text-danger small mt-1">{{ form.telefono.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Rol / Cargo -->
+                <div class="col-12 col-md-6">
+                    <label for="{{ form.cargo.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                        <i class="bi bi-shield-check me-1 text-primary"></i> {{ form.cargo.label }} <span class="text-danger">*</span>
+                    </label>
+                    {{ form.cargo }}
+                    {% if form.cargo.errors %}
+                        <div class="text-danger small mt-1">{{ form.cargo.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Fecha de Inicio -->
+                <div class="col-12 col-md-6">
+                    <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label fw-semibold text-secondary small">
+                        <i class="bi bi-calendar-event me-1 text-primary"></i> {{ form.fecha_inicio.label }}
+                    </label>
+                    {{ form.fecha_inicio }}
+                    {% if form.fecha_inicio.errors %}
+                        <div class="text-danger small mt-1">{{ form.fecha_inicio.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Activo Switch -->
+                <div class="col-12">
+                    <div class="form-card-switch-wrap">
+                        <div class="form-check form-switch mb-0 d-flex align-items-center">
+                            {{ form.activo }}
+                            <label class="form-check-label ms-2 fw-semibold text-dark cursor-pointer" for="{{ form.activo.id_for_label }}">
+                                {{ form.activo.label }}
+                            </label>
+                        </div>
+                        <span class="text-muted small">Permite que el usuario inicie sesión y opere en los módulos asignados.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="form-card-actions">
+                <a href="{% url 'usuarios' %}" class="form-btn-cancel">
+                    Cancelar
+                </a>
+                <button type="submit" class="form-btn-submit">
+                    <i class="bi bi-save"></i> Guardar Cambios
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+</section>
 
 {% endblock %}
