@@ -12,7 +12,7 @@
 
     <div class="menu-horizontal">
         <a href="{% url 'inv_control' %}" class="{% if request.resolver_match.url_name == 'inv_control' %}active{% endif %}">Control de stock</a>
-        <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Catálogo de ventas</a>
+        <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Inventario</a>
         <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">Historial de movimientos</a>
     </div>
 

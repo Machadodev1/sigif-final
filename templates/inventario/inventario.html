@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load humanize %}
-{% block title %}Catálogo de Ventas{% endblock %}
+{% block title %}Inventario{% endblock %}
 
 {% block content %}
 
@@ -24,7 +24,7 @@
 
     <div class="menu-horizontal">
         <a href="{% url 'inv_control' %}" class="{% if request.resolver_match.url_name == 'inv_control' %}active{% endif %}">Control de stock</a>
-        <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Catálogo de ventas</a>
+        <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Inventario</a>
         <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">Historial de movimientos</a>
     </div>
 
@@ -32,13 +32,19 @@
 
         <div class="cv-toolbar">
             <div class="cv-toolbar-left">
-                <h2 class="cv-title">Catálogo de Ventas</h2>
-                <p class="cv-subtitle">Selecciona productos para agregar al carrito</p>
+                <h2 class="cv-title">Inventario</h2>
+                <p class="cv-subtitle">Selecciona productos para agregar al carrito o consultar disponibilidad</p>
             </div>
             <div class="cv-toolbar-right">
                 <div class="cv-search-wrapper">
                     <i class="bi bi-search cv-search-icon"></i>
                     <input type="text" id="buscadorProductos" class="cv-search-input" placeholder="Buscar por nombre o ID…">
+                </div>
+                <div class="cs-filtros">
+                    <button class="cs-filtro-btn active" data-filtro="todos">Todos</button>
+                    <button class="cs-filtro-btn" data-filtro="ok">En stock</button>
+                    <button class="cs-filtro-btn" data-filtro="bajo">Stock bajo</button>
+                    <button class="cs-filtro-btn" data-filtro="agotado">Agotado</button>
                 </div>
                 <button id="btnCarrito" class="cv-cart-btn" data-bs-toggle="offcanvas" data-bs-target="#carritoPanel">
                     <i class="bi bi-cart3"></i>
@@ -48,44 +54,99 @@
             </div>
         </div>
 
+        <!-- Resumen rápido de métricas -->
+        <div class="cs-resumen">
+            <div class="cs-resumen-card cs-total">
+                <i class="bi bi-grid-3x3-gap cs-resumen-icon"></i>
+                <div>
+                    <span class="cs-resumen-num" id="totalProductos">{{ producto|length }}</span>
+                    <span class="cs-resumen-label">Total productos</span>
+                </div>
+            </div>
+            <div class="cs-resumen-card cs-disponible">
+                <i class="bi bi-check-circle cs-resumen-icon"></i>
+                <div>
+                    <span class="cs-resumen-num" id="totalOk">–</span>
+                    <span class="cs-resumen-label">Con stock</span>
+                </div>
+            </div>
+            <div class="cs-resumen-card cs-alerta">
+                <i class="bi bi-exclamation-triangle cs-resumen-icon"></i>
+                <div>
+                    <span class="cs-resumen-num" id="totalBajo">–</span>
+                    <span class="cs-resumen-label">Stock bajo (&lt;5)</span>
+                </div>
+            </div>
+            <div class="cs-resumen-card cs-agotado">
+                <i class="bi bi-x-circle cs-resumen-icon"></i>
+                <div>
+                    <span class="cs-resumen-num" id="totalAgotado">–</span>
+                    <span class="cs-resumen-label">Agotados</span>
+                </div>
+            </div>
+        </div>
+
         <div class="cards-grid" id="productosGrid">
             {% for producto in producto %}
-            <div class="tarjeta-producto-venta {% if producto.stock == 0 %}sin-stock{% elif producto.stock < 5 %}stock-bajo{% endif %}"
-                 data-nombre="{{ producto.nombre|lower }}"
-                 data-id="{{ producto.id }}">
+            <div class="tarjeta-producto-venta tarjeta-stock
+                {% if producto.stock == 0 %}ts-agotado sin-stock
+                {% elif producto.stock < 5 %}ts-bajo stock-bajo
+                {% else %}ts-ok{% endif %}"
+                data-nombre="{{ producto.nombre|lower }}"
+                data-id="{{ producto.id }}"
+                data-estado="{% if producto.stock == 0 %}agotado{% elif producto.stock < 5 %}bajo{% else %}ok{% endif %}">
 
-                <div class="tpv-header">
-                    <span class="tpv-id">ID #{{ producto.id }}</span>
+                <div class="ts-header tpv-header">
+                    <span class="ts-id tpv-id">ID #{{ producto.id }}</span>
                     {% if producto.stock == 0 %}
-                        <span class="tpv-badge agotado">Agotado</span>
+                        <span class="ts-badge ts-badge-agotado tpv-badge agotado"><i class="bi bi-x-circle-fill"></i> Agotado</span>
                     {% elif producto.stock < 5 %}
-                        <span class="tpv-badge stock-critico">Stock bajo</span>
+                        <span class="ts-badge ts-badge-bajo tpv-badge stock-critico"><i class="bi bi-exclamation-triangle-fill"></i> Stock bajo</span>
                     {% else %}
-                        <span class="tpv-badge disponible">Disponible</span>
+                        <span class="ts-badge ts-badge-ok tpv-badge disponible"><i class="bi bi-check-circle-fill"></i> Disponible</span>
                     {% endif %}
                 </div>
 
-                <div class="tpv-body">
-                    <div class="tpv-icon-wrap">
-                        <i class="bi bi-box-seam tpv-icon"></i>
+                <div class="ts-body tpv-body">
+                    <div class="ts-icon-wrap
+                        {% if producto.stock == 0 %}ts-icon-agotado
+                        {% elif producto.stock < 5 %}ts-icon-bajo
+                        {% else %}ts-icon-ok{% endif %}">
+                        <i class="bi bi-box-seam"></i>
                     </div>
-                    <strong class="tpv-nombre">{{ producto.nombre }}</strong>
+                    <strong class="ts-nombre tpv-nombre">{{ producto.nombre }}</strong>
                     {% if producto.categoria %}
-                    <span class="tpv-categoria">{{ producto.categoria }}</span>
+                    <span class="ts-categoria tpv-categoria">{{ producto.categoria }}</span>
                     {% endif %}
                 </div>
 
-                <div class="tpv-footer">
-                    <div class="tpv-stats">
-                        <div class="tpv-stat">
-                            <span class="tpv-stat-label">Stock</span>
-                            <span class="tpv-stat-value {% if producto.stock < 5 %}valor-alerta{% endif %}">{{ producto.stock }}uds.</span>
-                        </div>
-                        <div class="tpv-stat">
-                            <span class="tpv-stat-label">Precio</span>
-                            <span class="tpv-stat-value tpv-precio">${{ producto.precio|intcomma }}</span>
-                        </div>
+                <div class="ts-stock-visual">
+                    <div class="ts-stock-info">
+                        <span class="ts-stock-num
+                            {% if producto.stock == 0 %}ts-num-agotado
+                            {% elif producto.stock < 5 %}ts-num-bajo
+                            {% else %}ts-num-ok{% endif %}">
+                            {{ producto.stock }}
+                        </span>
+                        <span class="ts-stock-unit">unidades</span>
                     </div>
+                    <div class="ts-barra-wrap">
+                        {% if producto.stock >= 50 %}
+                            <div class="ts-barra ts-barra-ok" style="width:100%;"></div>
+                        {% elif producto.stock >= 20 %}
+                            <div class="ts-barra ts-barra-ok" style="width:{{ producto.stock }}%;"></div>
+                        {% elif producto.stock >= 5 %}
+                            <div class="ts-barra ts-barra-medio" style="width:{{ producto.stock|floatformat:0 }}%;"></div>
+                        {% elif producto.stock > 0 %}
+                            <div class="ts-barra ts-barra-bajo" style="width:{{ producto.stock }}%;"></div>
+                        {% else %}
+                            <div class="ts-barra ts-barra-agotado" style="width:100%;"></div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="tpv-footer ts-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px 16px; border-top: 1px solid #f1f5f9; margin-top: auto;">
+                    <span class="ts-precio tpv-precio" style="font-weight: 800; font-size: 1.1rem; color: #1e293b;">${{ producto.precio|intcomma }}</span>
                     <button
                         class="tpv-add-btn agregar {% if producto.stock == 0 %}tpv-add-disabled{% endif %}"
                         data-id="{{ producto.id }}"
@@ -193,20 +254,49 @@ const carritoCount   = document.getElementById('carritoCount');
 const cartBadge      = document.getElementById('cartBadge');
 const buscador       = document.getElementById('buscadorProductos');
 const productosGrid  = document.getElementById('productosGrid');
+let filtroActual     = 'todos';
 
-const codi = { Yamaha: 20, Motul: 30, CRC: 50 };
-let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
-let porcentajeAplicado = parseInt(localStorage.getItem('porcentajeAplicado')) || 0;
-let productoAEliminar = null;
+/* ---- Search & Filter ---- */
+if (buscador) {
+    buscador.addEventListener('input', aplicarFiltros);
+}
 
-/* ---- Search ---- */
-buscador.addEventListener('input', () => {
-    const q = buscador.value.toLowerCase().trim();
-    document.querySelectorAll('.tarjeta-producto-venta').forEach(card => {
-        const match = card.dataset.nombre.includes(q) || card.dataset.id.includes(q);
-        card.style.display = match ? '' : 'none';
+document.querySelectorAll('.cs-filtro-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.cs-filtro-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filtroActual = btn.dataset.filtro;
+        aplicarFiltros();
     });
 });
+
+function aplicarFiltros() {
+    const q = buscador ? buscador.value.toLowerCase().trim() : '';
+    document.querySelectorAll('.tarjeta-producto-venta').forEach(card => {
+        const nombreMatch = card.dataset.nombre.includes(q) || card.dataset.id.includes(q);
+        const estadoMatch  = filtroActual === 'todos' || card.dataset.estado === filtroActual;
+        card.style.display = (nombreMatch && estadoMatch) ? '' : 'none';
+    });
+}
+
+/* ---- Resumen métricas ---- */
+(function() {
+    const cards = document.querySelectorAll('.tarjeta-producto-venta');
+    let ok = 0, bajo = 0, agotado = 0;
+    cards.forEach(c => {
+        if (c.dataset.estado === 'ok')      ok++;
+        else if (c.dataset.estado === 'bajo') bajo++;
+        else if (c.dataset.estado === 'agotado') agotado++;
+    });
+    const elOk = document.getElementById('totalOk');
+    const elBajo = document.getElementById('totalBajo');
+    const elAgotado = document.getElementById('totalAgotado');
+    const elTotal = document.getElementById('totalProductos');
+    if (elOk) elOk.textContent = ok;
+    if (elBajo) elBajo.textContent = bajo;
+    if (elAgotado) elAgotado.textContent = agotado;
+    if (elTotal) elTotal.textContent = cards.length;
+})();
 
 /* ---- Add to cart ---- */
 document.querySelectorAll('.agregar').forEach(btn => {

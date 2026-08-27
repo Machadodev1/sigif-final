@@ -14,7 +14,7 @@
     </a>
 
     <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">
-        Catalogo de ventas
+        Inventario
     </a>
 
     <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">
@@ -22,12 +22,12 @@
     </a>
 </div>
 
-<section class="usuarios-container2">
+<section class="inventario-container2">
 
-    <div class="usuarios-header">
-        <div>
-            <h2>Historial de Movimientos</h2>
-            <p>Registro completo de entradas y salidas de inventario</p>
+    <div class="cv-toolbar">
+        <div class="cv-toolbar-left">
+            <h2 class="cv-title">Historial de Movimientos</h2>
+            <p class="cv-subtitle">Registro completo de entradas y salidas de inventario</p>
         </div>
     </div>
 

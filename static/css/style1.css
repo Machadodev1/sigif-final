@@ -1330,7 +1330,7 @@ body.login-body {
 .tpv-precio { color: #059669; font-size: 1.05rem; }
 .valor-alerta { color: #d97706 !important; }
 .tpv-add-btn {
-    width: 100%;
+    width: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
