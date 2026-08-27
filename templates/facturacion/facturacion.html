@@ -36,6 +36,10 @@
             <h2 class="cv-title">Facturas recientes</h2>
             <p class="cv-subtitle">Listado de todas las ventas generadas</p>
         </div>
+        <div class="cv-search-wrapper">
+                <i class="bi bi-search cv-search-icon"></i>
+                <input type="text" id="buscadorFacturas" class="cv-search-input" placeholder="Buscar por id" value="{{ q|default:'' }}">
+            </div>
         <div class="fac-resumen-pills">
             <span class="fac-pill fac-pill-total">
                 <i class="bi bi-receipt"></i>
@@ -46,8 +50,8 @@
 
     <div class="fac-grid">
 
-        {% for factura in facturas %}
-        <div class="tarjeta-factura">
+        {% for factura in facturas|dictsortreversed:"id" %}
+        <div class="tarjeta-factura" data-id="{{ factura.id }}">
 
             <!-- Cabecera de tarjeta -->
             <div class="tf-header">
@@ -131,5 +135,31 @@
     </div>
 
 </section>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const buscador = document.getElementById("buscadorFacturas");
+    const facturas = document.querySelectorAll(".tarjeta-factura");
+
+    buscador.addEventListener("input", function () {
+
+        const texto = this.value.toLowerCase().trim();
+
+        facturas.forEach(function (factura) {
+
+            const id = factura.getAttribute("data-id").toLowerCase();
+
+            if (id.includes(texto)) {
+                factura.style.display = "";
+            } else {
+                factura.style.display = "none";
+            }
+
+        });
+
+    });
+
+});
+</script>
 
 {% endblock %}

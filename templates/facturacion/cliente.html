@@ -23,6 +23,10 @@
             <h2 class="cv-title">Clientes Registrados</h2>
             <p class="cv-subtitle">Listado de clientes y su historial de facturación</p>
         </div>
+        <div class="cv-search-wrapper">
+                <i class="bi bi-search cv-search-icon"></i>
+                <input type="text" id="buscadorClientes" class="cv-search-input" placeholder="Buscar por nombre,documento" value="{{ q|default:'' }}">
+            </div>
         <div class="fac-resumen-pills">
             <span class="fac-pill fac-pill-total">
                 <i class="bi bi-people-fill"></i>
@@ -34,7 +38,7 @@
     <div class="fac-grid">
 
         {% for cliente in clientes %}
-        <div class="tarjeta-factura">
+        <div class="tarjeta-factura" data-nombre="{{ cliente.nombre }}">
 
             <!-- Cabecera de tarjeta: Cliente -->
             <div class="tf-header">
@@ -123,5 +127,30 @@
     </div>
 
 </section>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
 
+    const buscador = document.getElementById("buscadorClientes");
+    const clientes = document.querySelectorAll(".tarjeta-factura");
+
+    buscador.addEventListener("input", function () {
+
+        const texto = this.value.toLowerCase().trim();
+
+        clientes.forEach(function (cliente) {
+
+            const nombre = cliente.getAttribute("data-nombre").toLowerCase();
+
+            if (nombre.includes(texto)) {
+                cliente.style.display = "";
+            } else {
+                cliente.style.display = "none";
+            }
+
+        });
+
+    });
+
+});
+</script>
 {% endblock %}
