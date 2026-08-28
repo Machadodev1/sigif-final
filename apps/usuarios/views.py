@@ -187,7 +187,7 @@ def editar_usuarios(request, id):
 
             if (
                 rol_actual == "Admin"
-                and cargo_original == "SuperAdmin"
+                and cargo_original == "SuperAdmin" 
             ):
 
                 messages.error(
