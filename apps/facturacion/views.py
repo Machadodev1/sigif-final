@@ -1,146 +1,296 @@
 import json
+import os
+
 from decimal import Decimal
-from django.http import HttpResponse
+from io import BytesIO
+from django.utils import timezone
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render, get_object_or_404
+from django.views.generic import ListView, DetailView
+from django.db import transaction
+from django.core.mail import EmailMessage
+from django.conf import settings
+
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    Image
+)
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, DetailView
-from django.contrib import messages
-from django.db import transaction
-from django.http import JsonResponse
-from apps.facturacion.models import Factura, Cliente, DetalleFactura
+
+from apps.facturacion.models import (
+    Factura,
+    Cliente,
+    DetalleFactura
+)
+
 from apps.productos.models import Producto
+
 from core.decoradores import requerir_rol
 
 
+# ============================================================
+# FORMATO DE DINERO - PESOS COLOMBIANOS
+# ============================================================
+
+def formato_cop(valor):
+
+    valor = Decimal(str(valor))
+
+    valor = valor.quantize(
+        Decimal('1')
+    )
+
+    valor_formateado = f"{valor:,.0f}".replace(",", ".")
+
+    return f"$ {valor_formateado} COP"
+
+
+# ============================================================
+# LISTADO DE FACTURAS
+# ============================================================
+
 class FacturaListView(ListView):
+
     model = Factura
+
     template_name = 'facturacion/facturacion.html'
+
     context_object_name = 'facturas'
 
     def dispatch(self, request, *args, **kwargs):
-        return requerir_rol(["SuperAdmin","Admin", "Empleado"])(super().dispatch)(request, *args, **kwargs)
 
+        return requerir_rol(
+            ["SuperAdmin", "Admin", "Empleado"]
+        )(
+            super().dispatch
+        )(request, *args, **kwargs)
+
+
+# ============================================================
+# DETALLE DE FACTURA
+# ============================================================
 
 class FacturaDetailView(DetailView):
+
     model = Factura
+
     template_name = 'facturacion/facturacion.html'
+
     context_object_name = 'factura'
 
     def dispatch(self, request, *args, **kwargs):
-        return requerir_rol(["Admin", "Empleado"])(super().dispatch)(request, *args, **kwargs)
+
+        return requerir_rol(
+            ["Admin", "Empleado"]
+        )(
+            super().dispatch
+        )(request, *args, **kwargs)
 
 
-@requerir_rol(["SuperAdmin","Admin", "Empleado"])
+# ============================================================
+# CLIENTES
+# ============================================================
+
+@requerir_rol(["SuperAdmin", "Admin", "Empleado"])
 def clientes_view(request):
+
     clientes = Cliente.objects.all()
-    return render(request, 'facturacion/cliente.html', {'clientes': clientes})
+
+    return render(
+        request,
+        'facturacion/cliente.html',
+        {
+            'clientes': clientes
+        }
+    )
 
 
-@requerir_rol(["SuperAdmin","Admin", "Empleado"])
+# ============================================================
+# PRODUCTOS VENDIDOS
+# ============================================================
+
+@requerir_rol(["SuperAdmin", "Admin", "Empleado"])
 def productos_facturacion_view(request):
+
     detalles = DetalleFactura.objects.select_related(
         'producto',
         'factura',
         'factura__cliente'
-    ).order_by('-factura__fecha')
+    ).order_by(
+        '-factura__fecha'
+    )
 
     return render(
         request,
         'facturacion/productos_facturacion.html',
-        {'detalles': detalles}
+        {
+            'detalles': detalles
+        }
     )
 
 
-@requerir_rol(["SuperAdmin","Admin", "Empleado"])
+# ============================================================
+# FACTURA GENERADA
+# ============================================================
+
+@requerir_rol(["SuperAdmin", "Admin", "Empleado"])
 def factura_generada(request, pk):
-    factura = get_object_or_404(Factura, pk=pk)
+
+    factura = get_object_or_404(
+        Factura,
+        pk=pk
+    )
+
     return render(
         request,
         'facturacion/factura_generada.html',
-        {'factura': factura}
+        {
+            'factura': factura
+        }
     )
 
 
-@requerir_rol(["SuperAdmin","Admin", "Empleado"])
+# ============================================================
+# PÁGINA DE PAGO
+# ============================================================
+
+@requerir_rol(["SuperAdmin", "Admin", "Empleado"])
 def pago(request):
+
     clientes = Cliente.objects.all()
-    return render(request, 'facturacion/pago.html', {'clientes': clientes})
+
+    return render(
+        request,
+        'facturacion/pago.html',
+        {
+            'clientes': clientes
+        }
+    )
 
 
-@requerir_rol(["SuperAdmin","Admin", "Empleado"])
+
+@requerir_rol(["SuperAdmin", "Admin", "Empleado"])
 def confirmar_venta(request):
-    if request.method != 'POST':
+
+    if request.method != "POST":
         return JsonResponse({
-            'success': False,
-            'message': 'Método no permitido'
+            "success": False,
+            "message": "Método no permitido"
         }, status=405)
 
     try:
         data = json.loads(request.body)
 
-        productos = data.get('productos', [])
+        productos = data.get("productos", [])
+        descuento = Decimal(str(data.get("descuento", 0)))
 
-        descuento = Decimal(
-            str(data.get('descuento', 0))
-        )
+        cliente_id = data.get("cliente_id")
+        nombre = data.get("nombre", "").strip()
+        correo = data.get("correo", "").strip()
 
-        cliente_id = data.get('cliente_id')
-
-        nombre = data.get('nombre', '').strip()
-        correo = data.get('correo', '').strip()
+        # ==========================================
+        # VALIDACIONES INICIALES
+        # ==========================================
 
         if not productos:
             return JsonResponse({
-                'success': False,
-                'message': 'El carrito está vacío'
+                "success": False,
+                "message": "El carrito está vacío"
             })
 
         if not nombre:
-            nombre = 'Cliente general'
+            nombre = "Cliente general"
 
-        if not correo:
-            correo = 'cliente@general.com'
+        # Evitar descuentos inválidos
+        if descuento < 0:
+            descuento = Decimal("0")
+
+        if descuento > 100:
+            descuento = Decimal("100")
+
+        # ==========================================
+        # CREAR VENTA
+        # ==========================================
 
         with transaction.atomic():
 
+            # --------------------------------------
+            # CLIENTE
+            # --------------------------------------
+
             if cliente_id:
-                cliente = Cliente.objects.get(pk=int(cliente_id))
-            else:
-                cliente, creado = Cliente.objects.get_or_create(
-                    correo=correo,
-                    defaults={
-                        'nombre': nombre
-                    }
+
+                cliente = Cliente.objects.get(
+                    pk=int(cliente_id)
                 )
 
-            total = Decimal('0.00')
+            else:
+
+                if correo:
+
+                    cliente, creado = Cliente.objects.get_or_create(
+                        correo=correo,
+                        defaults={
+                            "nombre": nombre
+                        }
+                    )
+
+                else:
+
+                    cliente = Cliente.objects.create(
+                        nombre=nombre,
+                        correo=""
+                    )
+
+            # --------------------------------------
+            # PRODUCTOS
+            # --------------------------------------
+
+            total = Decimal("0.00")
+
             productos_validos = []
 
             for item in productos:
 
                 producto = Producto.objects.get(
-                    id=item['id']
+                    id=item["id"]
                 )
 
                 cantidad = int(
-                    item['cantidad']
+                    item["cantidad"]
                 )
 
+                # Validar cantidad
                 if cantidad <= 0:
+
                     return JsonResponse({
-                        'success': False,
-                        'message': f'Cantidad inválida para {producto.nombre}'
+                        "success": False,
+                        "message": (
+                            f"Cantidad inválida para "
+                            f"{producto.nombre}"
+                        )
                     })
 
+                # Validar stock
                 if cantidad > producto.stock:
+
                     return JsonResponse({
-                        'success': False,
-                        'message': f'No hay suficiente stock de {producto.nombre}. Stock disponible: {producto.stock}'
+                        "success": False,
+                        "message": (
+                            f"No hay suficiente stock de "
+                            f"{producto.nombre}. "
+                            f"Stock disponible: "
+                            f"{producto.stock}"
+                        )
                     })
 
+                # Precio actual del producto
                 precio = Decimal(
                     str(producto.precio)
                 )
@@ -150,19 +300,27 @@ def confirmar_venta(request):
                 total += subtotal
 
                 productos_validos.append({
-                    'producto': producto,
-                    'cantidad': cantidad,
-                    'precio': precio,
-                    'subtotal': subtotal
+                    "producto": producto,
+                    "cantidad": cantidad,
+                    "precio": precio,
+                    "subtotal": subtotal
                 })
+
+            # --------------------------------------
+            # DESCUENTO
+            # --------------------------------------
 
             valor_descuento = (
                 total *
                 descuento /
-                Decimal('100')
+                Decimal("100")
             )
 
             total_final = total - valor_descuento
+
+            # --------------------------------------
+            # USUARIO LOGUEADO
+            # --------------------------------------
 
             usuario = request.session.get(
                 "logueado",
@@ -172,6 +330,10 @@ def confirmar_venta(request):
                 "Usuario"
             )
 
+            # --------------------------------------
+            # CREAR FACTURA
+            # --------------------------------------
+
             factura = Factura.objects.create(
                 cliente=cliente,
                 usuario=usuario,
@@ -179,106 +341,579 @@ def confirmar_venta(request):
                 descuento=valor_descuento
             )
 
+            # --------------------------------------
+            # DETALLES + INVENTARIO
+            # --------------------------------------
+
             for item in productos_validos:
 
-                producto = item['producto']
+                producto = item["producto"]
 
                 DetalleFactura.objects.create(
                     factura=factura,
                     producto=producto,
-                    cantidad=item['cantidad'],
-                    precio=item['precio'],
-                    subtotal=item['subtotal']
+                    cantidad=item["cantidad"],
+                    precio=item["precio"],
+                    subtotal=item["subtotal"]
                 )
 
-                producto.stock -= item['cantidad']
-                producto.save()
+                # Descontar inventario
+                producto.stock -= item["cantidad"]
+
+                producto.save(
+                    update_fields=["stock"]
+                )
+
+        # ==========================================
+        # ENVÍO DEL CORREO EN SEGUNDO PLANO
+        # ==========================================
+
+        if factura.cliente.correo:
+
+            import threading
+
+            def enviar_correo():
+
+                try:
+
+                    enviar_factura_correo(factura)
+
+                    print(
+                        f"Factura #{factura.id} "
+                        f"enviada correctamente a "
+                        f"{factura.cliente.correo}"
+                    )
+
+                except Exception as e:
+
+                    print(
+                        f"Error enviando factura "
+                        f"#{factura.id}: {e}"
+                    )
+
+            hilo = threading.Thread(
+                target=enviar_correo,
+                daemon=True
+            )
+
+            hilo.start()
+
+        # ==========================================
+        # RESPUESTA INMEDIATA
+        # ==========================================
 
         return JsonResponse({
-            'success': True,
-            'message': 'Venta realizada correctamente',
-            'factura_id': factura.id
+            "success": True,
+            "message": (
+                "Venta realizada correctamente. "
+                "La factura fue registrada y "
+                "se está enviando al correo del cliente."
+            ),
+            "factura_id": factura.id
         })
 
-    except Producto.DoesNotExist:
+    # ==============================================
+    # ERRORES
+    # ==============================================
+
+    except Cliente.DoesNotExist:
+
         return JsonResponse({
-            'success': False,
-            'message': 'Uno de los productos ya no existe'
+            "success": False,
+            "message": "El cliente seleccionado no existe"
+        }, status=400)
+
+    except Producto.DoesNotExist:
+
+        return JsonResponse({
+            "success": False,
+            "message": "Uno de los productos ya no existe"
+        }, status=400)
+
+    except ValueError:
+
+        return JsonResponse({
+            "success": False,
+            "message": "Los datos enviados no son válidos"
         }, status=400)
 
     except Exception as e:
+
+        print(
+            f"Error confirmando venta: {e}"
+        )
+
         return JsonResponse({
-            'success': False,
-            'message': str(e)
+            "success": False,
+            "message": str(e)
         }, status=400)
 
-@requerir_rol(["SuperAdmin","Admin", "Empleado"])
-def exportar_factura_pdf(request, pk):
-    # 1. Obtener la factura o retornar 404 si no existe
-    factura = get_object_or_404(Factura, pk=pk)
-    
-    # 2. Configurar la respuesta HTTP para PDF
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="factura_{factura.id}.pdf"'
-    
-    # 3. Configurar el documento PDF
-    doc = SimpleDocTemplate(response, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+# ============================================================
+# GENERAR PDF DE FACTURA
+# ============================================================
+
+def generar_pdf_factura(factura):
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=35,
+        bottomMargin=35
+    )
+
     elementos = []
-    
+
     estilos = getSampleStyleSheet()
-    
-    # Estítulo personalizado
+
+    # ==========================================
+    # COLORES SIGIF
+    # ==========================================
+
+    azul_sigif = colors.HexColor("#1E2A44")
+    azul_tabla = colors.HexColor("#2F70B7")
+    verde_sigif = colors.HexColor("#05A77B")
+    gris_fondo = colors.HexColor("#F5F7FA")
+    gris_borde = colors.HexColor("#D9E0E8")
+
+    # ==========================================
+    # LOGO
+    # ==========================================
+
+    ruta_logo = os.path.join(
+        settings.BASE_DIR,
+        "static",
+        "img",
+        "logo123.png"
+    )
+
+    if os.path.exists(ruta_logo):
+
+        logo = Image(
+            ruta_logo,
+            width=90,
+            height=45
+        )
+
+        # Alinear a la izquierda
+        logo.hAlign = "LEFT"
+
+        # Crear espacio alrededor del logo
+        tabla_logo = Table(
+            [[logo]],
+            colWidths=[120],
+            rowHeights=[60]
+        )
+
+        tabla_logo.setStyle(
+            TableStyle([
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ])
+        )
+
+        elementos.append(tabla_logo)
+
+        elementos.append(
+            Spacer(1, 8)
+        )
+
+    # ==========================================
+    # TÍTULO
+    # ==========================================
 
     estilo_titulo = ParagraphStyle(
-        'TituloFactura',
-        parent=estilos['Heading1'] if 'Heading1' in estilos else estilos['Normal'],
+        "TituloFactura",
+        parent=estilos["Heading1"],
         fontSize=16,
         spaceAfter=12,
-        textColor=colors.HexColor('#1A365D')
+        textColor=azul_sigif
     )
-    
-    # Datos generales de la factura
-    elementos.append(Paragraph(f"Factura de Venta N° {factura.id}", estilo_titulo))
-    elementos.append(Paragraph(f"<b>Cliente:</b> {factura.cliente.nombre}", estilos['Normal']))
-    elementos.append(Paragraph(f"<b>Correo:</b> {factura.cliente.correo}", estilos['Normal']))
-    elementos.append(Paragraph(f"<b>Fecha:</b> {factura.fecha if hasattr(factura, 'fecha') else 'N/A'}", estilos['Normal']))
-    elementos.append(Paragraph(f"<b>Atendido por:</b> {factura.usuario}", estilos['Normal']))
-    elementos.append(Spacer(1, 15))
-    
-    # 4. Construir los datos de la tabla de productos
-    data = [["Producto", "Cantidad", "Precio Unit.", "Subtotal"]]
-    
-    # Obtenemos los detalles relacionados a esta factura
-    detalles = factura.detallefactura_set.all() if hasattr(factura, 'detallefactura_set') else DetalleFactura.objects.filter(factura=factura)
-    
-    for detalle in detalles:
+
+    elementos.append(
+        Paragraph(
+            f"Factura de Venta N° {factura.id}",
+            estilo_titulo
+        )
+    )
+
+    # ==========================================
+    # INFORMACIÓN DEL CLIENTE
+    # ==========================================
+
+    # Convertir la fecha de UTC a la zona horaria
+    # configurada en Django
+    fecha_local = timezone.localtime(factura.fecha)
+
+    elementos.append(
+        Paragraph(
+            f"<b>Cliente:</b> {factura.cliente.nombre}",
+            estilos["Normal"]
+        )
+    )
+
+    elementos.append(
+        Paragraph(
+            f"<b>Correo:</b> {factura.cliente.correo}",
+            estilos["Normal"]
+        )
+    )
+
+    elementos.append(
+        Paragraph(
+            f"<b>Fecha:</b> {fecha_local.strftime('%d/%m/%Y %H:%M')}",
+            estilos["Normal"]
+        )
+    )
+
+    elementos.append(
+        Paragraph(
+            f"<b>Atendido por:</b> {factura.usuario}",
+            estilos["Normal"]
+        )
+    )
+
+    elementos.append(
+        Spacer(1, 15)
+    )
+
+    # ==========================================
+    # TABLA DE PRODUCTOS
+    # ==========================================
+
+    data = [
+        [
+            "Producto",
+            "Cantidad",
+            "Precio Unit.",
+            "Subtotal"
+        ]
+    ]
+
+    for detalle in factura.detalles.all():
+
+        precio = Decimal(str(detalle.precio))
+        subtotal = Decimal(str(detalle.subtotal))
+
         data.append([
             detalle.producto.nombre,
             str(detalle.cantidad),
-            f"${detalle.precio}",
-            f"${detalle.subtotal}"
+            f"$ {precio:,.0f} COP",
+            f"$ {subtotal:,.0f} COP"
         ])
-        
-    # Añadir filas de totales
-    data.append(["", "", "Descuento:", f"${factura.descuento}"])
-    data.append(["", "", "Total Final:", f"${factura.total}"])
 
-    # 5. Estilizar la tabla
-    tabla = Table(data, colWidths=[200, 70, 100, 100])
-    tabla.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2B6CB0')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F7FAFC')),
-        ('GRID', (0, 0), (-1, -3), 0.5, colors.HexColor('#CBD5E0')),
-        ('FONTNAME', (0, -2), (-1, -1), 'Helvetica-Bold'), # Resaltar totales
-    ]))
+    # ==========================================
+    # DESCUENTO
+    # ==========================================
+
+    descuento = Decimal(
+        str(factura.descuento or 0)
+    )
+
+    total = Decimal(
+        str(factura.total)
+    )
+
+    data.append([
+        "",
+        "",
+        "Descuento:",
+        f"$ {descuento:,.0f} COP"
+    ])
+
+    # ==========================================
+    # TOTAL
+    # ==========================================
+
+    data.append([
+        "",
+        "",
+        "TOTAL:",
+        f"$ {total:,.0f} COP"
+    ])
+
+    # ==========================================
+    # TABLA
+    # ==========================================
+
+    tabla = Table(
+        data,
+        colWidths=[
+            200,
+            70,
+            100,
+            100
+        ]
+    )
+
+    tabla.setStyle(
+        TableStyle([
+
+            # Encabezado
+            (
+                "BACKGROUND",
+                (0, 0),
+                (-1, 0),
+                azul_tabla
+            ),
+
+            (
+                "TEXTCOLOR",
+                (0, 0),
+                (-1, 0),
+                colors.white
+            ),
+
+            (
+                "FONTNAME",
+                (0, 0),
+                (-1, 0),
+                "Helvetica-Bold"
+            ),
+
+            (
+                "FONTSIZE",
+                (0, 0),
+                (-1, 0),
+                10
+            ),
+
+            (
+                "BOTTOMPADDING",
+                (0, 0),
+                (-1, 0),
+                8
+            ),
+
+            (
+                "TOPPADDING",
+                (0, 0),
+                (-1, 0),
+                8
+            ),
+
+            # Cuerpo
+            (
+                "BACKGROUND",
+                (0, 1),
+                (-1, -1),
+                gris_fondo
+            ),
+
+            (
+                "GRID",
+                (0, 0),
+                (-1, -3),
+                0.5,
+                gris_borde
+            ),
+
+            (
+                "ALIGN",
+                (1, 0),
+                (-1, -1),
+                "CENTER"
+            ),
+
+            (
+                "VALIGN",
+                (0, 0),
+                (-1, -1),
+                "MIDDLE"
+            ),
+
+            # Descuento
+            (
+                "TEXTCOLOR",
+                (2, -2),
+                (-1, -2),
+                azul_tabla
+            ),
+
+            (
+                "FONTNAME",
+                (2, -2),
+                (-1, -2),
+                "Helvetica-Bold"
+            ),
+
+            # Total
+            (
+                "BACKGROUND",
+                (2, -1),
+                (-1, -1),
+                verde_sigif
+            ),
+
+            (
+                "TEXTCOLOR",
+                (2, -1),
+                (-1, -1),
+                colors.white
+            ),
+
+            (
+                "FONTNAME",
+                (2, -1),
+                (-1, -1),
+                "Helvetica-Bold"
+            ),
+
+            (
+                "FONTSIZE",
+                (2, -1),
+                (-1, -1),
+                11
+            ),
+
+            (
+                "TOPPADDING",
+                (2, -1),
+                (-1, -1),
+                8
+            ),
+
+            (
+                "BOTTOMPADDING",
+                (2, -1),
+                (-1, -1),
+                8
+            ),
+        ])
+    )
 
     elementos.append(tabla)
 
-    # 6. Compilar y retornar el PDF
+    elementos.append(
+        Spacer(1, 35)
+    )
+
+    # ==========================================
+    # PIE DE FACTURA
+    # ==========================================
+
+    estilo_pie = ParagraphStyle(
+        "PieFactura",
+        parent=estilos["Normal"],
+        fontSize=9,
+        textColor=colors.HexColor("#718096"),
+        alignment=1
+    )
+
+    elementos.append(
+        Paragraph(
+            "Gracias por tu compra.",
+            estilo_pie
+        )
+    )
+
+    elementos.append(
+        Paragraph(
+            "SIGIF - Sistema Integral de Gestión de Inventarios y Facturación",
+            estilo_pie
+        )
+    )
+
+    # ==========================================
+    # GENERAR PDF
+    # ==========================================
+
     doc.build(elementos)
-    return response        
+
+    buffer.seek(0)
+
+    return buffer.getvalue()
+
+# ============================================================
+# ENVIAR FACTURA POR CORREO
+# ============================================================
+
+def enviar_factura_correo(factura):
+
+    pdf = generar_pdf_factura(
+        factura
+    )
+
+    email = EmailMessage(
+
+        subject=(
+            f'Factura #{factura.id} - SIGIF'
+        ),
+
+        body=(
+            f'Hola {factura.cliente.nombre},\n\n'
+
+            f'Adjunto encontrarás tu factura '
+            f'#{factura.id} generada en SIGIF.\n\n'
+
+            f'Total: '
+            f'{formato_cop(factura.total)}\n\n'
+
+            f'Gracias por tu compra.\n\n'
+
+            f'SIGIF - Sistema Integral de '
+            f'Gestión de Inventarios y Facturación'
+        ),
+
+        from_email=settings.DEFAULT_FROM_EMAIL,
+
+        to=[
+            factura.cliente.correo
+        ],
+    )
+
+    # ========================================================
+    # ADJUNTAR PDF
+    # ========================================================
+
+    email.attach(
+        f'factura_{factura.id}.pdf',
+        pdf,
+        'application/pdf'
+    )
+
+    # ========================================================
+    # ENVIAR
+    # ========================================================
+
+    email.send(
+        fail_silently=False
+    )
+
+
+# ============================================================
+# EXPORTAR FACTURA PDF
+# ============================================================
+
+@requerir_rol(
+    ["SuperAdmin", "Admin", "Empleado"]
+)
+def exportar_factura_pdf(request, pk):
+
+    factura = get_object_or_404(
+        Factura,
+        pk=pk
+    )
+
+    pdf = generar_pdf_factura(
+        factura
+    )
+
+    response = HttpResponse(
+        pdf,
+        content_type='application/pdf'
+    )
+
+    response['Content-Disposition'] = (
+        f'attachment; '
+        f'filename="factura_{factura.id}.pdf"'
+    )
+
+    return response

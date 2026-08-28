@@ -285,9 +285,7 @@
                 </div>
 
                 <div class="d-flex flex-column gap-2">
-                    <a href="#" id="btnDescargarPdf" target="_blank" class="btn btn-primary py-2 fw-semibold">
-                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Descargar Factura PDF
-                    </a>
+                    
                     <a href="/inventario/" class="btn btn-outline-secondary py-2 fw-semibold">
                         <i class="bi bi-arrow-repeat me-1"></i> Realizar Nueva Venta
                     </a>
@@ -448,7 +446,6 @@ document.getElementById("btnConfirmar").addEventListener("click", () => {
 
             // Configurar modal de éxito
             document.getElementById("numFacturaGenerada").innerText = `Factura #${data.factura_id}`;
-            document.getElementById("btnDescargarPdf").href = `/facturacion/factura/pdf/${data.factura_id}/`;
             
             const modalExito = new bootstrap.Modal(document.getElementById("modalVentaExitosa"));
             modalExito.show();
