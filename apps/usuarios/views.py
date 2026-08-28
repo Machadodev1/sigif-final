@@ -305,3 +305,4 @@ def logout_view(request):
     request.session.flush()
     messages.success(request, "Sesion cerrada")
     return redirect('login')
+#prueba
