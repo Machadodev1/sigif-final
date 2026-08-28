@@ -31,6 +31,8 @@ from apps.facturacion.models import (
 
 from apps.productos.models import Producto
 
+from apps.inventario.models import EntradaInventario, DetalleEntradaInventario
+
 from core.decoradores import requerir_rol
 
 
@@ -917,3 +919,34 @@ def exportar_factura_pdf(request, pk):
     )
 
     return response
+
+# ============================================================
+# FACTURAS DE ENTRADA (INGRESOS AL INVENTARIO)
+# ============================================================
+
+@requerir_rol(["SuperAdmin", "Admin", "Empleado"])
+def facturas_entrada_view(request):
+    entradas = EntradaInventario.objects.prefetch_related(
+        'detalles__producto'
+    ).order_by('-fecha')
+
+    return render(
+        request,
+        'facturacion/facturas_entrada.html',
+        {'entradas': entradas}
+    )
+
+
+@requerir_rol(["SuperAdmin", "Admin", "Empleado"])
+def registro_entradas_view(request):
+    """Registro linea por linea de todos los productos ingresados."""
+    detalles = DetalleEntradaInventario.objects.select_related(
+        'producto',
+        'entrada'
+    ).order_by('-entrada__fecha')
+
+    return render(
+        request,
+        'facturacion/registro_entradas.html',
+        {'detalles': detalles}
+    )

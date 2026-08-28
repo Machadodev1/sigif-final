@@ -25,6 +25,8 @@
 
 <div class="menu-horizontal">
     <a href="{% url 'factura-list' %}" class="{% if request.resolver_match.url_name == 'factura-list' %}active{% endif %}">Facturas</a>
+    <a href="{% url 'facturas_entrada' %}" class="{% if request.resolver_match.url_name == 'facturas_entrada' %}active{% endif %}">Facturas de entrada</a>
+    <a href="{% url 'registro_entradas' %}" class="{% if request.resolver_match.url_name == 'registro_entradas' %}active{% endif %}">Registro de entradas</a>
     <a href="{% url 'clientes' %}" class="{% if request.resolver_match.url_name == 'clientes' %}active{% endif %}">Clientes</a>
     <a href="{% url 'productos_facturacion' %}" class="{% if request.resolver_match.url_name == 'productos_facturacion' %}active{% endif %}">Productos</a>
 </div>
