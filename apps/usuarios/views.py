@@ -138,25 +138,128 @@ def crear_usuarios(request):
 
 
 @requerir_rol(["SuperAdmin", "Admin"])
-@impedir_crear_superadmin
 def editar_usuarios(request, id):
-    usuarios = get_object_or_404(Usuarios, id=id)
-    if request.method == 'POST':
-        form = UsuarioForm(request.POST, instance=usuarios)
+
+    usuario = get_object_or_404(Usuarios, id=id)
+
+    # Usuario que está realizando la acción
+    usuario_actual_id = request.session["logueado"]["id"]
+    rol_actual = request.session["logueado"]["rol"]
+
+    # Cargo original del usuario que estamos editando
+    cargo_original = usuario.cargo
+
+    if request.method == "POST":
+
+        form = UsuarioForm(
+            request.POST,
+            instance=usuario
+        )
+
         if form.is_valid():
-            usuarios = form.save()
+
+            usuario_editado = form.save(commit=False)
+
+            nuevo_cargo = usuario_editado.cargo
+
+            # ==========================================
+            # 1. NADIE PUEDE CAMBIAR SU PROPIO ROL
+            # ==========================================
+
+            if usuario.id == usuario_actual_id:
+
+                if nuevo_cargo != cargo_original:
+
+                    messages.error(
+                        request,
+                        "No puedes cambiar tu propio rol."
+                    )
+
+                    return render(
+                        request,
+                        "usuarios/editar_usuarios.html",
+                        {"form": form}
+                    )
+
+            # ==========================================
+            # 2. ADMIN NO PUEDE MODIFICAR AL SUPERADMIN
+            # ==========================================
+
+            if (
+                rol_actual == "Admin"
+                and cargo_original == "SuperAdmin"
+            ):
+
+                messages.error(
+                    request,
+                    "Un Administrador no puede modificar al SuperAdmin."
+                )
+
+                return render(
+                    request,
+                    "usuarios/editar_usuarios.html",
+                    {"form": form}
+                )
+
+            # ==========================================
+            # 3. ADMIN NO PUEDE CREAR OTRO SUPERADMIN
+            # ==========================================
+
+            if (
+                rol_actual == "Admin"
+                and nuevo_cargo == "SuperAdmin"
+                and cargo_original != "SuperAdmin"
+            ):
+
+                messages.error(
+                    request,
+                    "Un Administrador no puede asignar el rol de SuperAdmin."
+                )
+
+                return render(
+                    request,
+                    "usuarios/editar_usuarios.html",
+                    {"form": form}
+                )
+
+            # ==========================================
+            # 4. GUARDAR CAMBIOS
+            # ==========================================
+
+            usuario_editado.save()
+
             Auditoria.objects.create(
                 usuario=request.session["logueado"]["nombre"],
-                accion=f"ACTUALIZO USUARIO: {usuarios.nombre}",
+                accion=f"ACTUALIZO USUARIO: {usuario_editado.nombre}",
                 modulo="USUARIOS"
             )
-            return redirect('usuarios')
 
-        messages.error(request, "Falta información obligatoria para actualizar el usuario.")
-        return render(request, 'usuarios/editar_usuarios.html', {'form': form})
+            messages.success(
+                request,
+                f"El usuario {usuario_editado.nombre} "
+                f"fue actualizado correctamente."
+            )
 
-    form = UsuarioForm(instance=usuarios)
-    return render(request, 'usuarios/editar_usuarios.html', {'form': form})
+            return redirect("usuarios")
+
+        messages.error(
+            request,
+            "Falta información obligatoria para actualizar el usuario."
+        )
+
+        return render(
+            request,
+            "usuarios/editar_usuarios.html",
+            {"form": form}
+        )
+
+    form = UsuarioForm(instance=usuario)
+
+    return render(
+        request,
+        "usuarios/editar_usuarios.html",
+        {"form": form}
+    )
 
 @requerir_rol(["SuperAdmin", "Admin"])
 def eliminar_usuario(request, id):
