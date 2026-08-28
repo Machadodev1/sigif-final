@@ -119,11 +119,12 @@
                             <label for="moneda" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">
                                 <i class="bi bi-cash-coin me-1 text-success"></i> Moneda Principal
                             </label>
-                            {% if user.is_staff or request.session.logueado.rol == "SuperAdmin" or request.session.logueado.rol == "Admin" %}
-                            <input type="text" id="moneda" name="moneda" value="{{ config.moneda }}" class="form-control" placeholder="Ej. COP, USD, EUR">
-                            {% else %}
-                            <div class="p-2 bg-light rounded border text-muted">{{ config.moneda|default:"COP" }}</div>
-                            {% endif %}
+                            <div class="input-group shadow-sm">
+                                <input type="text" id="moneda" name="moneda" value="COP ($) - Pesos Colombianos" class="form-control bg-light text-secondary fw-semibold border-start-0" readonly style="cursor: not-allowed; border-radius: 0 8px 8px 0; border-color: #cbd5e1;">
+                            </div>
+                            <small class="text-muted mt-2 d-block" style="font-size: 0.8rem; line-height: 1.4;">
+                                <i class="bi bi-info-circle-fill me-1 text-primary"></i> La moneda del sistema está configurada de manera fija a <strong>Pesos Colombianos (COP)</strong> para asegurar el correcto cálculo de precios, impuestos locales y totalizaciones.
+                            </small>
                         </div>
 
                         <div>

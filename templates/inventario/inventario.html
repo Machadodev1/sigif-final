@@ -24,7 +24,7 @@
 
     <div class="menu-horizontal">
         <a href="{% url 'inv_control' %}" class="{% if request.resolver_match.url_name == 'inv_control' %}active{% endif %}">Control de stock</a>
-        <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Inventario</a>
+        <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Catalogo de ventas</a>
         <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">Historial de movimientos</a>
     </div>
 
@@ -39,12 +39,6 @@
                 <div class="cv-search-wrapper">
                     <i class="bi bi-search cv-search-icon"></i>
                     <input type="text" id="buscadorProductos" class="cv-search-input" placeholder="Buscar por nombre o ID…">
-                </div>
-                <div class="cs-filtros">
-                    <button class="cs-filtro-btn active" data-filtro="todos">Todos</button>
-                    <button class="cs-filtro-btn" data-filtro="ok">En stock</button>
-                    <button class="cs-filtro-btn" data-filtro="bajo">Stock bajo</button>
-                    <button class="cs-filtro-btn" data-filtro="agotado">Agotado</button>
                 </div>
                 <button id="btnCarrito" class="cv-cart-btn" data-bs-toggle="offcanvas" data-bs-target="#carritoPanel">
                     <i class="bi bi-cart3"></i>
