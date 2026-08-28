@@ -161,7 +161,13 @@
 /* ---- Buscador ---- */
 const buscador = document.getElementById('buscadorStock');
 const grid     = document.getElementById('stockGrid');
-let filtroActual = 'todos';
+const filtrosPermitidos = ['todos', 'ok', 'bajo', 'agotado'];
+const filtroSolicitado = new URLSearchParams(window.location.search).get('filtro');
+let filtroActual = filtrosPermitidos.includes(filtroSolicitado) ? filtroSolicitado : 'todos';
+
+document.querySelectorAll('.cs-filtro-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filtro === filtroActual);
+});
 
 buscador.addEventListener('input', aplicarFiltros);
 
@@ -174,6 +180,8 @@ document.querySelectorAll('.cs-filtro-btn').forEach(btn => {
         aplicarFiltros();
     });
 });
+
+aplicarFiltros();
 
 function aplicarFiltros() {
     const q = buscador.value.toLowerCase().trim();

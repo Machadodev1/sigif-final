@@ -3,6 +3,7 @@ from django.db import models
 
 class Usuarios(models.Model):
     nombre = models.CharField(max_length=100, verbose_name='Nombre del empleado')
+    documento = models.CharField(max_length=15, verbose_name='Documento de identidad')
     contra = models.CharField(max_length=15, verbose_name='Contraseña')
     telefono = models.CharField(max_length=12, verbose_name='Teléfono')
     correo = models.EmailField(max_length=100, unique=True, verbose_name='Correo electrónico')
