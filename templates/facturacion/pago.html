@@ -89,7 +89,7 @@
                 </div>
             </div>
 
-            <!-- 2. MÉTODO DE PAGO -->
+      <!-- 2. MÉTODO DE PAGO -->
             <div class="form-card-responsive">
                 <div class="form-card-header">
                     <div class="form-card-header-left">
@@ -135,7 +135,7 @@
                             </label>
                         </div>
                     </div>
-
+  
                     <!-- Panel Dinámico: Efectivo (Calculadora de cambio) -->
                     <div id="panelEfectivo" class="p-3 bg-light rounded-3 border mb-3">
                         <div class="row g-3 align-items-center">
@@ -237,9 +237,19 @@
                             <strong id="subtotal" class="text-dark">$0</strong>
                         </div>
 
-                        <div class="d-flex justify-content-between text-success mb-2 small" id="filaDescuento" style="display:none !important;">
-                            <span id="textoDescuento">Descuento aplicado:</span>
+                        <div class="d-flex justify-content-between text-success mb-2 small" id="filaDescuento">
+                            <span id="textoDescuento">Descuento Total:</span>
                             <strong id="descuentoFactura">-$0</strong>
+                        </div>
+
+                        <div class="d-flex justify-content-between text-secondary mb-2 small">
+                            <span>Base Gravable (sin IVA):</span>
+                            <strong id="baseGravable" class="text-dark">$0</strong>
+                        </div>
+
+                        <div class="d-flex justify-content-between text-secondary mb-2 small">
+                            <span>IVA (19%):</span>
+                            <strong id="ivaFactura" class="text-dark">$0</strong>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center p-3 rounded-3 mt-3" style="background: linear-gradient(135deg, #059669, #047857); color: #fff;">
@@ -345,14 +355,19 @@ if(carrito.length === 0){
 const valorDescuento = subtotalCalculado * (porcentajeAplicado / 100);
 totalFinalCalculado = subtotalCalculado - valorDescuento;
 
-document.getElementById("subtotal").innerText = "$" + subtotalCalculado.toLocaleString("es-CO");
-document.getElementById("totalFactura").innerText = "$" + totalFinalCalculado.toLocaleString("es-CO");
+const baseGravableCalculada = totalFinalCalculado / 1.19;
+const ivaCalculado = totalFinalCalculado - baseGravableCalculada;
+
+document.getElementById("subtotal").innerText = "$" + Math.round(subtotalCalculado).toLocaleString("es-CO");
+document.getElementById("descuentoFactura").innerText = "-$" + Math.round(valorDescuento).toLocaleString("es-CO");
+document.getElementById("baseGravable").innerText = "$" + Math.round(baseGravableCalculada).toLocaleString("es-CO");
+document.getElementById("ivaFactura").innerText = "$" + Math.round(ivaCalculado).toLocaleString("es-CO");
+document.getElementById("totalFactura").innerText = "$" + Math.round(totalFinalCalculado).toLocaleString("es-CO");
 
 if (porcentajeAplicado > 0) {
-    const filaDesc = document.getElementById("filaDescuento");
-    filaDesc.style.setProperty("display", "flex", "important");
-    document.getElementById("textoDescuento").innerText = `Descuento (${porcentajeAplicado}%):`;
-    document.getElementById("descuentoFactura").innerText = "-$" + valorDescuento.toLocaleString("es-CO");
+    document.getElementById("textoDescuento").innerText = `Descuento Total (${porcentajeAplicado}%):`;
+} else {
+    document.getElementById("textoDescuento").innerText = "Descuento Total:";
 }
 
 /* Manejo de Métodos de Pago y Calculadora de Cambio */

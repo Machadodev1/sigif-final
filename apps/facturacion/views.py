@@ -31,6 +31,8 @@ from apps.facturacion.models import (
 
 from apps.productos.models import Producto
 
+from apps.inventario.models import EntradaInventario, DetalleEntradaInventario
+
 from core.decoradores import requerir_rol
 
 
@@ -610,16 +612,22 @@ def generar_pdf_factura(factura):
         ])
 
     # ==========================================
-    # DESCUENTO
+    # TOTALES DE RESUMEN
     # ==========================================
 
-    descuento = Decimal(
-        str(factura.descuento or 0)
-    )
+    descuento = Decimal(str(factura.descuento or 0))
+    total = Decimal(str(factura.total))
 
-    total = Decimal(
-        str(factura.total)
-    )
+    subtotal_bruto = total + descuento
+    base_gravable = factura.base_gravable
+    iva = factura.iva
+
+    data.append([
+        "",
+        "",
+        "Subtotal Bruto:",
+        f"$ {subtotal_bruto:,.0f} COP"
+    ])
 
     data.append([
         "",
@@ -628,9 +636,19 @@ def generar_pdf_factura(factura):
         f"$ {descuento:,.0f} COP"
     ])
 
-    # ==========================================
-    # TOTAL
-    # ==========================================
+    data.append([
+        "",
+        "",
+        "Base Gravable:",
+        f"$ {base_gravable:,.0f} COP"
+    ])
+
+    data.append([
+        "",
+        "",
+        "IVA (19%):",
+        f"$ {iva:,.0f} COP"
+    ])
 
     data.append([
         "",
@@ -710,7 +728,7 @@ def generar_pdf_factura(factura):
             (
                 "GRID",
                 (0, 0),
-                (-1, -3),
+                (-1, -6),
                 0.5,
                 gris_borde
             ),
@@ -729,19 +747,26 @@ def generar_pdf_factura(factura):
                 "MIDDLE"
             ),
 
-            # Descuento
+            # Filas de Resumen (Subtotal, Descuento, Base Gravable, IVA)
             (
                 "TEXTCOLOR",
-                (2, -2),
+                (2, -5),
                 (-1, -2),
-                azul_tabla
+                azul_sigif
             ),
 
             (
                 "FONTNAME",
-                (2, -2),
+                (2, -5),
                 (-1, -2),
                 "Helvetica-Bold"
+            ),
+
+            (
+                "TEXTCOLOR",
+                (2, -4), # Descuento en color azul_tabla
+                (-1, -4),
+                azul_tabla
             ),
 
             # Total
@@ -917,3 +942,34 @@ def exportar_factura_pdf(request, pk):
     )
 
     return response
+
+# ============================================================
+# FACTURAS DE ENTRADA (INGRESOS AL INVENTARIO)
+# ============================================================
+
+@requerir_rol(["SuperAdmin", "Admin", "Empleado"])
+def facturas_entrada_view(request):
+    entradas = EntradaInventario.objects.prefetch_related(
+        'detalles__producto'
+    ).order_by('-fecha')
+
+    return render(
+        request,
+        'facturacion/facturas_entrada.html',
+        {'entradas': entradas}
+    )
+
+
+@requerir_rol(["SuperAdmin", "Admin", "Empleado"])
+def registro_entradas_view(request):
+    """Registro linea por linea de todos los productos ingresados."""
+    detalles = DetalleEntradaInventario.objects.select_related(
+        'producto',
+        'entrada'
+    ).order_by('-entrada__fecha')
+
+    return render(
+        request,
+        'facturacion/registro_entradas.html',
+        {'detalles': detalles}
+    )

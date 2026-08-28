@@ -40,10 +40,6 @@
                 <button class="cs-filtro-btn" data-filtro="bajo">Stock bajo</button>
             </div>
 
-            <a href="{% url 'crear_productos' %}" class="cv-cart-btn" style="background: linear-gradient(135deg, #3a56e4, #5c7cfa); color: #fff; text-decoration: none;">
-                <i class="bi bi-plus-circle-fill"></i>
-                <span class="cv-cart-label">Nuevo producto</span>
-            </a>
         </div>
     </div>
 
@@ -81,15 +77,6 @@
 
     <!-- TARJETAS DE PRODUCTOS (cards) -->
     <div class="cards-grid" id="productosGrid">
-        
-        <!-- TARJETA BOTÓN CREAR PRODUCTO -->
-        <a href="{% url 'crear_productos' %}" class="tarjeta-stock tarjeta-crear-link" style="text-decoration: none; border: 2px dashed #cbd5e1; background: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; min-height: 220px; transition: all 0.2s ease;">
-            <div style="width: 54px; height: 54px; border-radius: 50%; background: #e0e7ff; color: #3a56e4; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 12px;">
-                <i class="bi bi-plus-lg"></i>
-            </div>
-            <strong style="color: #1e293b; font-size: 1.05rem; margin-bottom: 4px;">Crear producto</strong>
-            <span style="color: #64748b; font-size: 0.8rem; text-align: center;">Haz clic para registrar un nuevo producto</span>
-        </a>
 
         {% for p in productos %}
         <div class="tarjeta-producto-item tarjeta-stock {% if not p.activo %}ts-agotado{% elif p.stock == 0 %}ts-agotado{% elif p.stock < 5 %}ts-bajo{% else %}ts-ok{% endif %}"
@@ -183,10 +170,10 @@ document.querySelectorAll('.cs-filtro-btn').forEach(btn => {
 function aplicarFiltrosProductos() {
     const q = buscadorProductos ? buscadorProductos.value.toLowerCase().trim() : '';
     document.querySelectorAll('.tarjeta-producto-item').forEach(card => {
-        const textMatch = (card.dataset.nombre || '').includes(q) || 
-                          (card.dataset.id || '').includes(q) || 
+        const textMatch = (card.dataset.nombre || '').includes(q) ||
+                          (card.dataset.id || '').includes(q) ||
                           (card.dataset.categoria || '').includes(q);
-        
+
         let estadoMatch = false;
         if (filtroActual === 'todos') {
             estadoMatch = true;
@@ -211,12 +198,12 @@ function aplicarFiltrosProductos() {
         else inactivos++;
         if (c.dataset.stock === 'bajo' || c.dataset.stock === 'agotado') bajos++;
     });
-    
+
     const elActivos = document.getElementById('totalActivos');
     const elInactivos = document.getElementById('totalInactivos');
     const elBajo = document.getElementById('totalBajo');
     const elTotal = document.getElementById('totalProductos');
-    
+
     if (elActivos) elActivos.textContent = activos;
     if (elInactivos) elInactivos.textContent = inactivos;
     if (elBajo) elBajo.textContent = bajos;
