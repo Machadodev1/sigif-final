@@ -58,21 +58,42 @@ def formato_cop(valor):
 # ============================================================
 
 class FacturaListView(ListView):
-
     model = Factura
-
     template_name = 'facturacion/facturacion.html'
-
     context_object_name = 'facturas'
 
     def dispatch(self, request, *args, **kwargs):
-
         return requerir_rol(
             ["SuperAdmin", "Admin", "Empleado"]
-        )(
-            super().dispatch
-        )(request, *args, **kwargs)
+        )(super().dispatch)(request, *args, **kwargs)
 
+    def get_queryset(self):
+        facturas = Factura.objects.select_related(
+            'cliente'
+        ).prefetch_related(
+            'detalles__producto'
+        ).order_by('-id')
+
+        usuario = self.request.session.get("logueado", {})
+
+        rol = usuario.get("rol")
+        nombre_usuario = usuario.get("nombre")
+
+        # SuperAdmin y Admin pueden ver TODAS las facturas
+        if rol in ["SuperAdmin", "Admin"]:
+            return facturas
+
+        # Empleado solamente puede ver las facturas
+        # que él mismo realizó
+        if rol == "Empleado":
+            return facturas.filter(
+                usuario=nombre_usuario
+            )
+
+        # Si por alguna razón no tiene un rol válido,
+        # no mostrar ninguna factura
+        return Factura.objects.none()
+    
 
 # ============================================================
 # DETALLE DE FACTURA
