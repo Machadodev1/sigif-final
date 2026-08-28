@@ -20,7 +20,7 @@ def inv_configuracion(request):
 @requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def inventario(request):
 
-    productos = Producto.objects.filter(activo=True)
+    productos = Producto.objects.filter(activo=True).order_by('-stock', 'nombre')
 
     contexto = {
         'producto': productos
