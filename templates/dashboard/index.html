@@ -18,9 +18,16 @@
 {% endif %}
 
 {% if low_stock > 0 %}
-    <div class="alert error">
-        Algunos productos están agotados o con stock bajo.
-        <a href="{% url 'inv_control' %}">Ver detalles</a>
+    <div class="alert warning">
+        Hay {{ low_stock }} producto{{ low_stock|pluralize }} con stock bajo.
+        <a href="{% url 'inv_control' %}?filtro=bajo">Ver detalles</a>
+    </div>
+{% endif %}
+
+{% if out_of_stock > 0 %}
+    <div class="alert danger">
+        Hay {{ out_of_stock }} producto{{ out_of_stock|pluralize }} agotado{{ out_of_stock|pluralize }}.
+        <a href="{% url 'inv_control' %}?filtro=agotado">Ver detalles</a>
     </div>
 {% endif %}
 
@@ -42,6 +49,11 @@
     </div>
 
     <div class="tarjetas">
+        <h3>Agotados</h3>
+        <strong class="valor">{{ out_of_stock }}</strong>
+    </div>
+
+    <div class="tarjetas">
         <h3>Ventas del Mes</h3>
         <strong class="valor">
             ${{ ventas_totales|floatformat:0|intcomma }}
@@ -55,21 +67,30 @@
     <!-- ACTIVIDAD REAL -->
     <div class="Actividad-recientes">
 
-        <h2>Actividad Reciente</h2>
+        <div class="panel-heading">
+            <div>
+                <span class="panel-kicker">Registro del sistema</span>
+                <h2>Actividad Reciente</h2>
+            </div>
+            <span class="panel-count">{{ actividades_recientes|length }}</span>
+        </div>
 
         {% if actividades_recientes %}
 
             <ul>
                 {% for actividad in actividades_recientes %}
-                    <li>
-                        <strong>{{ actividad.usuario }}</strong>
-                        {{ actividad.accion }}
-
-                        <small>
-                            {{ actividad.modulo }}
-                            -
-                            {{ actividad.fecha|date:"d/m/Y H:i" }}
-                        </small>
+                    <li class="actividad-item">
+                        <span class="actividad-icon" aria-hidden="true"><i class="bi bi-activity"></i></span>
+                        <div class="actividad-body">
+                            <div class="actividad-main">
+                                <strong>{{ actividad.usuario }}</strong>
+                                <span>{{ actividad.accion }}</span>
+                            </div>
+                            <div class="actividad-meta">
+                                <span class="actividad-modulo">{{ actividad.modulo }}</span>
+                                <time datetime="{{ actividad.fecha|date:'c' }}">{{ actividad.fecha|date:"d/m/Y H:i" }}</time>
+                            </div>
+                        </div>
                     </li>
                 {% endfor %}
             </ul>
@@ -90,13 +111,21 @@
 
         <h2>Alertas del Sistema</h2>
 
-        {% if low_stock > 0 %}
+        {% if low_stock > 0 or out_of_stock > 0 %}
 
             <ul>
-                <li>
-                    Hay {{ low_stock }} producto{{ low_stock|pluralize }}
-                    con stock bajo.
-                </li>
+                {% if low_stock > 0 %}
+                    <li class="alerta-agotados">
+                        Stock bajo: {{ low_stock }} producto{{ low_stock|pluralize }}.
+                        <a href="{% url 'inv_control' %}?filtro=bajo">Ver detalles</a>
+                    </li>
+                {% endif %}
+                {% if out_of_stock > 0 %}
+                    <li>
+                        Agotados: {{ out_of_stock }} producto{{ out_of_stock|pluralize }}.
+                        <a href="{% url 'inv_control' %}?filtro=agotado">Ver detalles</a>
+                    </li>
+                {% endif %}
             </ul>
 
         {% else %}

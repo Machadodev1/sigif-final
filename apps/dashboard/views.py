@@ -11,7 +11,9 @@ from apps.auditoria.models import Auditoria
 def index(request):
     total = Usuarios.objects.count()
     to = Producto.objects.count()
-    low_stock = Producto.objects.filter(stock__lt=5).count()
+    productos_activos = Producto.objects.filter(activo=True)
+    low_stock = productos_activos.filter(stock__gt=0, stock__lt=5).count()
+    out_of_stock = productos_activos.filter(stock=0).count()
 
     ahora = timezone.localtime()
     inicio_mes = ahora.replace(
@@ -37,6 +39,7 @@ def index(request):
         "total": total,
         "to": to,
         "low_stock": low_stock,
+        "out_of_stock": out_of_stock,
         "ventas_totales": ventas_totales,
         "actividades_recientes": actividades_recientes,
     }
