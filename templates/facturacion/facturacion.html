@@ -94,6 +94,14 @@
                         <span class="tf-meta-val tf-descuento">-${{ factura.descuento|floatformat:0 }}</span>
                     </div>
                     {% endif %}
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-cash"></i> Base Gravable</span>
+                        <span class="tf-meta-val">${{ factura.base_gravable|floatformat:0|intcomma }}</span>
+                    </div>
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-percent"></i> IVA (19%)</span>
+                        <span class="tf-meta-val">${{ factura.iva|floatformat:0|intcomma }}</span>
+                    </div>
                 </div>
 
                 <!-- Productos vendidos -->

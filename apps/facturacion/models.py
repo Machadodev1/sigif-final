@@ -21,6 +21,8 @@ class Cliente(models.Model):
         return ultima_factura.fecha if ultima_factura else "Sin compras"
 
 
+from decimal import Decimal
+
 class Factura(models.Model):
     cliente = models.ForeignKey(
         Cliente,
@@ -47,6 +49,14 @@ class Factura(models.Model):
         decimal_places=2,
         default=0
     )
+
+    @property
+    def base_gravable(self):
+        return self.total / Decimal("1.19")
+
+    @property
+    def iva(self):
+        return self.total - self.base_gravable
 
     def __str__(self):
         return f"Factura #{self.id} - {self.cliente.nombre}"
