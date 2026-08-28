@@ -12,7 +12,7 @@
 
     <div class="menu-horizontal">
         <a href="{% url 'inv_control' %}" class="{% if request.resolver_match.url_name == 'inv_control' %}active{% endif %}">Control de stock</a>
-        <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Inventario</a>
+        <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Catalogo de ventas</a>
         <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">Historial de movimientos</a>
     </div>
 
@@ -70,6 +70,15 @@
         </div>
 
         <div class="cards-grid" id="stockGrid">
+            <!-- TARJETA BOTÓN REGISTRAR ENTRADA -->
+            <a href="{% url 'inv_ingresos' %}" class="tarjeta-stock tarjeta-crear-link" style="text-decoration: none; border: 2px dashed #cbd5e1; background: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; min-height: 220px; transition: all 0.2s ease;">
+                <div style="width: 54px; height: 54px; border-radius: 50%; background: #d1fae5; color: #05a77b; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 12px;">
+                    <i class="bi bi-box-arrow-in-down"></i>
+                </div>
+                <strong style="color: #1e293b; font-size: 1.05rem; margin-bottom: 4px;">Registrar entrada</strong>
+                <span style="color: #64748b; font-size: 0.8rem; text-align: center;">Registra la llegada de mercancía y genera la factura de entrada</span>
+            </a>
+
             {% for producto in producto %}
             <div class="tarjeta-stock
                 {% if producto.stock == 0 %}ts-agotado
@@ -168,7 +177,7 @@ document.querySelectorAll('.cs-filtro-btn').forEach(btn => {
 
 function aplicarFiltros() {
     const q = buscador.value.toLowerCase().trim();
-    document.querySelectorAll('.tarjeta-stock').forEach(card => {
+    document.querySelectorAll('.tarjeta-stock[data-estado]').forEach(card => {
         const nombreMatch = card.dataset.nombre.includes(q) || card.dataset.id.includes(q);
         const estadoMatch  = filtroActual === 'todos' || card.dataset.estado === filtroActual;
         card.style.display = (nombreMatch && estadoMatch) ? '' : 'none';
@@ -177,7 +186,7 @@ function aplicarFiltros() {
 
 /* ---- Contadores resumen ---- */
 (function() {
-    const cards = document.querySelectorAll('.tarjeta-stock');
+    const cards = document.querySelectorAll('.tarjeta-stock[data-estado]');
     let ok = 0, bajo = 0, agotado = 0;
     cards.forEach(c => {
         if (c.dataset.estado === 'ok')      ok++;

@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Facturas de entrada{% endblock %}
+
+{% block content %}
+
+<header class="facturacion-header">
+    <div>
+        <h1>Gestión de facturación</h1>
+    </div>
+</header>
+
+<div class="menu-horizontal">
+    <a href="{% url 'factura-list' %}"
+        class="{% if request.resolver_match.url_name == 'factura-list' %}active{% endif %}">Facturas</a>
+    <a href="{% url 'facturas_entrada' %}" class="{% if request.resolver_match.url_name == 'facturas_entrada' %}active{% endif %}">Facturas de entrada</a>
+    <a href="{% url 'registro_entradas' %}" class="{% if request.resolver_match.url_name == 'registro_entradas' %}active{% endif %}">Registro de entradas</a>
+    <a href="{% url 'clientes' %}"
+        class="{% if request.resolver_match.url_name == 'clientes' %}active{% endif %}">Clientes</a>
+    <a href="{% url 'productos_facturacion' %}"
+        class="{% if request.resolver_match.url_name == 'productos_facturacion' %}active{% endif %}">Productos</a>
+</div>
+
+<section class="facturacion-container2">
+
+    <div class="fac-toolbar">
+        <div>
+            <h2 class="cv-title">Facturas de entrada</h2>
+            <p class="cv-subtitle">Ingresos de mercancía registrados desde el control de stock</p>
+        </div>
+        <div class="cv-search-wrapper">
+            <i class="bi bi-search cv-search-icon"></i>
+            <input type="text" id="buscadorEntradas" class="cv-search-input" placeholder="Buscar por id o proveedor">
+        </div>
+        <div class="fac-resumen-pills">
+            <span class="fac-pill fac-pill-total">
+                <i class="bi bi-box-arrow-in-down"></i>
+                {{ entradas|length }} entrada{{ entradas|length|pluralize:"s" }}
+            </span>
+        </div>
+    </div>
+
+    <div class="fac-grid">
+
+        {% for entrada in entradas %}
+        <div class="tarjeta-factura" data-id="{{ entrada.id }}" data-proveedor="{{ entrada.proveedor|lower }}">
+            <div class="tf-header">
+                <div class="tf-header-left">
+                    <div class="tf-icon-wrap">
+                        <i class="bi bi-box-arrow-in-down tf-icon"></i>
+                    </div>
+                    <div>
+                        <span class="tf-num">Factura de entrada <strong>{{ entrada.numero_factura }}</strong></span>
+                        <span class="tf-fecha">
+                            <i class="bi bi-calendar3"></i>
+                            {{ entrada.fecha|date:"d/m/Y H:i" }}
+                        </span>
+                    </div>
+                </div>
+                <span class="tf-total-badge">$ {{ entrada.total|floatformat:0|intcomma }}</span>
+            </div>
+
+            <div class="tf-body">
+                <div class="tf-meta-row">
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-truck"></i> Proveedor</span>
+                        <span class="tf-meta-val">{{ entrada.proveedor }}</span>
+                    </div>
+                    {% if entrada.documento %}
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-file-earmark-text"></i> Documento</span>
+                        <span class="tf-meta-val">{{ entrada.documento }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-person-badge-fill"></i> Registró</span>
+                        <span class="tf-meta-val">{{ entrada.usuario }}</span>
+                    </div>
+                </div>
+
+                <div class="tf-productos">
+                    <span class="tf-productos-label">Productos ingresados</span>
+                    <div class="tf-productos-lista">
+                        {% for detalle in entrada.detalles.all %}
+                        <div class="tf-detalle-item">
+                            <div class="tf-detalle-info">
+                                <i class="bi bi-box-seam tf-detalle-icon"></i>
+                                <span class="tf-detalle-nombre">{{ detalle.producto.nombre }}</span>
+                            </div>
+                            <div class="tf-detalle-nums">
+                                <span class="tf-detalle-qty">+{{ detalle.cantidad }}</span>
+                                <span class="tf-detalle-precio">${{ detalle.subtotal|floatformat:0|intcomma }}</span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="tf-detalle-empty">Sin productos registrados</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="tf-footer">
+                <span class="tf-footer-label">Total de la entrada</span>
+                <span class="tf-footer-total">${{ entrada.total|floatformat:0|intcomma }}</span>
+            </div>
+
+            <a href="{% url 'exportar_entrada_pdf' entrada.id %}" class="btn btn-success" style="margin: 0 16px 16px;">
+                <i class="bi bi-download"></i> Descargar factura en PDF
+            </a>
+        </div>
+        {% empty %}
+        <div class="fac-empty">
+            <i class="bi bi-box-arrow-in-down fac-empty-icon"></i>
+            <p>No hay facturas de entrada registradas.</p>
+        </div>
+        {% endfor %}
+
+    </div>
+
+</section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const buscador = document.getElementById("buscadorEntradas");
+        const entradas = document.querySelectorAll(".tarjeta-factura");
+
+        buscador.addEventListener("input", function () {
+            const texto = this.value.toLowerCase().trim();
+            entradas.forEach(function (entrada) {
+                const id = entrada.getAttribute("data-id").toLowerCase();
+                const proveedor = entrada.getAttribute("data-proveedor") || "";
+                if (id.includes(texto) || proveedor.includes(texto)) {
+                    entrada.style.display = "";
+                } else {
+                    entrada.style.display = "none";
+                }
+            });
+        });
+    });
+</script>
+
+{% endblock %}
