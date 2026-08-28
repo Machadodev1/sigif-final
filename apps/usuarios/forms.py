@@ -11,6 +11,14 @@ class UsuarioForm(forms.ModelForm):
             'class': 'form-control',
         }),
     )
+    documento = forms.CharField(
+        label='Documento de identidad',
+        error_messages={'required': 'El documento de identidad es obligatorio para continuar.'},
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Ej. 1234567890',
+            'class': 'form-control',
+        }),
+    )
     contra = forms.CharField(
         label='Contraseña',
         widget=forms.PasswordInput(render_value=True, attrs={
