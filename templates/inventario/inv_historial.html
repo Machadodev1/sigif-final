@@ -1,79 +1,144 @@
 {% extends 'base.html' %}
+{%load humanize %}
+{%block title %}Historial{% endblock %}
 
-{% block title %} Historial {% endblock %}
+{%block content %}  
 
-{% block content %} 
+<header class="inventario-header">
+    <h1>Gestión de inventario</h1>
+</header>
 
-    <header class="inventario-header">
-        <h1>Gestión de inventario</h1>
-    </header>
+<div class="menu-horizontal">
+    <a href="{% url 'inv_control' %}" class="{% if request.resolver_match.url_name == 'inv_control' %}active{% endif %}">
+        Control de stock
+    </a>
 
-    <div class="menu-horizontal">
-        <a href="{% url 'inv_control' %}">Control de stock</a>
-        <a href="{% url 'inventario' %}">Carritos de compras</a>
-        <a href="{% url 'inv_historial' %}" class="active">Historial de movimientos</a>
+    <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">
+        Catalogo de ventas
+    </a>
+
+    <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">
+        Historial de movimientos
+    </a>
+</div>
+
+<section class="inventario-container2">
+
+    <div class="cv-toolbar">
+        <div class="cv-toolbar-left">
+            <h2 class="cv-title">Historial de Movimientos</h2>
+            <p class="cv-subtitle">Registro completo de entradas y salidas de inventario</p>
+        </div>
     </div>
 
-    <section class="inventario-container2">
-        <div class="inv-header">
-            <div>
-                <h2>Historial De Movimientos</h2>
-                <p>Registro De Entradas y Salidas</p>
+    <!-- SECCIONES DE ENTRADAS Y SALIDAS EN TARJETAS NOVEDOSAS -->
+    <div class="movimientos-grid-layout">
+
+        <!-- COLUMNA ENTRADAS -->
+        <div class="columna-movimientos">
+            <div class="columna-header">
+                <h3><span class="badge-tipo entrada">ENTRADAS</span> Registro de Productos</h3>
+            </div>
+
+            <div class="cards-stack">
+                {% for movimiento in movimientos %}
+                <div class="tarjeta-historial entrada-card">
+                    <div class="tarjeta-historial-header">
+                        <div>
+                            <span class="badge-id">ID #{{ movimiento.id }}</span>
+                            <strong class="titulo-producto">{{ movimiento.nombre }}</strong>
+                        </div>
+                        <span class="badge-tipo entrada">Entrada</span>
+                    </div>
+
+                    <div class="historial-detalles">
+                        <div class="detalle-item">
+                            <span class="detalle-label">Marca / Categoría</span>
+                            <span class="detalle-val">{{ movimiento.categoria|default:"General" }}</span>
+                        </div>
+                        <div class="detalle-item">
+                            <span class="detalle-label">Cantidad (Stock)</span>
+                            <span class="detalle-val">{{ movimiento.stock }} unid.</span>
+                        </div>
+                        <div class="detalle-item">
+                            <span class="detalle-label">Precio Unit.</span>
+                            <span class="detalle-val">${{ movimiento.precio|floatformat:0|intcomma }}</span>
+                        </div>
+                        <div class="detalle-item">
+                            <span class="detalle-label">Valor Total</span>
+                            <span class="detalle-val destacada-entrada">${{ movimiento.valor_total|floatformat:0|intcomma }}</span>
+                        </div>
+                    </div>
+
+                    <div class="tarjeta-historial-footer">
+                        <div class="fecha-creacion">
+                            <strong>Fecha y Hora de Creación:</strong> {{ movimiento.fecha_creacion|date:"d/m/Y - H:i"|default:"Reciente" }}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="tarjeta-historial empty-card">
+                    <p>No hay entradas registradas.</p>
+                </div>
+                {% endfor %}
             </div>
         </div>
 
-        <div class="movimientos">
-            <div class="movimientos-col">
+        <!-- COLUMNA SALIDAS -->
+        <div class="columna-movimientos">
+            <div class="columna-header">
+                <h3><span class="badge-tipo salida">SALIDAS</span> Movimientos de Venta</h3>
+            </div>
 
-                <div class="columna">
-                    <h3>Últimas Entradas</h3>
-
-                    <div class="tarjeta-mov">
-                        <div class="mov-info">
-                            <strong>Neumatico Trasero - Cross 21</strong>
-                            <p>Cantidad: 50 unidades</p>
-                            <p>Precio unitario: $90,000</p>
+            <div class="cards-stack">
+                {% for salida in salidas %}
+                <div class="tarjeta-historial salida-card">
+                    <div class="tarjeta-historial-header">
+                        <div>
+                            <span class="badge-id">Factura #{{ salida.factura.id }}</span>
+                            <strong class="titulo-producto">{{ salida.producto.nombre }}</strong>
                         </div>
-                        <div class="vl2">+$4,500,000</div>
+                        <span class="badge-tipo salida">Salida</span>
                     </div>
 
-                    <div class="tarjeta-mov">
-                        <div class="mov-info">
-                            <strong>Kit de arrastre</strong>
-                            <p>Cantidad: 15 unidades</p>
-                            <p>Precio unitario: $180,000</p>
+                    <div class="historial-detalles">
+                        <div class="detalle-item">
+                            <span class="detalle-label">Marca / Categoría</span>
+                            <span class="detalle-val">{{ salida.producto.categoria|default:"General" }}</span>
                         </div>
-                        <div class="vl2">+$2,700,000</div>
-                    </div>
-                </div> <div class="columna">
-                    <h3>Últimas Salidas</h3>
-
-                    <div class="tarjeta-mov">
-                        <div class="mov-info">
-                            <strong>Líquido de frenos</strong>
-                            <p>Motul — Cantidad: 2</p>
-                            <p>Precio unitario: $48,000</p>
+                        <div class="detalle-item">
+                            <span class="detalle-label">Cantidad Vendida</span>
+                            <span class="detalle-val">{{ salida.cantidad|floatformat:0|intcomma }} unid.</span>
                         </div>
-                        <div class="vl2">-$96,000</div>
-                    </div>
-
-                    <div class="tarjeta-mov">
-                        <div class="mov-info">
-                            <strong>Filtro de Aire</strong>
-                            <p>Motul — Cantidad: 4</p>
-                            <p>Precio unitario: $22,000</p>
+                        <div class="detalle-item">
+                            <span class="detalle-label">Cliente</span>
+                            <span class="detalle-val">{{ salida.factura.cliente.nombre|default:"Consumidor final" }}</span>
                         </div>
-                        <div class="vl2">-$88,000</div>
+                        <div class="detalle-item">
+                            <span class="detalle-label">Total Venta</span>
+                            <span class="detalle-val destacada-salida">${{ salida.subtotal|floatformat:0|intcomma }}</span>
+                        </div>
                     </div>
 
-                    <div class="tarjeta-mov">
-                        <div class="mov-info">
-                            <strong>Kit Luces LED</strong>
-                            <p>Philips — Cantidad: 1</p>
-                            <p>Precio unitario: $85,000</p>
+                    <div class="tarjeta-historial-footer">
+                        <div class="fecha-creacion">
+                            <strong>Fecha y Hora:</strong> {{ salida.factura.fecha|date:"d/m/Y - H:i" }}
                         </div>
-                        <div class="vl2">-$85,000</div>
+                        <div class="vendedor-info">
+                            <strong>Vendedor:</strong> {{ salida.factura.usuario }}
+                        </div>
                     </div>
-                </div> </div> </div> </section>
+                </div>
+                {% empty %}
+                <div class="tarjeta-historial empty-card">
+                    <p>No hay salidas registradas.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+</section>
 
 {% endblock %}

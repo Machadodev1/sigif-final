@@ -1,72 +1,214 @@
-{% extends 'base.html' %} 
-{% block title %} 
-Productos 
-{% endblock %} 
-
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %} Productos {% endblock %}
 {% block content %}
 
-<header class="usuarios-header">
-  <div>
-    <h2>Gestión de productos</h2>
-    <p>Administra el catálogo de productos</p>
-  </div>
-  <a href="{% url 'crear_productos' %}" class="btn-nuevo">Nuevo producto</a>
-</header>
-<section class="productos-lista">
-  <div class="productos-sub">
+<header class="inventario-header">
     <div>
-      <h2>Productos Registrados</h2>
-      <p>Lista de productos registrados en el sistema</p>
+        <h1>Gestión de productos</h1>
+    </div>
+</header>
+
+<section class="inventario-container2">
+
+    {# Mensajes específicos del módulo 'productos' #}
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert {% if 'error' in message.tags or message.tags == 'error' %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags or message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show {{ message.tags }}" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="cv-toolbar">
+        <div class="cv-toolbar-left">
+            <h2 class="cv-title">Lista de productos</h2>
+            <p class="cv-subtitle">Administra los productos registrados en el catálogo, precios, stock y categorías</p>
+        </div>
+
+        <div class="cv-toolbar-right">
+            <div class="cv-search-wrapper">
+                <i class="bi bi-search cv-search-icon"></i>
+                <input type="text" id="buscadorProductos" class="cv-search-input" placeholder="Buscar por nombre, categoría o ID…" value="{{ q|default:'' }}">
+            </div>
+
+            <div class="cs-filtros">
+                <button class="cs-filtro-btn active" data-filtro="todos">Todos</button>
+                <button class="cs-filtro-btn" data-filtro="activo">Activos</button>
+                <button class="cs-filtro-btn" data-filtro="inactivo">Inactivos</button>
+                <button class="cs-filtro-btn" data-filtro="bajo">Stock bajo</button>
+            </div>
+
+        </div>
     </div>
 
-    <input
-      type="text"
-      class="buscar"
-      placeholder=" Buscar productos por nombre o ID"
-    />
-  </div>
+    <!-- TARJETAS DE RESUMEN DE MÉTRICAS -->
+    <div class="cs-resumen">
+        <div class="cs-resumen-card cs-total">
+            <i class="bi bi-box-seam cs-resumen-icon"></i>
+            <div>
+                <span class="cs-resumen-num" id="totalProductos">{{ productos|length }}</span>
+                <span class="cs-resumen-label">Total productos</span>
+            </div>
+        </div>
+        <div class="cs-resumen-card cs-disponible">
+            <i class="bi bi-check-circle cs-resumen-icon"></i>
+            <div>
+                <span class="cs-resumen-num" id="totalActivos">–</span>
+                <span class="cs-resumen-label">Activos</span>
+            </div>
+        </div>
+        <div class="cs-resumen-card cs-agotado">
+            <i class="bi bi-x-circle cs-resumen-icon"></i>
+            <div>
+                <span class="cs-resumen-num" id="totalInactivos">–</span>
+                <span class="cs-resumen-label">Inactivos</span>
+            </div>
+        </div>
+        <div class="cs-resumen-card cs-alerta">
+            <i class="bi bi-exclamation-triangle cs-resumen-icon"></i>
+            <div>
+                <span class="cs-resumen-num" id="totalBajo">–</span>
+                <span class="cs-resumen-label">Stock bajo (&lt;5)</span>
+            </div>
+        </div>
+    </div>
 
-  <table border="1" cellpadding="10">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Descripcion</th>
-        <th>Precio</th>
-        <th>Stock</th>
-        <th>Categoria</th>
-        <th>Activo</th>
-        <th>Fecha de creacion</th>
-        <th>Fecha de actualizacion</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for i in productos %}
-      <tr>
-        <td>{{ i.id }}</td>
-        <td>{{ i.nombre }}</td>
-        <td>{{ i.descripcion }}</td>
-        <td>{{ i.precio }}</td>
-        <td>{{ i.stock }}</td>
-        <td>{{ i.categoria }}</td>
-        <td>{{ i.activo }}</td>
-        <td>{{ i.fecha_creacion }}</td>
-        <td>{{ i.fecha_actualizacion }}</td>
-        <td class="td-actions">
-          <a href="{% url 'actualizar_productos' i.id %}" class="btn-nuevo btn-sm">Editar</a>
-          <form action="{% url 'eliminar_productos' i.id %}" method="POST">
-            {% csrf_token %}
-            <button type="submit" class="btn-logout btn-sm">Eliminar</button>
-          </form>
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="10">No hay productos</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-    </table>
+    <!-- TARJETAS DE PRODUCTOS (cards) -->
+    <div class="cards-grid" id="productosGrid">
+
+        {% for p in productos %}
+        <div class="tarjeta-producto-item tarjeta-stock {% if not p.activo %}ts-agotado{% elif p.stock == 0 %}ts-agotado{% elif p.stock < 5 %}ts-bajo{% else %}ts-ok{% endif %}"
+             data-nombre="{{ p.nombre|lower }}"
+             data-id="{{ p.id }}"
+             data-categoria="{{ p.categoria|lower }}"
+             data-estado="{% if p.activo %}activo{% else %}inactivo{% endif %}"
+             data-stock="{% if p.stock == 0 %}agotado{% elif p.stock < 5 %}bajo{% else %}ok{% endif %}">
+
+            <div class="ts-header">
+                <span class="ts-id">ID #{{ p.id }}</span>
+                {% if not p.activo %}
+                    <span class="ts-badge ts-badge-agotado"><i class="bi bi-x-circle-fill"></i> Inactivo</span>
+                {% elif p.stock == 0 %}
+                    <span class="ts-badge ts-badge-agotado"><i class="bi bi-x-circle-fill"></i> Agotado</span>
+                {% elif p.stock < 5 %}
+                    <span class="ts-badge ts-badge-bajo"><i class="bi bi-exclamation-triangle-fill"></i> Stock bajo</span>
+                {% else %}
+                    <span class="ts-badge ts-badge-ok"><i class="bi bi-check-circle-fill"></i> Activo</span>
+                {% endif %}
+            </div>
+
+            <div class="ts-body">
+                <div class="ts-icon-wrap {% if not p.activo or p.stock == 0 %}ts-icon-agotado{% elif p.stock < 5 %}ts-icon-bajo{% else %}ts-icon-ok{% endif %}">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <strong class="ts-nombre">{{ p.nombre }}</strong>
+                <span class="ts-categoria" style="font-weight: 700; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.4px; color: #475569;">
+                    <i class="bi bi-tag-fill me-1"></i>{{ p.categoria|default:"General" }}
+                </span>
+            </div>
+
+            <div class="ts-stock-visual" style="margin-top: 10px;">
+                <div class="ts-stock-info" style="font-size: 0.82rem; color: #64748b; display: flex; flex-direction: column; gap: 6px;">
+                    <div><i class="bi bi-currency-dollar me-1" style="color: #059669;"></i> <strong>Precio:</strong> <span style="font-weight: 700; color: #059669;">${{ p.precio|intcomma }}</span></div>
+                    <div><i class="bi bi-boxes me-1" style="color: #3a56e4;"></i> <strong>Stock disponible:</strong> <span style="font-weight: 700; {% if p.stock < 5 %}color: #d97706;{% else %}color: #1e293b;{% endif %}">{{ p.stock }} unidades</span></div>
+                    {% if p.descripcion %}
+                    <div style="color: #64748b; font-size: 0.78rem; line-height: 1.3; margin-top: 2px;">{{ p.descripcion|truncatechars:65 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="ts-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 12px 18px 16px; border-top: 1px solid #f1f5f9; margin-top: auto;">
+                <a href="{% url 'actualizar_productos' p.id %}" class="cs-filtro-btn" style="padding: 6px 14px; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #cbd5e1; color: #334155; background: #fff;">
+                    <i class="bi bi-pencil-square"></i> Editar
+                </a>
+
+                <form action="{% url 'activar_desactivar_producto' p.id %}" method="POST" style="margin: 0;">
+                    {% csrf_token %}
+                    {% if p.activo %}
+                    <button type="submit" class="cs-filtro-btn" style="padding: 6px 14px; font-size: 0.78rem; background: #fff1f2; border: 1px solid #fecdd3; color: #e11d48; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="bi bi-slash-circle"></i> Desactivar
+                    </button>
+                    {% else %}
+                    <button type="submit" class="cs-filtro-btn" style="padding: 6px 14px; font-size: 0.78rem; background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="bi bi-check-circle"></i> Activar
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+
+        </div>
+        {% empty %}
+        <div class="cv-empty" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+            <i class="bi bi-box-seam cv-empty-icon" style="font-size: 2.5rem; color: #94a3b8;"></i>
+            <p style="margin-top: 10px; color: #64748b; font-weight: 500;">No se encontraron productos{% if q %} para "{{ q }}"{% endif %}.</p>
+        </div>
+        {% endfor %}
+    </div>
+
 </section>
+
+<script>
+/* ---- Buscador y Filtros dinámicos ---- */
+const buscadorProductos = document.getElementById('buscadorProductos');
+let filtroActual = 'todos';
+
+if (buscadorProductos) {
+    buscadorProductos.addEventListener('input', aplicarFiltrosProductos);
+}
+
+document.querySelectorAll('.cs-filtro-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.cs-filtro-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filtroActual = btn.dataset.filtro;
+        aplicarFiltrosProductos();
+    });
+});
+
+function aplicarFiltrosProductos() {
+    const q = buscadorProductos ? buscadorProductos.value.toLowerCase().trim() : '';
+    document.querySelectorAll('.tarjeta-producto-item').forEach(card => {
+        const textMatch = (card.dataset.nombre || '').includes(q) ||
+                          (card.dataset.id || '').includes(q) ||
+                          (card.dataset.categoria || '').includes(q);
+
+        let estadoMatch = false;
+        if (filtroActual === 'todos') {
+            estadoMatch = true;
+        } else if (filtroActual === 'activo') {
+            estadoMatch = card.dataset.estado === 'activo';
+        } else if (filtroActual === 'inactivo') {
+            estadoMatch = card.dataset.estado === 'inactivo';
+        } else if (filtroActual === 'bajo') {
+            estadoMatch = card.dataset.stock === 'bajo' || card.dataset.stock === 'agotado';
+        }
+
+        card.style.display = (textMatch && estadoMatch) ? '' : 'none';
+    });
+}
+
+/* ---- Resumen de Métricas ---- */
+(function() {
+    const cards = document.querySelectorAll('.tarjeta-producto-item');
+    let activos = 0, inactivos = 0, bajos = 0;
+    cards.forEach(c => {
+        if (c.dataset.estado === 'activo') activos++;
+        else inactivos++;
+        if (c.dataset.stock === 'bajo' || c.dataset.stock === 'agotado') bajos++;
+    });
+
+    const elActivos = document.getElementById('totalActivos');
+    const elInactivos = document.getElementById('totalInactivos');
+    const elBajo = document.getElementById('totalBajo');
+    const elTotal = document.getElementById('totalProductos');
+
+    if (elActivos) elActivos.textContent = activos;
+    if (elInactivos) elInactivos.textContent = inactivos;
+    if (elBajo) elBajo.textContent = bajos;
+    if (elTotal) elTotal.textContent = cards.length;
+})();
+</script>
+
 {% endblock %}

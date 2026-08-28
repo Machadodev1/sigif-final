@@ -2,61 +2,219 @@
 {% block title %} Usuarios {% endblock %}
 {% block content %}
 
-<header class="usuarios-header">
-  <h1>Gestión de usuarios</h1>
-  <p>Administra los usuarios del sistema</p>
+<header class="inventario-header">
+    <div>
+        <h1>Gestión de usuarios</h1>
+    </div>
 </header>
 
-<!-- CONTENEDOR DEL LISTADO -->
-<section class="usuarios-container2">
-  <div class="usuarios-header">
-    <div>
-      <h2>Lista de usuarios</h2>
-      <p>Usuarios registrados en el sistema</p>
+<section class="inventario-container2">
+
+    {# Mensajes específicos del módulo 'usuarios' #}
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert {% if 'error' in message.tags or message.tags == 'error' %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags or message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show {{ message.tags }}" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="cv-toolbar">
+        <div class="cv-toolbar-left">
+            <h2 class="cv-title">Lista de usuarios</h2>
+            <p class="cv-subtitle">Administra los usuarios registrados en el sistema, sus roles y estados</p>
+        </div>
+
+        <div class="cv-toolbar-right">
+            <div class="cv-search-wrapper">
+                <i class="bi bi-search cv-search-icon"></i>
+                <input type="text" id="buscadorUsuarios" class="cv-search-input" placeholder="Buscar por nombre, rol o teléfono…" value="{{ q|default:'' }}">
+            </div>
+
+            <div class="cs-filtros">
+                <button class="cs-filtro-btn active" data-filtro="todos">Todos</button>
+                <button class="cs-filtro-btn" data-filtro="activo">Activos</button>
+                <button class="cs-filtro-btn" data-filtro="inactivo">Inactivos</button>
+                <button class="cs-filtro-btn" data-filtro="admin">Admins</button>
+            </div>
+
+            <a href="{% url 'crear_usuarios' %}" class="cv-cart-btn" style="background: linear-gradient(135deg, #3a56e4, #5c7cfa); color: #fff; text-decoration: none;">
+                <i class="bi bi-person-plus-fill"></i>
+                <span class="cv-cart-label">Nuevo usuario</span>
+            </a>
+        </div>
     </div>
 
-    <a href="{% url 'crear_usuarios' %}" class="btn-nuevo">
-      <span></span> Nuevo Usuario
-    </a>
-  </div>
+    <!-- TARJETAS DE RESUMEN DE MÉTRICAS -->
+    <div class="cs-resumen">
+        <div class="cs-resumen-card cs-total">
+            <i class="bi bi-people cs-resumen-icon"></i>
+            <div>
+                <span class="cs-resumen-num" id="totalUsuarios">{{ user|length }}</span>
+                <span class="cs-resumen-label">Total usuarios</span>
+            </div>
+        </div>
+        <div class="cs-resumen-card cs-disponible">
+            <i class="bi bi-check-circle cs-resumen-icon"></i>
+            <div>
+                <span class="cs-resumen-num" id="totalActivos">–</span>
+                <span class="cs-resumen-label">Activos</span>
+            </div>
+        </div>
+        <div class="cs-resumen-card cs-agotado">
+            <i class="bi bi-x-circle cs-resumen-icon"></i>
+            <div>
+                <span class="cs-resumen-num" id="totalInactivos">–</span>
+                <span class="cs-resumen-label">Inactivos</span>
+            </div>
+        </div>
+        <div class="cs-resumen-card cs-alerta">
+            <i class="bi bi-shield-lock cs-resumen-icon"></i>
+            <div>
+                <span class="cs-resumen-num" id="totalAdmins">–</span>
+                <span class="cs-resumen-label">Admins / SuperAdmins</span>
+            </div>
+        </div>
+    </div>
 
-  <!-- TARJETAS DE USUARIOS -->
-  <table border="1" cellpadding="10">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Cargo</th>
-        <th>Telefono</th>
-        <th>Activo</th>
-        <th>Fecha de inicio</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for user in user %}
-      <tr>
-        <td>{{ user.id }}</td>
-        <td>{{ user.nombre }}</td>
-        <td>{{ user.cargo }}</td>
-        <td>{{ user.telefono }}</td>
-        <td>{{ user.activo }}</td>
-        <td>{{ user.fecha_inicio }}</td>
-        <td class="td-actions">
-          <a href="{% url 'editar_usuarios' user.id %}" class="btn-nuevo btn-sm">Editar</a>
+    <!-- TARJETAS DE USUARIOS (cards) -->
+    <div class="cards-grid" id="usuariosGrid">
+        
+        <!-- TARJETA BOTÓN CREAR USUARIO -->
+        <a href="{% url 'crear_usuarios' %}" class="tarjeta-stock tarjeta-crear-link" style="text-decoration: none; border: 2px dashed #cbd5e1; background: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; min-height: 220px; transition: all 0.2s ease;">
+            <div style="width: 54px; height: 54px; border-radius: 50%; background: #e0e7ff; color: #3a56e4; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 12px;">
+                <i class="bi bi-plus-lg"></i>
+            </div>
+            <strong style="color: #1e293b; font-size: 1.05rem; margin-bottom: 4px;">Crear usuario</strong>
+            <span style="color: #64748b; font-size: 0.8rem; text-align: center;">Haz clic para registrar un nuevo usuario</span>
+        </a>
 
-          <form action="{% url 'eliminar_usuario' user.id %}" method="POST">
-            {% csrf_token %}
-            <button type="submit" class="btn-logout btn-sm">Eliminar</button>
-          </form>
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="8">No hay usuarios</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+        {% for u in user %}
+        <div class="tarjeta-usuario-item tarjeta-stock {% if u.activo %}ts-ok{% else %}ts-agotado{% endif %}"
+             data-nombre="{{ u.nombre|lower }}"
+             data-id="{{ u.id }}"
+             data-cargo="{{ u.cargo|lower }}"
+             data-telefono="{{ u.telefono|default:'' }}"
+             data-estado="{% if u.activo %}activo{% else %}inactivo{% endif %}">
+
+            <div class="ts-header">
+                <span class="ts-id">ID #{{ u.id }}</span>
+                {% if u.activo %}
+                    <span class="ts-badge ts-badge-ok"><i class="bi bi-check-circle-fill"></i> Activo</span>
+                {% else %}
+                    <span class="ts-badge ts-badge-agotado"><i class="bi bi-x-circle-fill"></i> Inactivo</span>
+                {% endif %}
+            </div>
+
+            <div class="ts-body">
+                <div class="ts-icon-wrap {% if u.cargo|lower == 'superadmin' or u.cargo|lower == 'super_admin' %}ts-icon-agotado{% elif u.cargo|lower == 'admin' %}ts-icon-bajo{% else %}ts-icon-ok{% endif %}">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <strong class="ts-nombre">{{ u.nombre }}</strong>
+                <span class="ts-categoria" style="font-weight: 700; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.4px; color: #475569;">
+                    <i class="bi bi-shield-check me-1"></i>{{ u.cargo }}
+                </span>
+            </div>
+
+            <div class="ts-stock-visual" style="margin-top: 10px;">
+                <div class="ts-stock-info" style="font-size: 0.82rem; color: #64748b; display: flex; flex-direction: column; gap: 6px;">
+                    <div><i class="bi bi-telephone me-1" style="color: #3a56e4;"></i> <strong>Teléfono:</strong> {{ u.telefono|default:"Sin teléfono" }}</div>
+                    <div><i class="bi bi-calendar-event me-1" style="color: #10b981;"></i> <strong>Inicio:</strong> {{ u.fecha_inicio|date:"d/m/Y"|default:"Reciente" }}</div>
+                </div>
+            </div>
+
+            <div class="ts-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 12px 18px 16px; border-top: 1px solid #f1f5f9; margin-top: auto;">
+                <a href="{% url 'editar_usuarios' u.id %}" class="cs-filtro-btn" style="padding: 6px 14px; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #cbd5e1; color: #334155; background: #fff;">
+                    <i class="bi bi-pencil-square"></i> Editar
+                </a>
+
+                <form action="{% url 'cambiar_estado_usuario' u.id %}" method="POST" style="margin: 0;">
+                    {% csrf_token %}
+                    {% if u.activo %}
+                    <button type="submit" class="cs-filtro-btn" style="padding: 6px 14px; font-size: 0.78rem; background: #fff1f2; border: 1px solid #fecdd3; color: #e11d48; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="bi bi-person-x"></i> Desactivar
+                    </button>
+                    {% else %}
+                    <button type="submit" class="cs-filtro-btn" style="padding: 6px 14px; font-size: 0.78rem; background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="bi bi-person-check"></i> Activar
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+
+        </div>
+        {% empty %}
+        <div class="cv-empty" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+            <i class="bi bi-people cv-empty-icon" style="font-size: 2.5rem; color: #94a3b8;"></i>
+            <p style="margin-top: 10px; color: #64748b; font-weight: 500;">No se encontraron usuarios{% if q %} para "{{ q }}"{% endif %}.</p>
+        </div>
+        {% endfor %}
+    </div>
+
 </section>
+
+<script>
+/* ---- Buscador y Filtros dinámicos ---- */
+const buscadorUsuarios = document.getElementById('buscadorUsuarios');
+let filtroActual = 'todos';
+
+if (buscadorUsuarios) {
+    buscadorUsuarios.addEventListener('input', aplicarFiltrosUsuarios);
+}
+
+document.querySelectorAll('.cs-filtro-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.cs-filtro-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filtroActual = btn.dataset.filtro;
+        aplicarFiltrosUsuarios();
+    });
+});
+
+function aplicarFiltrosUsuarios() {
+    const q = buscadorUsuarios ? buscadorUsuarios.value.toLowerCase().trim() : '';
+    document.querySelectorAll('.tarjeta-usuario-item').forEach(card => {
+        const textMatch = card.dataset.nombre.includes(q) || 
+                          card.dataset.id.includes(q) || 
+                          card.dataset.cargo.includes(q) || 
+                          card.dataset.telefono.includes(q);
+        
+        let estadoMatch = false;
+        if (filtroActual === 'todos') {
+            estadoMatch = true;
+        } else if (filtroActual === 'activo') {
+            estadoMatch = card.dataset.estado === 'activo';
+        } else if (filtroActual === 'inactivo') {
+            estadoMatch = card.dataset.estado === 'inactivo';
+        } else if (filtroActual === 'admin') {
+            estadoMatch = card.dataset.cargo.includes('admin');
+        }
+
+        card.style.display = (textMatch && estadoMatch) ? '' : 'none';
+    });
+}
+
+/* ---- Resumen de Métricas ---- */
+(function() {
+    const cards = document.querySelectorAll('.tarjeta-usuario-item');
+    let activos = 0, inactivos = 0, admins = 0;
+    cards.forEach(c => {
+        if (c.dataset.estado === 'activo') activos++;
+        else inactivos++;
+        if (c.dataset.cargo.includes('admin')) admins++;
+    });
+    
+    const elActivos = document.getElementById('totalActivos');
+    const elInactivos = document.getElementById('totalInactivos');
+    const elAdmins = document.getElementById('totalAdmins');
+    const elTotal = document.getElementById('totalUsuarios');
+    
+    if (elActivos) elActivos.textContent = activos;
+    if (elInactivos) elInactivos.textContent = inactivos;
+    if (elAdmins) elAdmins.textContent = admins;
+    if (elTotal) elTotal.textContent = cards.length;
+})();
+</script>
+
 {% endblock %}

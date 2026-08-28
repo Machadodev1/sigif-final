@@ -1,0 +1,512 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Terminal de Pago - Facturación{% endblock %}
+
+{% block content %}
+
+<header class="inventario-header">
+    <div>
+        <h1>Terminal de Pago y Cobro</h1>
+    </div>
+</header>
+
+<section class="inventario-container2">
+
+    <div class="cv-toolbar mb-4">
+        <div class="cv-toolbar-left">
+            <h2 class="cv-title">Pasarela de Facturación</h2>
+            <p class="cv-subtitle">Completa los datos del cliente, selecciona el método de pago y emite la factura</p>
+        </div>
+        
+        <div class="cv-toolbar-right">
+            <a href="/inventario/" class="cs-filtro-btn" style="padding: 9px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #cbd5e1; color: #475569; font-weight: 600;">
+                <i class="bi bi-cart3"></i> Volver al inventario
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- COLUMNA IZQUIERDA: CLIENTE Y FORMA DE PAGO -->
+        <div class="col-lg-7">
+
+            <!-- 1. DATOS DEL CLIENTE -->
+            <div class="form-card-responsive mb-4">
+                <div class="form-card-header">
+                    <div class="form-card-header-left">
+                        <div class="form-card-icon">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+                        <div>
+                            <h3 class="form-card-title">1. Datos del Cliente</h3>
+                            <span class="form-card-subtitle">Asocia un cliente registrado o ingresa datos para la factura</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-card-body">
+                    <!-- Selector de tipo de cliente -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary small">
+                            <i class="bi bi-search me-1 text-primary"></i> Seleccionar Cliente Existente
+                        </label>
+                        <select id="clienteSelect" class="form-select">
+                            <option value="">-- Consumidor Final / Nuevo Cliente --</option>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente.id }}">{{ cliente.nombre }} — {{ cliente.correo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Formulario de nuevo cliente / datos adicionales -->
+                    <div id="clienteForm" class="p-3 bg-light rounded-3 border">
+                        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                            <span class="fw-bold text-dark small"><i class="bi bi-person-plus text-primary me-1"></i> Información del Comprador</span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" id="btnConsumidorFinal" style="font-size: 0.75rem;">
+                                Consumidor Final
+                            </button>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label for="nombre" class="form-label fw-semibold text-secondary small">Nombre o Razón Social</label>
+                                <input type="text" id="nombre" class="form-control form-control-sm" placeholder="Ej. Juan Pérez">
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="documento" class="form-label fw-semibold text-secondary small">Documento / C.C. / NIT</label>
+                                <input type="text" id="documento" class="form-control form-control-sm" placeholder="Ej. 1020304050">
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="correo" class="form-label fw-semibold text-secondary small">Correo Electrónico</label>
+                                <input type="email" id="correo" class="form-control form-control-sm" placeholder="cliente@correo.com">
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="telefono" class="form-label fw-semibold text-secondary small">Teléfono / WhatsApp</label>
+                                <input type="text" id="telefono" class="form-control form-control-sm" placeholder="Ej. 3001234567">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+      <!-- 2. MÉTODO DE PAGO -->
+            <div class="form-card-responsive">
+                <div class="form-card-header">
+                    <div class="form-card-header-left">
+                        <div class="form-card-icon" style="background: linear-gradient(135deg, #059669, #10b981);">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
+                        <div>
+                            <h3 class="form-card-title">2. Método de Pago</h3>
+                            <span class="form-card-subtitle">Selecciona la forma en que se liquida la transacción</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-card-body">
+                    <!-- Opciones de métodos de pago -->
+                    <div class="row g-2 mb-4" id="metodosPago">
+                        <div class="col-6 col-sm-3">
+                            <input type="radio" class="btn-check" name="metodo_pago" id="pago_efectivo" value="efectivo" checked>
+                            <label class="btn btn-outline-primary w-100 py-3 d-flex flex-column align-items-center gap-1 rounded-3 h-100" for="pago_efectivo">
+                                <i class="bi bi-cash-stack fs-4 text-success"></i>
+                                <span class="fw-bold small">Efectivo</span>
+                            </label>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <input type="radio" class="btn-check" name="metodo_pago" id="pago_tarjeta" value="tarjeta">
+                            <label class="btn btn-outline-primary w-100 py-3 d-flex flex-column align-items-center gap-1 rounded-3 h-100" for="pago_tarjeta">
+                                <i class="bi bi-credit-card-2-front fs-4 text-primary"></i>
+                                <span class="fw-bold small">Tarjeta</span>
+                            </label>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <input type="radio" class="btn-check" name="metodo_pago" id="pago_transferencia" value="transferencia">
+                            <label class="btn btn-outline-primary w-100 py-3 d-flex flex-column align-items-center gap-1 rounded-3 h-100" for="pago_transferencia">
+                                <i class="bi bi-phone fs-4 text-info"></i>
+                                <span class="fw-bold small">Transferencia</span>
+                            </label>
+                        </div>
+                        <div class="col-6 col-sm-3">
+                            <input type="radio" class="btn-check" name="metodo_pago" id="pago_credito" value="credito">
+                            <label class="btn btn-outline-primary w-100 py-3 d-flex flex-column align-items-center gap-1 rounded-3 h-100" for="pago_credito">
+                                <i class="bi bi-receipt-cutoff fs-4 text-warning"></i>
+                                <span class="fw-bold small">Crédito</span>
+                            </label>
+                        </div>
+                    </div>
+  
+                    <!-- Panel Dinámico: Efectivo (Calculadora de cambio) -->
+                    <div id="panelEfectivo" class="p-3 bg-light rounded-3 border mb-3">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-6">
+                                <label for="montoRecibido" class="form-label fw-semibold text-secondary small">Monto Recibido</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white fw-bold text-success">$</span>
+                                    <input type="number" id="montoRecibido" class="form-control fw-bold" placeholder="0">
+                                </div>
+                                <!-- Botones de billetes rápidos -->
+                                <div class="d-flex gap-1 mt-2 flex-wrap" id="billetesRapidos">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 btn-billete" data-val="exacto">Exacto</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 btn-billete" data-val="20000">$20k</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 btn-billete" data-val="50000">$50k</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 btn-billete" data-val="100000">$100k</button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-3 text-center" style="background: #e6fffa; border: 1px dashed #38b2ac;">
+                                    <span class="text-muted small d-block font-weight-bold">Cambio / Devuelta</span>
+                                    <span class="fs-4 fw-extrabold text-success" id="cambioTexto">$0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Dinámico: Tarjeta / Voucher -->
+                    <div id="panelTarjeta" class="p-3 bg-light rounded-3 border mb-3" style="display:none;">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small">Tipo de Tarjeta</label>
+                                <select class="form-select form-select-sm">
+                                    <option>Tarjeta Débito</option>
+                                    <option>Tarjeta Crédito (Visa)</option>
+                                    <option>Tarjeta Crédito (Mastercard)</option>
+                                    <option>Tarjeta Crédito (Otra)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small">N° Aprobación / Voucher</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="Ej. AP-982341">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Dinámico: Transferencia -->
+                    <div id="panelTransferencia" class="p-3 bg-light rounded-3 border mb-3" style="display:none;">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small">Canal / Billetera</label>
+                                <select class="form-select form-select-sm">
+                                    <option>Nequi</option>
+                                    <option>Daviplata</option>
+                                    <option>Bancolombia QR / Transferencia</option>
+                                    <option>Otro Banco</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small">Referencia de Pago</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="Ej. M12345678">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Dinámico: Crédito -->
+                    <div id="panelCredito" class="p-3 bg-light rounded-3 border mb-3" style="display:none;">
+                        <div class="alert alert-warning mb-0 py-2 small">
+                            <i class="bi bi-info-circle me-1"></i> Esta venta se registrará como cuenta por cobrar pendiente para el cliente.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- COLUMNA DERECHA: RESUMEN DE ORDEN / TICKET -->
+        <div class="col-lg-5">
+            <div class="form-card-responsive sticky-top" style="top: 20px;">
+                <div class="form-card-header" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff;">
+                    <div class="d-flex align-items-center justify-content-between w-100">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-receipt-cutoff fs-4 text-warning"></i>
+                            <h3 class="form-card-title text-white m-0">Ticket de Venta</h3>
+                        </div>
+                        <span id="itemsBadge" class="badge bg-primary rounded-pill px-3 py-2">0 ítems</span>
+                    </div>
+                </div>
+
+                <div class="form-card-body p-3">
+                    <!-- Lista de productos en el carrito -->
+                    <div id="productosFactura" class="mb-3" style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
+                        <!-- Items inyectados con JavaScript -->
+                    </div>
+
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between text-secondary mb-2 small">
+                            <span>Subtotal Bruto:</span>
+                            <strong id="subtotal" class="text-dark">$0</strong>
+                        </div>
+
+                        <div class="d-flex justify-content-between text-success mb-2 small" id="filaDescuento">
+                            <span id="textoDescuento">Descuento Total:</span>
+                            <strong id="descuentoFactura">-$0</strong>
+                        </div>
+
+                        <div class="d-flex justify-content-between text-secondary mb-2 small">
+                            <span>Base Gravable (sin IVA):</span>
+                            <strong id="baseGravable" class="text-dark">$0</strong>
+                        </div>
+
+                        <div class="d-flex justify-content-between text-secondary mb-2 small">
+                            <span>IVA (19%):</span>
+                            <strong id="ivaFactura" class="text-dark">$0</strong>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded-3 mt-3" style="background: linear-gradient(135deg, #059669, #047857); color: #fff;">
+                            <div>
+                                <span class="d-block small text-white-50 text-uppercase fw-bold">Total a Cobrar</span>
+                                <h2 class="m-0 fw-extrabold" id="totalFactura" style="font-size: 1.8rem;">$0</h2>
+                            </div>
+                            <i class="bi bi-shield-check fs-2 text-white-50"></i>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Confirmación Principal -->
+                    <button type="button" id="btnConfirmar" class="form-btn-submit w-100 mt-4 py-3 fs-6 d-flex align-items-center justify-content-center gap-2 shadow">
+                        <i class="bi bi-credit-card-2-front-fill"></i>
+                        <span>Confirmar y Emitir Factura</span>
+                    </button>
+
+                    <a href="/inventario/" class="form-btn-cancel w-100 mt-2 text-center">
+                        <i class="bi bi-arrow-left me-1"></i> Modificar productos
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</section>
+
+<!-- MODAL DE VENTA EXITOSA -->
+<div class="modal fade" id="modalVentaExitosa" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-body text-center p-4">
+                <div style="width: 72px; height: 72px; border-radius: 50%; background: #d1fae5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 16px;">
+                    <i class="bi bi-check-lg"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-1">¡Venta Confirmada con Éxito!</h4>
+                <p class="text-muted small mb-3">La factura ha sido registrada en el sistema y el inventario ha sido actualizado.</p>
+
+                <div class="p-3 bg-light rounded-3 mb-4 border">
+                    <span class="text-secondary small d-block mb-1">Comprobante de Venta</span>
+                    <strong class="fs-4 text-primary" id="numFacturaGenerada">Factura #000</strong>
+                </div>
+
+                <div class="d-flex flex-column gap-2">
+                    
+                    <a href="/inventario/" class="btn btn-outline-secondary py-2 fw-semibold">
+                        <i class="bi bi-arrow-repeat me-1"></i> Realizar Nueva Venta
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+let porcentajeAplicado = parseFloat(localStorage.getItem("porcentajeAplicado")) || 0;
+const productosFactura = document.getElementById("productosFactura");
+const itemsBadge = document.getElementById("itemsBadge");
+let subtotalCalculado = 0;
+let totalFinalCalculado = 0;
+
+/* Renderizar items del carrito en el ticket */
+if(carrito.length === 0){
+    productosFactura.innerHTML = `
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-cart-x fs-1 d-block mb-2 text-secondary"></i>
+            <p class="m-0 fw-semibold">El carrito está vacío</p>
+            <small>Agrega productos desde el inventario para cobrar.</small>
+        </div>
+    `;
+    document.getElementById("btnConfirmar").disabled = true;
+    document.getElementById("btnConfirmar").classList.add("opacity-50");
+} else {
+    let totalItems = 0;
+    productosFactura.innerHTML = "";
+
+    carrito.forEach(producto => {
+        const subtotalProducto = producto.price * producto.cantidad;
+        subtotalCalculado += subtotalProducto;
+        totalItems += producto.cantidad;
+
+        productosFactura.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center p-2 mb-2 bg-white rounded border">
+                <div class="d-flex align-items-center gap-2" style="min-width:0; flex:1;">
+                    <div style="width:34px; height:34px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#3a56e4; font-size:1.1rem; flex-shrink:0;">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div style="min-width:0;">
+                        <strong class="d-block text-truncate small text-dark">${producto.title}</strong>
+                        <span class="text-muted" style="font-size:0.75rem;">${producto.cantidad} un. x $${producto.price.toLocaleString("es-CO")}</span>
+                    </div>
+                </div>
+                <strong class="text-dark small ms-2">$${subtotalProducto.toLocaleString("es-CO")}</strong>
+            </div>
+        `;
+    });
+
+    itemsBadge.textContent = `${totalItems} ítem${totalItems !== 1 ? 's' : ''}`;
+}
+
+const valorDescuento = subtotalCalculado * (porcentajeAplicado / 100);
+totalFinalCalculado = subtotalCalculado - valorDescuento;
+
+const baseGravableCalculada = totalFinalCalculado / 1.19;
+const ivaCalculado = totalFinalCalculado - baseGravableCalculada;
+
+document.getElementById("subtotal").innerText = "$" + Math.round(subtotalCalculado).toLocaleString("es-CO");
+document.getElementById("descuentoFactura").innerText = "-$" + Math.round(valorDescuento).toLocaleString("es-CO");
+document.getElementById("baseGravable").innerText = "$" + Math.round(baseGravableCalculada).toLocaleString("es-CO");
+document.getElementById("ivaFactura").innerText = "$" + Math.round(ivaCalculado).toLocaleString("es-CO");
+document.getElementById("totalFactura").innerText = "$" + Math.round(totalFinalCalculado).toLocaleString("es-CO");
+
+if (porcentajeAplicado > 0) {
+    document.getElementById("textoDescuento").innerText = `Descuento Total (${porcentajeAplicado}%):`;
+} else {
+    document.getElementById("textoDescuento").innerText = "Descuento Total:";
+}
+
+/* Manejo de Métodos de Pago y Calculadora de Cambio */
+const panelEfectivo = document.getElementById("panelEfectivo");
+const panelTarjeta = document.getElementById("panelTarjeta");
+const panelTransferencia = document.getElementById("panelTransferencia");
+const panelCredito = document.getElementById("panelCredito");
+const inputRecibido = document.getElementById("montoRecibido");
+const textoCambio = document.getElementById("cambioTexto");
+
+document.querySelectorAll('input[name="metodo_pago"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        panelEfectivo.style.display = e.target.value === 'efectivo' ? 'block' : 'none';
+        panelTarjeta.style.display = e.target.value === 'tarjeta' ? 'block' : 'none';
+        panelTransferencia.style.display = e.target.value === 'transferencia' ? 'block' : 'none';
+        panelCredito.style.display = e.target.value === 'credito' ? 'block' : 'none';
+    });
+});
+
+function calcularCambio() {
+    const recibido = parseFloat(inputRecibido.value) || 0;
+    const cambio = recibido - totalFinalCalculado;
+    if (cambio >= 0) {
+        textoCambio.innerText = "$" + cambio.toLocaleString("es-CO");
+        textoCambio.className = "fs-4 fw-extrabold text-success";
+    } else {
+        textoCambio.innerText = "Faltan $" + Math.abs(cambio).toLocaleString("es-CO");
+        textoCambio.className = "fs-5 fw-bold text-danger";
+    }
+}
+
+if (inputRecibido) {
+    inputRecibido.addEventListener("input", calcularCambio);
+}
+
+document.querySelectorAll('.btn-billete').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const val = btn.dataset.val;
+        if (val === 'exacto') {
+            inputRecibido.value = totalFinalCalculado;
+        } else {
+            inputRecibido.value = val;
+        }
+        calcularCambio();
+    });
+});
+
+/* Botón rápido "Consumidor Final" */
+document.getElementById("btnConsumidorFinal").addEventListener("click", () => {
+    document.getElementById("nombre").value = "Consumidor Final";
+    document.getElementById("documento").value = "222222222222";
+    document.getElementById("correo").value = "consumidorfinal@pos.com";
+    document.getElementById("telefono").value = "0000000000";
+});
+
+/* Confirmar Venta / Envío Fetch */
+document.getElementById("btnConfirmar").addEventListener("click", () => {
+    if(carrito.length === 0){
+        alert("El carrito está vacío");
+        return;
+    }
+
+    const btn = document.getElementById("btnConfirmar");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Procesando venta...`;
+
+    const datos = {
+        cliente_id: clienteSelect ? clienteSelect.value : null,
+        nombre: document.getElementById("nombre").value,
+        documento: document.getElementById("documento").value,
+        correo: document.getElementById("correo").value,
+        telefono: document.getElementById("telefono").value,
+        productos: carrito,
+        descuento: porcentajeAplicado
+    };
+
+    fetch("/facturacion/confirmar-venta/", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify(datos)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success){
+            localStorage.removeItem("carrito");
+            localStorage.removeItem("porcentajeAplicado");
+
+            // Configurar modal de éxito
+            document.getElementById("numFacturaGenerada").innerText = `Factura #${data.factura_id}`;
+            
+            const modalExito = new bootstrap.Modal(document.getElementById("modalVentaExitosa"));
+            modalExito.show();
+        } else {
+            alert(data.message || "Error al procesar la venta");
+            btn.disabled = false;
+            btn.innerHTML = `<i class="bi bi-credit-card-2-front-fill me-1"></i> Confirmar y Emitir Factura`;
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        alert("Error al confirmar la venta");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="bi bi-credit-card-2-front-fill me-1"></i> Confirmar y Emitir Factura`;
+    });
+});
+
+function getCookie(name){
+    let cookieValue = null;
+    if(document.cookie && document.cookie !== ''){
+        const cookies = document.cookie.split(';');
+        for(let cookie of cookies){
+            cookie = cookie.trim();
+            if(cookie.startsWith(name + '=')){
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Ocultar formulario de cliente cuando se elige uno ya existente
+const clienteSelect = document.getElementById("clienteSelect");
+const clienteForm = document.getElementById("clienteForm");
+
+function toggleClienteForm(){
+    if(!clienteForm || !clienteSelect) return;
+    if(clienteSelect.value){
+        clienteForm.style.display = "none";
+    } else {
+        clienteForm.style.display = "";
+    }
+}
+toggleClienteForm();
+clienteSelect && clienteSelect.addEventListener("change", toggleClienteForm);
+</script>
+
+{% endblock %}

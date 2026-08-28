@@ -1,31 +1,66 @@
 {% extends 'base.html' %}
 
+{% block title %}Eliminar Usuario{% endblock %}
+
 {% block content %}
 
-    <div class="usuarios-header">
-        <div>
-            <h2>Eliminar Usuario</h2>
-            <p>Esta acción no se puede deshacer</p>
+<header class="inventario-header">
+    <div>
+        <h1>Gestión de usuarios</h1>
+    </div>
+</header>
+
+<section class="inventario-container2">
+
+    <div class="cv-toolbar" style="margin-bottom: 25px;">
+        <div class="cv-toolbar-left">
+            <h2 class="cv-title">Eliminar usuario</h2>
+            <p class="cv-subtitle">Confirma la eliminación permanente del usuario en el sistema</p>
+        </div>
+        <div class="cv-toolbar-right">
+            <a href="{% url 'usuarios' %}" class="cs-filtro-btn" style="padding: 9px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #cbd5e1; color: #475569; font-weight: 600;">
+                <i class="bi bi-arrow-left"></i> Volver a la lista
+            </a>
         </div>
     </div>
 
-    <div class="contenedor-formularios">
-        <div class="form-configuracion">
-            <h3>Confirmar eliminación</h3>
-            <div class="form-body">
-
-                <p class="Alerta-inv">¿Seguro que quieres eliminar a "{{ users }}"?</p>
-
-                <form method="POST">
-                    {% csrf_token %}
-                    <div class="actions-container">
-                        <button type="submit" class="btn-guardar" style="background-color:var(--color-closed)">Sí, eliminar</button>
-                        <a href="{% url 'usuarios' %}" class="btn-nuevo" style="margin-left:10px; background:#e6edf2; color:var(--text-main);">Cancelar</a>
-                    </div>
-                </form>
-
+    <div class="form-producto-card" style="background: #fff; border-radius: 14px; border: 1px solid #fecdd3; box-shadow: 0 4px 20px rgba(225,29,72,0.06); overflow: hidden; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); padding: 22px 25px; border-bottom: 1px solid #fecdd3; display: flex; align-items: center; gap: 14px;">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #f43f5e, #e11d48); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
+                <i class="bi bi-person-x-fill"></i>
+            </div>
+            <div>
+                <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #9f1239;">Confirmar eliminación</h3>
+                <span style="font-size: 0.82rem; color: #be123c;">Esta acción no se puede deshacer</span>
             </div>
         </div>
+
+        <div style="padding: 28px;">
+            <div class="p-3 mb-4" style="background: #fff5f5; border-radius: 10px; border: 1px solid #fed7d7; color: #9b2c2c; font-size: 0.95rem;">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                ¿Estás seguro de que deseas eliminar permanentemente al usuario <strong>"{{ usuarios.nombre }}"</strong>?
+            </div>
+
+            <div class="d-flex flex-column gap-2 mb-4 p-3" style="background: #f8fafc; border-radius: 10px; font-size: 0.88rem; color: #475569;">
+                <div><i class="bi bi-envelope me-2 text-primary"></i> <strong>Correo:</strong> {{ usuarios.correo }}</div>
+                <div><i class="bi bi-shield-check me-2 text-primary"></i> <strong>Cargo:</strong> {{ usuarios.cargo }}</div>
+                <div><i class="bi bi-telephone me-2 text-primary"></i> <strong>Teléfono:</strong> {{ usuarios.telefono|default:"N/A" }}</div>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="d-flex justify-content-end align-items-center gap-3 pt-3 border-top">
+                    <a href="{% url 'usuarios' %}" class="cs-filtro-btn" style="padding: 10px 22px; font-size: 0.9rem; text-decoration: none; color: #64748b; background: #f1f5f9; border: 1px solid #cbd5e1; font-weight: 600;">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn-delete" style="padding: 10px 24px; font-size: 0.9rem; border-radius: 8px;">
+                        <i class="bi bi-trash3-fill me-1"></i> Sí, eliminar usuario
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
+
+</section>
 
 {% endblock %}

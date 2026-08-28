@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Registro de entradas{% endblock %}
+
+{% block content %}
+
+<header class="facturacion-header">
+    <div>
+        <h1>Gestión de facturación</h1>
+    </div>
+</header>
+
+<div class="menu-horizontal">
+    <a href="{% url 'factura-list' %}"
+        class="{% if request.resolver_match.url_name == 'factura-list' %}active{% endif %}">Facturas</a>
+    <a href="{% url 'facturas_entrada' %}"
+        class="{% if request.resolver_match.url_name == 'facturas_entrada' %}active{% endif %}">Facturas de entrada</a>
+    <a href="{% url 'registro_entradas' %}"
+        class="{% if request.resolver_match.url_name == 'registro_entradas' %}active{% endif %}">Registro de
+        entradas</a>
+    <a href="{% url 'clientes' %}"
+        class="{% if request.resolver_match.url_name == 'clientes' %}active{% endif %}">Clientes</a>
+    <a href="{% url 'productos_facturacion' %}"
+        class="{% if request.resolver_match.url_name == 'productos_facturacion' %}active{% endif %}">Productos</a>
+</div>
+
+<section class="facturacion-container2">
+
+    <div class="fac-toolbar">
+        <div>
+            <h2 class="cv-title">Registro de entradas</h2>
+            <p class="cv-subtitle">Detalle línea por línea de todos los productos ingresados al inventario</p>
+        </div>
+        <div class="cv-search-wrapper">
+            <i class="bi bi-search cv-search-icon"></i>
+            <input type="text" id="buscadorRegEntradas" class="cv-search-input"
+                placeholder="Buscar por producto, factura o proveedor">
+        </div>
+        <div class="fac-resumen-pills">
+            <span class="fac-pill fac-pill-total">
+                <i class="bi bi-list-ul"></i>
+                {{ detalles|length }} registro{{ detalles|length|pluralize:"s" }}
+            </span>
+        </div>
+    </div>
+
+    <div class="card shadow-sm" style="border:none; border-radius:14px;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Factura</th>
+                        <th>Fecha</th>
+                        <th>Producto</th>
+                        <th>Proveedor</th>
+                        <th class="text-center">Cantidad</th>
+                        <th class="text-end">Precio unit.</th>
+                        <th class="text-end">Subtotal</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in detalles %}
+                    <tr
+                        data-buscar="{{ detalle.producto.nombre|lower }} {{ detalle.entrada.numero_factura|lower }} {{ detalle.entrada.proveedor|lower }}">
+                        <td><strong>{{ detalle.entrada.numero_factura }}</strong></td>
+                        <td>{{ detalle.entrada.fecha|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <i class="bi bi-box-seam me-1 text-primary"></i>{{ detalle.producto.nombre }}
+                        </td>
+                        <td>{{ detalle.entrada.proveedor }}</td>
+                        <td class="text-center"><span class="badge bg-success">+{{ detalle.cantidad }}</span></td>
+                        <td class="text-end">${{ detalle.precio|floatformat:0|intcomma }}</td>
+                        <td class="text-end fw-semibold">${{ detalle.subtotal|floatformat:0|intcomma }}</td>
+                        <td>
+                            <a href="{% url 'exportar_entrada_pdf' detalle.entrada.id %}"
+                                class="btn btn-sm btn-outline-success" title="Descargar factura en PDF">
+                                <i class="bi bi-download"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            No hay entradas de productos registradas.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const buscador = document.getElementById("buscadorRegEntradas");
+        const filas = document.querySelectorAll("tr[data-buscar]");
+
+        buscador.addEventListener("input", function () {
+            const texto = this.value.toLowerCase().trim();
+            filas.forEach(function (fila) {
+                const datos = fila.getAttribute("data-buscar");
+                fila.style.display = datos.includes(texto) ? "" : "none";
+            });
+        });
+    });
+</script>
+
+{% endblock %}

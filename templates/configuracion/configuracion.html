@@ -4,8 +4,22 @@
 
 {% block content %}
 <header class="inventario-header">
-    <h1>Configuración del Sistema</h1>
+    <div>
+        <h1>Configuración del Sistema</h1>
+    </div>
 </header>
+
+{# Mensajes específicos del módulo 'configuracion' #}
+{% if messages %}
+    {% for message in messages %}
+        {% if 'module-configuracion' in message.tags or not 'module-' in message.tags %}
+            <div class="alert {% if 'error' in message.tags or message.tags == 'error' %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags or message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
 
 <div class="menu-horizontal">
     <a href="{% url 'configuracion' %}" class="active">General y Empresa</a>
@@ -13,112 +27,139 @@
 </div>
 
 <section class="inventario-container2">
-    <div class="inv-header">
-        <div>
-            <h2>General y Empresa</h2>
-            <p>Gestiona la información básica de tu negocio.</p>
+    <div class="cv-toolbar" style="margin-bottom: 25px;">
+        <div class="cv-toolbar-left">
+            <h2 class="cv-title">General y Empresa</h2>
+            <p class="cv-subtitle">Gestiona la información básica del negocio, moneda, impuestos y datos de contacto</p>
         </div>
     </div>
 
-    {{config}}
+    <div class="row g-4">
 
-    <div class="contenedor-formularios">
-
-        <form action="{% url 'configuracion' %}" method="POST" class="form-configuracion">
-            {% csrf_token %}
-            <h3>Datos de la Empresa</h3>
-
-            <div class="form-body">
-                <div class="tarjetas-inv">
-                    <div class="inv-info editable-field">
-                        <label for="nombre_comercial">Nombre Comercial</label>
-                        {% if user.is_staff %}
-                        <input type="text" id="nombre_comercial" name="nombre_comercial"
-                            value="{{ config.nombre_comercial }}" class="form-input">
-                        {% else %}
-                        <span>{{ config.nombre_comercial }}</span>
-                        {% endif %}
+        <!-- Formulario Datos de la Empresa -->
+        <div class="col-lg-6">
+            <div class="form-producto-card h-100" style="background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.03); overflow: hidden; display: flex; flex-direction: column;">
+                <div style="background: linear-gradient(135deg, #f8faff 0%, #eff4ff 100%); padding: 18px 25px; border-bottom: 1px solid #e8eef8; display: flex; align-items: center; gap: 14px;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #3a56e4, #5c7cfa); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #1e293b;">Datos de la Empresa</h3>
+                        <span style="font-size: 0.82rem; color: #64748b;">Información legal e institucional del negocio</span>
                     </div>
                 </div>
 
-                <div class="tarjetas-inv">
-                    <div class="inv-info editable-field">
-                        <label for="nit">NIT / Identificación</label>
-                        {% if user.is_staff %}
-                        <input type="text" id="nit" name="nit" value="{{ config.nit }}" class="form-input">
-                        {% else %}
-                        <span>{{ config.nit }}</span>
-                        {% endif %}
-                    </div>
-                </div>
+                <form action="{% url 'configuracion' %}" method="POST" style="padding: 25px; flex: 1; display: flex; flex-direction: column;">
+                    {% csrf_token %}
 
-                <div class="tarjetas-inv">
-                    <div class="inv-info editable-field">
-                        <label for="direccion">Dirección</label>
-                        {% if user.is_staff %}
-                        <input type="text" id="direccion" name="direccion" value="{{ config.direccion }}"
-                            class="form-input">
-                        {% else %}
-                        <span>{{ config.direccion }}</span>
-                        {% endif %}
-                    </div>
-                </div>
+                    <div class="d-flex flex-column gap-3 mb-4">
+                        <div>
+                            <label for="nombre_comercial" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">
+                                <i class="bi bi-shop me-1 text-primary"></i> Nombre Comercial
+                            </label>
+                            {% if user.is_staff or request.session.logueado.rol == "SuperAdmin" or request.session.logueado.rol == "Admin" %}
+                            <input type="text" id="nombre_comercial" name="nombre_comercial" value="{{ config.nombre_comercial }}" class="form-control" placeholder="Ej. Ferretería El Progreso">
+                            {% else %}
+                            <div class="p-2 bg-light rounded border text-muted">{{ config.nombre_comercial|default:"Sin especificar" }}</div>
+                            {% endif %}
+                        </div>
 
-                {% if user.is_staff %}
-                <div class="actions-container">
-                    <button type="submit" class="btn-guardar">Guardar Cambios</button>
-                </div>
-                {% endif %}
+                        <div>
+                            <label for="nit" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">
+                                <i class="bi bi-card-heading me-1 text-primary"></i> NIT / Identificación Tributaria
+                            </label>
+                            {% if user.is_staff or request.session.logueado.rol == "SuperAdmin" or request.session.logueado.rol == "Admin" %}
+                            <input type="text" id="nit" name="nit" value="{{ config.nit }}" class="form-control" placeholder="Ej. 900.123.456-7">
+                            {% else %}
+                            <div class="p-2 bg-light rounded border text-muted">{{ config.nit|default:"Sin especificar" }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="direccion" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">
+                                <i class="bi bi-geo-alt me-1 text-primary"></i> Dirección Principal
+                            </label>
+                            {% if user.is_staff or request.session.logueado.rol == "SuperAdmin" or request.session.logueado.rol == "Admin" %}
+                            <input type="text" id="direccion" name="direccion" value="{{ config.direccion }}" class="form-control" placeholder="Ej. Calle 10 # 20-30">
+                            {% else %}
+                            <div class="p-2 bg-light rounded border text-muted">{{ config.direccion|default:"Sin especificar" }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if user.is_staff or request.session.logueado.rol == "SuperAdmin" or request.session.logueado.rol == "Admin" %}
+                    <div class="d-flex justify-content-end mt-auto pt-3 border-top">
+                        <button type="submit" class="cv-cart-btn" style="padding: 9px 22px; font-size: 0.9rem; background: linear-gradient(135deg, #3a56e4, #5c7cfa); color: #fff; border: none; cursor: pointer;">
+                            <i class="bi bi-save me-1"></i> Guardar Empresa
+                        </button>
+                    </div>
+                    {% endif %}
+                </form>
             </div>
-        </form>
+        </div>
 
-        <form action="{% url 'configuracion' %}" method="POST" class="form-configuracion">
-            {% csrf_token %}
-            <h3>Configuración del Sistema</h3>
-
-            <div class="form-body">
-                <div class="tarjetas-inv">
-                    <div class="inv-info editable-field">
-                        <label for="moneda">Moneda Principal</label>
-                        {% if user.is_staff %}
-                        <input type="text" id="moneda" name="moneda" value="{{ config.moneda }}" class="form-input">
-                        {% else %}
-                        <span>{{ config.moneda }}</span>
-                        {% endif %}
+        <!-- Formulario Configuración del Sistema -->
+        <div class="col-lg-6">
+            <div class="form-producto-card h-100" style="background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.03); overflow: hidden; display: flex; flex-direction: column;">
+                <div style="background: linear-gradient(135deg, #f8faff 0%, #eff4ff 100%); padding: 18px 25px; border-bottom: 1px solid #e8eef8; display: flex; align-items: center; gap: 14px;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #059669, #10b981); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">
+                        <i class="bi bi-sliders"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #1e293b;">Configuración del Sistema</h3>
+                        <span style="font-size: 0.82rem; color: #64748b;">Moneda, impuestos y canales de atención</span>
                     </div>
                 </div>
 
-                <div class="tarjetas-inv">
-                    <div class="inv-info editable-field">
-                        <label for="impuesto">Impuesto General (%)</label>
-                        {% if user.is_staff %}
-                        <input type="text" id="impuesto" name="impuesto" value="{{ config.impuesto }}"
-                            class="form-input">
-                        {% else %}
-                        <span>{{ config.impuesto }}</span>
-                        {% endif %}
-                    </div>
-                </div>
+                <form action="{% url 'configuracion' %}" method="POST" style="padding: 25px; flex: 1; display: flex; flex-direction: column;">
+                    {% csrf_token %}
 
-                <div class="tarjetas-inv">
-                    <div class="inv-info editable-field">
-                        <label for="correo_contacto">Correo de Soporte</label>
-                        {% if user.is_staff %}
-                        <input type="email" id="correo_contacto" name="correo_contacto"
-                            value="{{ config.correo_contacto }}" class="form-input">
-                        {% else %}
-                        <span>{{ config.correo_contacto }}</span>
-                        {% endif %}
-                    </div>
-                </div>
+                    <div class="d-flex flex-column gap-3 mb-4">
+                        <div>
+                            <label for="moneda" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">
+                                <i class="bi bi-cash-coin me-1 text-success"></i> Moneda Principal
+                            </label>
+                            <div class="input-group shadow-sm">
+                                <input type="text" id="moneda" name="moneda" value="COP ($) - Pesos Colombianos" class="form-control bg-light text-secondary fw-semibold border-start-0" readonly style="cursor: not-allowed; border-radius: 0 8px 8px 0; border-color: #cbd5e1;">
+                            </div>
+                            <small class="text-muted mt-2 d-block" style="font-size: 0.8rem; line-height: 1.4;">
+                                <i class="bi bi-info-circle-fill me-1 text-primary"></i> La moneda del sistema está configurada de manera fija a <strong>Pesos Colombianos (COP)</strong> para asegurar el correcto cálculo de precios, impuestos locales y totalizaciones.
+                            </small>
+                        </div>
 
-                {% if user.is_staff %}
-                <div class="actions-container">
-                    <button type="submit" class="btn-guardar">Guardar Ajustes</button>
-                </div>
-                {% endif %}
+                        <div>
+                            <label for="impuesto" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">
+                                <i class="bi bi-percent me-1 text-success"></i> Impuesto General (%)
+                            </label>
+                            {% if user.is_staff or request.session.logueado.rol == "SuperAdmin" or request.session.logueado.rol == "Admin" %}
+                            <input type="text" id="impuesto" name="impuesto" value="{{ config.impuesto }}" class="form-control" placeholder="Ej. 19">
+                            {% else %}
+                            <div class="p-2 bg-light rounded border text-muted">{{ config.impuesto|default:"0" }}%</div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="correo_contacto" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">
+                                <i class="bi bi-envelope-at me-1 text-success"></i> Correo de Soporte / Notificaciones
+                            </label>
+                            {% if user.is_staff or request.session.logueado.rol == "SuperAdmin" or request.session.logueado.rol == "Admin" %}
+                            <input type="email" id="correo_contacto" name="correo_contacto" value="{{ config.correo_contacto }}" class="form-control" placeholder="soporte@empresa.com">
+                            {% else %}
+                            <div class="p-2 bg-light rounded border text-muted">{{ config.correo_contacto|default:"Sin especificar" }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if user.is_staff or request.session.logueado.rol == "SuperAdmin" or request.session.logueado.rol == "Admin" %}
+                    <div class="d-flex justify-content-end mt-auto pt-3 border-top">
+                        <button type="submit" class="cv-cart-btn" style="padding: 9px 22px; font-size: 0.9rem; background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: none; cursor: pointer;">
+                            <i class="bi bi-save me-1"></i> Guardar Ajustes
+                        </button>
+                    </div>
+                    {% endif %}
+                </form>
             </div>
-        </form>
+        </div>
 
     </div>
 </section>

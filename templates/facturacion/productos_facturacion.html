@@ -1,89 +1,117 @@
 {% extends 'base.html' %}
+{%load humanize %}
+{% block title %}Facturación - Productos{% endblock %}
 
-{% block title %} Facturación - Productos {% endblock %}
+{% block content %}
 
-{% block content %} 
-
-<!-- Envoltura para controlar que el contenido no desborde hacia arriba -->
-<div style="padding: 0 20px; width: 100%; box-sizing: border-box;">
-
-    <header class="facturacion-header">
+<header class="facturacion-header">
+    <div>
         <h1>Gestión de facturación</h1>
-        <a href="{% url 'dashboard' %}"><i class="bg-secondary"></i></a>
-    </header>
+    </div>
+</header>
 
-    <!-- Tu menú horizontal original intacto con tus clases nativas -->
-    <div class="menu-horizontal">
-        <a href="{% url 'facturacion' %}">Facturas</a>
-        <a href="{% url 'clientes' %}">Clientes</a>
-        <a href="{% url 'productos_facturacion' %}" class="active">Productos</a>
+<div class="menu-horizontal">
+    <a href="{% url 'factura-list' %}" class="{% if request.resolver_match.url_name == 'factura-list' %}active{% endif %}">Facturas</a>
+    <a href="{% url 'clientes' %}" class="{% if request.resolver_match.url_name == 'clientes' %}active{% endif %}">Clientes</a>
+    <a href="{% url 'productos_facturacion' %}" class="{% if request.resolver_match.url_name == 'productos_facturacion' %}active{% endif %}">Productos</a>
+</div>
+
+<section class="facturacion-container2">
+
+    <div class="fac-toolbar">
+        <div>
+            <h2 class="cv-title">Productos Vendidos</h2>
+            <p class="cv-subtitle">Historial detallado de todas las ventas de productos</p>
+        </div>
+        <div class="fac-resumen-pills">
+            <span class="fac-pill fac-pill-total">
+                <i class="bi bi-box-seam-fill"></i>
+                {{ detalles|length }} producto{{ detalles|length|pluralize:"s" }} vendido{{ detalles|length|pluralize:"s" }}
+            </span>
+        </div>
     </div>
 
-    <!-- CONTENEDOR DEL LISTADO -->
-    <section class="facturacion-container2" style="margin-top: 20px; clear: both;">
-        <div class="facturacion-header">
-            <div>
-                <h2>Inventario de Repuestos</h2>
-                <p>Control de stock y tirilla de ventas por artículo</p>
-            </div>
-        </div>
+    <div class="fac-grid">
 
-        <!-- Contenedor de tarjetas -->
-        <div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
-            {% for producto in productos %}
-            
-            <!-- Tarjeta optimizada en ancho para que no colapse con el zoom al 100% -->
-            <div class="tarjetas-facturacion" style="display: flex; justify-content: space-between; align-items: stretch; padding: 0; overflow: hidden; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff; min-height: 140px; width: 100%; box-sizing: border-box;">
-                
-                <!-- LADO IZQUIERDO: Información del Repuesto -->
-                <div style="flex: 1; padding: 20px; display: flex; flex-direction: column; justify-content: center;">
-                    <span style="font-size: 0.85em; text-transform: uppercase; color: #6c757d; font-weight: bold; letter-spacing: 0.5px;">Autoparte / Repuesto</span>
-                    <strong style="font-size: 1.2em; color: #212529; margin: 4px 0 10px 0;">{{ producto.nombre }}</strong>
-                    
-                    <div class="extra" style="display: flex; gap: 20px; margin: 0; padding: 0;">
-                        <span><strong style="color: #495057;">Precio:</strong> ${{ producto.precio|floatformat:0 }}</span>
-                        <span><strong style="color: #495057;">Stock:</strong> {{ producto.stock }} Unds</span>
+        {% for detalle in detalles|dictsortreversed:"factura.fecha" %}
+        <div class="tarjeta-factura">
+
+            <!-- Cabecera de tarjeta: Producto -->
+            <div class="tf-header">
+                <div class="tf-header-left">
+                    <div class="tf-icon-wrap" style="background: linear-gradient(135deg, #1e293b, #475569);">
+                        <i class="bi bi-box-seam tf-icon"></i>
                     </div>
-                </div>
-
-                <!-- LADO DERECHO: Resumen tipo tirilla de factura -->
-                {% if producto.comprador %}
-                <div style="width: 280px; min-width: 280px; background: #f8f9fa; border-left: 2px dashed #ced4da; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-sizing: border-box;">
-                    <!-- Decoración de círculos simulando corte de papel -->
-                    <div style="position: absolute; top: -5px; left: 0; right: 0; height: 10px; background-image: radial-gradient(circle, #fff 4px, transparent 5px); background-size: 12px 12px;"></div>
-                    
                     <div>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.8em; font-weight: bold; color: #198754; margin-bottom: 8px;">
-                            <span>RECIBO DE VENTA</span>
-                            <span>#{{ producto.num_factura }}</span>
-                        </div>
-                        <div style="font-size: 0.85em; color: #495057; display: flex; flex-direction: column; gap: 2px;">
-                            <span><strong>Cliente:</strong> {{ producto.comprador }}</span>
-                            <span><strong>Fecha:</strong> {{ producto.fecha_venta }}</span>
-                            <span><strong>Cant:</strong> {{ producto.cantidad_vendida }} Unidades</span>
-                        </div>
-                    </div>
-                    
-                    <div style="border-top: 1px dashed #ced4da; padding-top: 8px; margin-top: 8px; text-align: right;">
-                        <span style="font-size: 0.75em; color: #6c757d; display: block;">TOTAL GENERADO</span>
-                        <strong style="font-size: 1.15em; color: #212529;">${{ producto.subtotal_venta|floatformat:0 }}</strong>
+                        <span class="tf-num">VENTA DE PRODUCTO</span>
+                        <span class="tf-num" style="max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <strong style="font-size: 1.1rem;" title="{{ detalle.producto.nombre }}">{{ detalle.producto.nombre }}</strong>
+                        </span>
                     </div>
                 </div>
-                {% else %}
-                <!-- Si no tiene ventas -->
-                <div style="width: 280px; min-width: 280px; background: #fafafa; border-left: 1px solid #e0e0e0; padding: 15px; display: flex; align-items: center; justify-content: center; text-align: center; box-sizing: border-box;">
-                    <span style="font-size: 0.85em; color: #adb5bd; font-style: italic;">Sin movimientos<br>recientes</span>
+                <div style="text-align: right;">
+                    <span class="tf-footer-label" style="display:block; margin-bottom: 3px;">Subtotal</span>
+                    <span class="tf-total-badge" style="padding: 5px 12px;">${{ detalle.subtotal|floatformat:0|intcomma }}</span>
                 </div>
-                {% endif %}
+            </div>
 
+            <!-- Cuerpo: Detalles de la venta -->
+            <div class="tf-body">
+                
+                <div class="tf-meta-row" style="margin-bottom: 8px;">
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-tag-fill"></i> Precio Unit.</span>
+                        <span class="tf-meta-val">${{ detalle.precio|floatformat:0|intcomma }}</span>
+                    </div>
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-hash"></i> Cantidad</span>
+                        <span class="tf-meta-val">x{{ detalle.cantidad }}</span>
+                    </div>
+                </div>
+
+                <hr style="border-color: #e2e8f0; margin: 0;">
+
+                <div class="tf-productos">
+                    <span class="tf-productos-label"><i class="bi bi-receipt"></i> Datos de la Factura Asociada</span>
+                    <div class="tf-productos-lista">
+                        <div class="tf-detalle-item" style="flex-direction: column; align-items: flex-start; gap: 8px; background: #f8fafc;">
+                            <div style="display: flex; justify-content: space-between; width: 100%;">
+                                <strong style="font-size: 0.9rem; color: #1e293b;">Factura #{{ detalle.factura.id }}</strong>
+                                <span style="font-size: 0.8rem; color: #64748b;"><i class="bi bi-calendar3"></i> {{ detalle.factura.fecha|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            
+                            <div style="font-size: 0.85rem; color: #475569; display: flex; flex-direction: column; gap: 4px; width: 100%;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="font-weight: 600; color: #94a3b8; font-size: 0.72rem; text-transform: uppercase;">Cliente</span>
+                                    <span>{{ detalle.factura.cliente.nombre }}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="font-weight: 600; color: #94a3b8; font-size: 0.72rem; text-transform: uppercase;">Vendedor</span>
+                                    <span>{{ detalle.factura.usuario }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
             </div>
-            {% empty %}
-            <div class="tarjetas-facturacion" style="padding: 20px; text-align: center;">
-                <p>No hay repuestos registrados en el inventario.</p>
+
+            <!-- Footer: Total de la factura asociada -->
+            <div class="tf-footer" style="background: #f1f5f9;">
+                <span class="tf-footer-label">Total de esta Factura</span>
+                <span class="tf-footer-total" style="color: #475569; font-size: 1rem;">${{ detalle.factura.total|floatformat:0|intcomma }}</span>
             </div>
-            {% endfor %}
+
         </div>
-    </section>
-</div>
+        {% empty %}
+        <div class="fac-empty">
+            <i class="bi bi-box-seam fac-empty-icon"></i>
+            <p>Todavía no se han registrado ventas de productos.</p>
+        </div>
+        {% endfor %}
+
+    </div>
+
+</section>
 
 {% endblock %}

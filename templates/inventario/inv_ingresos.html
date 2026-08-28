@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Ingresos al inventario{% endblock %}
+
+{% block content %}
+
+<header class="inventario-header">
+    <div>
+        <h1>Gestión de inventario</h1>
+    </div>
+</header>
+
+<div class="menu-horizontal">
+    <a href="{% url 'inv_control' %}" class="{% if request.resolver_match.url_name == 'inv_control' %}active{% endif %}">Control de stock</a>
+    <a href="{% url 'inv_ingresos' %}" class="{% if request.resolver_match.url_name == 'inv_ingresos' %}active{% endif %}">Ingresos al inventario</a>
+    <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Catalogo de ventas</a>
+    <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">Historial de movimientos</a>
+</div>
+
+<section class="inventario-container2">
+
+    <div class="cv-toolbar">
+        <div class="cv-toolbar-left">
+            <h2 class="cv-title">Ingresos al inventario</h2>
+            <p class="cv-subtitle">Registra la llegada de mercancía y genera la factura de entrada</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm mb-4" style="border:none; border-radius:14px;">
+        <div class="card-body p-4">
+
+            <form id="formEntrada" novalidate>
+                {% csrf_token %}
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">Proveedor <span class="text-danger">*</span></label>
+                        <input type="text" id="proveedor" class="form-control" maxlength="150" placeholder="Nombre del proveedor">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">N° factura / remisión</label>
+                        <input type="text" id="documento" class="form-control" maxlength="50" placeholder="Opcional">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Fecha de llegada</label>
+                        <input type="text" class="form-control" value="{% now 'd/m/Y H:i' %}" disabled>
+                    </div>
+                </div>
+
+                <h5 class="fw-semibold mb-2"><i class="bi bi-box-seam me-1"></i> Productos recibidos</h5>
+
+                <div class="table-responsive">
+                    <table class="table align-middle" id="tablaItems">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="min-width:260px;">Producto</th>
+                                <th style="width:110px;">Cantidad</th>
+                                <th style="width:140px;">Precio unit.</th>
+                                <th style="width:140px;">Subtotal</th>
+                                <th style="width:50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody"></tbody>
+                    </table>
+                </div>
+
+                <button type="button" id="btnAddItem" class="btn btn-outline-primary btn-sm mb-3">
+                    <i class="bi bi-plus-lg"></i> Agregar producto a la entrada
+                </button>
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold">Observaciones</label>
+                        <textarea id="observaciones" class="form-control" rows="2" placeholder="Opcional"></textarea>
+                    </div>
+                    <div class="col-md-4 d-flex flex-column justify-content-end align-items-end">
+                        <div class="fs-4 fw-bold text-primary" id="totalEntrada">$ 0</div>
+                        <button type="submit" id="btnGuardar" class="btn btn-success btn-lg mt-2">
+                            <i class="bi bi-check2-circle"></i> Registrar entrada y generar factura
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <h5 class="fw-semibold mb-3"><i class="bi bi-clock-history me-1"></i> Entradas recientes</h5>
+    <div class="fac-grid">
+        {% for entrada in entradas %}
+        <div class="tarjeta-factura" data-id="{{ entrada.id }}">
+            <div class="tf-header">
+                <div class="tf-header-left">
+                    <div class="tf-icon-wrap"><i class="bi bi-box-arrow-in-down tf-icon"></i></div>
+                    <div>
+                        <span class="tf-num">Factura de entrada <strong>{{ entrada.numero_factura }}</strong></span>
+                        <span class="tf-fecha"><i class="bi bi-calendar3"></i> {{ entrada.fecha|date:"d/m/Y H:i" }}</span>
+                    </div>
+                </div>
+                <span class="tf-total-badge">$ {{ entrada.total|floatformat:0|intcomma }}</span>
+            </div>
+            <div class="tf-body">
+                <div class="tf-meta-row">
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-truck"></i> Proveedor</span>
+                        <span class="tf-meta-val">{{ entrada.proveedor }}</span>
+                    </div>
+                    {% if entrada.documento %}
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-file-earmark-text"></i> Documento</span>
+                        <span class="tf-meta-val">{{ entrada.documento }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-person-badge-fill"></i> Registró</span>
+                        <span class="tf-meta-val">{{ entrada.usuario }}</span>
+                    </div>
+                </div>
+                <div class="tf-productos">
+                    <span class="tf-productos-label">Productos ingresados</span>
+                    <div class="tf-productos-lista">
+                        {% for detalle in entrada.detalles.all %}
+                        <div class="tf-detalle-item">
+                            <div class="tf-detalle-info">
+                                <i class="bi bi-box-seam tf-detalle-icon"></i>
+                                <span class="tf-detalle-nombre">{{ detalle.producto.nombre }}</span>
+                            </div>
+                            <div class="tf-detalle-nums">
+                                <span class="tf-detalle-qty">+{{ detalle.cantidad }}</span>
+                                <span class="tf-detalle-precio">${{ detalle.subtotal|floatformat:0|intcomma }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="tf-footer">
+                <a href="{% url 'exportar_entrada_pdf' entrada.id %}" class="btn btn-success btn-sm">
+                    <i class="bi bi-download"></i> Descargar PDF
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="fac-empty">
+            <i class="bi bi-box-arrow-in-down fac-empty-icon"></i>
+            <p>Todavía no se han registrado entradas.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</section>
+
+<script>
+const PRODUCTOS = JSON.parse('{{ productos_serializados|escapejs }}');
+
+const body = document.getElementById('itemsBody');
+
+function filaTemplate() {
+    const opciones = PRODUCTOS.map(p =>
+        `<option value="${p.id}">${p.nombre} (Stock: ${p.stock})</option>`
+    ).join('');
+    return `
+    <tr class="item-row">
+        <td>
+            <select class="form-select sel-producto">
+                <option value="">— Crear producto nuevo —</option>
+                ${opciones}
+            </select>
+            <div class="campos-nuevo border rounded p-2 mt-2 bg-light d-none">
+                <span class="fw-semibold small text-primary"><i class="bi bi-plus-circle"></i> Nuevo producto</span>
+                <div class="row g-2 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label small mb-1">Nombre *</label>
+                        <input type="text" class="form-control form-control-sm inp-nombre" maxlength="100" placeholder="Ej. Martillo de acero">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small mb-1">Categoría *</label>
+                        <input type="text" class="form-control form-control-sm inp-categoria" maxlength="100" placeholder="Ej. Herramientas">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small mb-1">Precio de venta ($) *</label>
+                        <input type="number" class="form-control form-control-sm inp-precio-venta" min="1" step="1" placeholder="Ej. 25000">
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input inp-activo" id="chkActivo" checked>
+                            <label class="form-check-label small" for="chkActivo">Producto activo para ventas</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small mb-1">Descripción (opcional)</label>
+                        <textarea class="form-control form-control-sm inp-desc" rows="2" placeholder="Especificaciones del producto..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </td>
+        <td><input type="number" class="form-control inp-cantidad" min="1" value="1"></td>
+        <td><input type="number" class="form-control inp-precio" min="1" value="0"></td>
+        <td class="fw-semibold celda-subtotal">$ 0</td>
+        <td><button type="button" class="btn btn-outline-danger btn-sm btn-del"><i class="bi bi-trash"></i></button></td>
+    </tr>`;
+}
+
+function agregarFila() {
+    body.insertAdjacentHTML('beforeend', filaTemplate());
+    // Mostrar el panel de producto nuevo si la fila inicia sin producto seleccionado
+    const fila = body.querySelector('.item-row:last-child');
+    const select = fila.querySelector('.sel-producto');
+    if (select.value === '') {
+        fila.querySelector('.campos-nuevo').classList.remove('d-none');
+    }
+}
+
+function actualizarTotales() {
+    let total = 0;
+    body.querySelectorAll('.item-row').forEach(row => {
+        const precio = parseFloat(row.querySelector('.inp-precio').value) || 0;
+        const cantidad = parseInt(row.querySelector('.inp-cantidad').value) || 0;
+        const sub = precio * cantidad;
+        row.querySelector('.celda-subtotal').textContent = '$ ' + sub.toLocaleString('es-CO');
+        total += sub;
+    });
+    document.getElementById('totalEntrada').textContent = '$ ' + total.toLocaleString('es-CO');
+}
+
+body.addEventListener('click', e => {
+    if (e.target.closest('.btn-del')) {
+        e.target.closest('.item-row').remove();
+        if (!body.querySelector('.item-row')) agregarFila();
+        actualizarTotales();
+    }
+});
+
+body.addEventListener('input', e => {
+    if (e.target.matches('.inp-precio, .inp-cantidad')) actualizarTotales();
+});
+
+body.addEventListener('change', e => {
+    if (e.target.matches('.sel-producto')) {
+        const row = e.target.closest('.item-row');
+        const nuevo = e.target.value === '';
+        row.querySelector('.campos-nuevo').classList.toggle('d-none', !nuevo);
+        const producto = PRODUCTOS.find(p => p.id == e.target.value);
+        if (producto) row.querySelector('.inp-precio').value = producto.precio;
+        actualizarTotales();
+    }
+});
+
+document.getElementById('btnAddItem').addEventListener('click', agregarFila);
+
+document.getElementById('formEntrada').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const form = this;
+
+    const proveedor = document.getElementById('proveedor').value.trim();
+    if (!proveedor) {
+        document.getElementById('proveedor').classList.add('is-invalid');
+        document.getElementById('proveedor').focus();
+        alert('El proveedor es obligatorio.');
+        return;
+    }
+    document.getElementById('proveedor').classList.remove('is-invalid');
+
+    const items = [];
+    let error = null;
+
+    body.querySelectorAll('.item-row').forEach((row, idx) => {
+        if (error) return;
+        const sel = row.querySelector('.sel-producto').value;
+        const cantidad = parseInt(row.querySelector('.inp-cantidad').value);
+        const precio = parseFloat(row.querySelector('.inp-precio').value);
+
+        if (!cantidad || cantidad <= 0) { error = `Fila ${idx + 1}: la cantidad debe ser mayor a 0.`; return; }
+        if (!precio || precio <= 0)   { error = `Fila ${idx + 1}: el precio debe ser mayor a 0.`; return; }
+
+        if (sel) {
+            items.push({ producto_id: parseInt(sel), cantidad, precio });
+        } else {
+            const nombre = row.querySelector('.inp-nombre').value.trim();
+            const categoria = row.querySelector('.inp-categoria').value.trim();
+            const precioVenta = parseFloat(row.querySelector('.inp-precio-venta').value);
+            const activo = row.querySelector('.inp-activo').checked;
+            if (!nombre)    { error = `Fila ${idx + 1}: el nombre del nuevo producto es obligatorio.`; return; }
+            if (!categoria) { error = `Fila ${idx + 1}: la categoría del nuevo producto es obligatoria.`; return; }
+            if (!precioVenta || precioVenta <= 0) { error = `Fila ${idx + 1}: el precio de venta del nuevo producto debe ser mayor a 0.`; return; }
+            items.push({
+                nombre, categoria, activo,
+                precio_venta: precioVenta,
+                descripcion: row.querySelector('.inp-desc').value.trim(),
+                cantidad, precio
+            });
+        }
+    });
+
+    if (error) { alert(error); return; }
+    if (!items.length) { alert('Agrega al menos un producto a la entrada.'); return; }
+
+    const btn = document.getElementById('btnGuardar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Registrando…';
+
+    try {
+        const resp = await fetch('{% url "registrar_entrada" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                proveedor,
+                documento: document.getElementById('documento').value.trim(),
+                observaciones: document.getElementById('observaciones').value.trim(),
+                items
+            })
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert(data.message || 'Error al registrar la entrada.');
+        }
+    } catch (err) {
+        alert('Error de conexión con el servidor.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check2-circle"></i> Registrar entrada y generar factura';
+    }
+});
+
+agregarFila();
+</script>
+
+{% endblock %}

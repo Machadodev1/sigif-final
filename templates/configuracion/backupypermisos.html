@@ -8,6 +8,13 @@
 <header class="inventario-header">
     <h1>Backups y Permisos del Sistema</h1>
 </header>
+{% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
 
 <div class="menu-horizontal">
     <a href="{% url 'configuracion' %}">General y Empresa</a>
@@ -104,107 +111,67 @@
             </div>
         </div>
 
-        <div class="form-configuracion" style="max-width: 600px;">
-            <h3>Gestión de Permisos y Roles</h3>
-            <div class="form-body">
-                <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 15px;">
-                    Controla los accesos generales del sistema según el rol asignado a cada miembro del equipo.
-                </p>
+        
 
-                <form action="" method="POST"
-                    style="box-shadow: none; padding: 0; max-width: 100%; margin-bottom: 25px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px;">
-                    {% csrf_token %}
-                    <div class="tarjetas-inv" style="gap: 10px;">
-                        <label
-                            style="color: #64748b; font-size: 0.85rem; font-weight: 500; text-transform: uppercase;">Asignar
-                            Rol a Usuario</label>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-
-                            <select name="usuario_id" class="form-input" style="flex: 2; min-width: 180px;" required>
-                                <option value="" disabled selected>Selecciona un usuario...</option>
-                                {% for u in usuarios %}
-                                <option value="{{ u.id }}">{{ u.username }} ({% if u.email %}{{ u.email }}{% else %}Sin
-                                    correo{% endif %})</option>
-                                {% endfor %}
-                            </select>
-
-                            <select name="rol_asignar" class="form-input" style="flex: 1; min-width: 130px;" required>
-                                <option value="admin">Administrador</option>
-                                <option value="empleado">Empleado</option>
-                            </select>
-
-                            <button type="submit" class="btn-guardar" style="padding: 10px 15px;">Aplicar</button>
-                        </div>
-                    </div>
-                </form>
-
-                <div class="tarjetas-inv">
+                <div class="tarjetas-inv" style="width: 100%; max-width: 100%; overflow: hidden; min-width: 0;">
                     <label
                         style="color: #64748b; font-size: 0.85rem; font-weight: 500; text-transform: uppercase; margin-bottom: 10px;">Matriz
                         de Accesos por Rol</label>
 
-                    <div
-                        style="width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; font-size: 0.9rem;">
+                    <div style="width: 100%; overflow-x: auto;">
                         <div
-                            style="background: #f8fafc; padding: 12px; display: flex; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; text-align: center;">
-                            <div style="flex: 2; text-align: left;">Módulo del Sistema</div>
-                            <div style="flex: 1;">Administrador</div>
-                            <div style="flex: 1;">Empleado</div>
-                        </div>
-
-                        <div
-                            style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
-                            <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b;">Dashboard / Inicio
+                            style="min-width: 520px; width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; font-size: 0.9rem;">
+                            <div
+                                style="background: #f8fafc; padding: 12px; display: flex; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                                <div style="flex: 2; text-align: left; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Módulo del Sistema</div>
+                                <div style="flex: 1; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">Administrador</div>
+                                <div style="flex: 1; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">Empleado</div>
                             </div>
-                            <div style="flex: 1; color: #10b981; font-weight: bold;">✔ Acceso Total</div>
-                            <div style="flex: 1; color: #10b981; font-weight: bold;">✔ Acceso Total</div>
-                        </div>
 
-                        <div
-                            style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
-                            <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b;">Productos</div>
-                            <div style="flex: 1; color: #10b981; font-weight: bold;">✔ Acceso Total</div>
-                            <div style="flex: 1; color: #10b981; font-weight: bold;">✔ Acceso Total</div>
-                        </div>
+                            <div
+                                style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
+                                <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Dashboard / Inicio
+                                </div>
+                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
+                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
+                            </div>
 
-                        <div
-                            style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
-                            <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b;">Inventario</div>
-                            <div style="flex: 1; color: #10b981; font-weight: bold;">✔ Acceso Total</div>
-                            <div style="flex: 1; color: #10b981; font-weight: bold;">✔ Acceso Total</div>
-                        </div>
+                            <div
+                                style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
+                                <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Productos</div>
+                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
+                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
+                            </div>
 
-                        <div
-                            style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
-                            <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b;">Facturación /
-                                Ventas</div>
-                            <div style="flex: 1; color: #10b981; font-weight: bold;">✔ Acceso Total</div>
-                            <div style="flex: 1; color: #10b981; font-weight: bold;">✔ Acceso Total</div>
-                        </div>
+                            <div
+                                style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
+                                <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Inventario</div>
+                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
+                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
+                            </div>
 
-                        <div
-                            style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
-                            <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b;">Auditoría e
-                                Historial</div>
-                            <div style="flex: 1; color: #10b981; font-weight: bold;">✔ Acceso Total</div>
-                            <div style="flex: 1; color: #ef4444; font-weight: bold;">❌ Denegado</div>
-                        </div>
+                            <div
+                                style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
+                                <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Facturación / Ventas</div>
+                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
+                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
+                            </div>
 
-                        <div style="padding: 12px; display: flex; align-items: center; text-align: center;">
-                            <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b;">Copias de
-                                Seguridad / Ajustes</div>
-                            <div style="flex: 1; color: #10b981; font-weight: bold;">✔ Acceso Total</div>
-                            <div style="flex: 1; color: #ef4444; font-weight: bold;">❌ Denegado</div>
+                            <div
+                                style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
+                                <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Auditoría e Historial</div>
+                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
+                                <div style="flex: 1; color: #ef4444; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">❌ Denegado</div>
+                            </div>
+
+                            <div style="padding: 12px; display: flex; align-items: center; text-align: center;">
+                                <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Copias de Seguridad / Ajustes</div>
+                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
+                                <div style="flex: 1; color: #ef4444; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">❌ Denegado</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <div
-                    style="display: flex; gap: 20px; margin-top: 15px; font-size: 0.8rem; color: #64748b; justify-content: center;">
-                    <span><strong style="color: #10b981;">✔</strong> Permiso concedido para operar</span>
-                    <span><strong style="color: #ef4444;">❌</strong> Módulo restringido</span>
-                </div>
-
             </div>
         </div>
 

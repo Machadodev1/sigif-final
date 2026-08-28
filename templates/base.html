@@ -4,31 +4,33 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>base</title>
-  <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+  <title>SIGIF</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style1.css' %}?v=5">
 </head>
 
 <body>
 
   <aside class="sidebar">
     <div class="logo">
-      <img src="{% static 'img/logo.png' %}" alt="">
+      <img src="{% static 'img/logo123.png' %}" alt="">
     </div>
-    <div class="user-Info">
-      <h3>Administrativo</h3>
-      <p>Oficina central</p>
+    <div class="user-Info" style="padding-bottom: 0;">
+      <!-- Usuario removido de aquí para colocarlo a la derecha -->
     </div>
     <nav class="menu">
       <ul>
-        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-        <li><a href="{% url 'usuarios' %}">Usuarios</a></li>
-        <li><a href="{% url 'productos' %}">Productos</a></li>
-        <li><a href="{% url 'inventario' %}">Inventario</a></li>
-        <li><a href="{% url 'facturacion' %}">Facturación</a></li>
-        <li><a href="{% url 'auditoria' %}">Auditoría</a></li>
-        <li><a href="{% url 'configuracion' %}">Configuración</a></li>
+        <li><a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+        <li><a href="{% url 'usuarios' %}" class="{% if request.resolver_match.url_name == 'usuarios' %}active{% endif %}">Usuarios</a></li>
+        <li><a href="{% url 'productos' %}" class="{% if request.resolver_match.url_name == 'productos' %}active{% endif %}">Productos</a></li>
+        <li><a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Inventario</a></li>
+        <li><a href="{% url 'factura-list' %}" class="{% if request.resolver_match.url_name == 'factura-list' or request.resolver_match.url_name == 'factura-crear' or request.resolver_match.url_name == 'factura-detalle' %}active{% endif %}">Facturación</a></li>
+        <li><a href="{% url 'auditoria' %}" class="{% if request.resolver_match.url_name == 'auditoria' %}active{% endif %}">Auditoría</a></li>
+        <li><a href="{% url 'configuracion' %}" class="{% if request.resolver_match.url_name == 'configuracion' %}active{% endif %}">Configuración</a></li>
       </ul>
     </nav>
     <div class="Cerrar-sesion">
@@ -38,9 +40,75 @@
   </aside>
 
   <div class="main-container">
+    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 25px;">
+        <div style="display: flex; align-items: center; gap: 12px; background: #fff; padding: 6px 20px 6px 8px; border-radius: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e8eef8;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #3a56e4, #5c7cfa); color: #fff; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 1rem;">
+                {{ request.session.logueado.nombre|default:"U"|first|upper }}
+            </div>
+            <div style="display: flex; flex-direction: column; justify-content: center;">
+                <span style="font-size: 0.88rem; font-weight: 700; color: #1e293b; line-height: 1.1;">{{ request.session.logueado.nombre|default:"Usuario Activo"|title }}</span>
+                <span style="font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 2px;">
+                    {{ request.session.logueado.rol|default:"Operador" }}
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    {# Mensajes globales (estilizados con Bootstrap). Incluye tags extra como "module-<nombre>" #}
+    {% if messages %}
+      <div class="messages-container">
+        
+      </div>
+    {% endif %}
+
     {% block content %}
     {% endblock %}
   </div>
+
+  <!-- Modal global de confirmación de eliminación -->
+  <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmar eliminación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="confirmDeleteText">¿Estás seguro de que deseas eliminar este elemento?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" id="confirmDeleteBtn" class="btn-delete">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function(){
+      let formToSubmit = null;
+      const modalEl = document.getElementById('confirmDeleteModal');
+      if(!modalEl) return;
+      const bsModal = new bootstrap.Modal(modalEl);
+      document.querySelectorAll('.btn-delete-trigger').forEach(btn => {
+        btn.addEventListener('click', function(e){
+          e.preventDefault();
+          const selector = this.dataset.form;
+          const name = this.dataset.name || '';
+          formToSubmit = document.querySelector(selector);
+          const text = name ? `¿Eliminar "${name}"? Esta acción no se puede deshacer.` : '¿Eliminar este elemento? Esta acción no se puede deshacer.';
+          document.getElementById('confirmDeleteText').innerText = text;
+          bsModal.show();
+        });
+      });
+      document.getElementById('confirmDeleteBtn').addEventListener('click', function(){
+        if(formToSubmit){
+          formToSubmit.submit();
+        }
+      });
+    })();
+  </script>
 
 </body>
 

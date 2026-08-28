@@ -2,45 +2,66 @@
 
 {% block content %}
 
-<div class="container mt-4">
+<header class="auditoria-header">
+    <div>
+        <h1>Registro de Auditoría</h1>
+        <p>Monitorea las acciones realizadas en el sistema</p>
+    </div>
+</header>
 
-    <h2>Registro de Auditoría</h2>
-
-    <hr>
-
-    <!-- Tabla de auditoría -->
-    <table class="table table-striped table-hover">
-
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Usuario</th>
-                <th>Acción</th>
-                <th>Módulo</th>
-                <th>Fecha</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {% for item in datos %}
-            <tr>
-                <td>{{ item.id }}</td>
-                <td>{{ item.usuario }}</td>
-                <td>{{ item.accion }}</td>
-                <td>{{ item.modulo }}</td>
-                <td>{{ item.fecha|date:"Y-m-d H:i:s" }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" class="text-center">
-                    No hay registros de auditoría
-                </td>
-            </tr>
+<section class="auditoria-container2">
+        {# Mensajes específicos del módulo 'auditoria' #}
+        {% if messages %}
+            {% for message in messages %}
+                {% if 'module-auditoria' in message.tags %}
+                    <div class="alert {% if 'error' in message.tags %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show {{ message.tags }}" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
             {% endfor %}
-        </tbody>
+        {% endif %}
+    <form method="GET" class="filter-form" style="margin-bottom:20px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+        <input type="search" name="q" class="buscar" placeholder="Buscar por usuario o acción" value="{{ q|default_if_none:'' }}">
 
-    </table>
+        <select name="modulo" id="modulo" class="buscar">
+            <option value="">Todos los módulos</option>
+            {% for value, label in modulos %}
+            <option value="{{ value }}" {% if value == modulo_actual %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
 
-</div>
+        <label style="display:flex; gap:8px; align-items:center;">
+            Desde
+            <input type="date" name="fecha_desde" class="buscar" value="{{ fecha_desde|default_if_none:'' }}">
+        </label>
+        <label style="display:flex; gap:8px; align-items:center;">
+            Hasta
+            <input type="date" name="fecha_hasta" class="buscar" value="{{ fecha_hasta|default_if_none:'' }}">
+        </label>
+
+        <div style="margin-left:auto; display:flex; gap:8px;">
+            <button type="submit" class="btn-nuevo btn-sm">Filtrar</button>
+            <a href="{% url 'auditoria' %}" class="btn-delete btn-sm">Limpiar</a>
+        </div>
+    </form>
+
+    <div class="cards-grid">
+        {% for item in datos %}
+        <div class="tarjetas-productos">
+            <div class="pro-info">
+                <strong>{{ item.usuario }}</strong>
+                <span style="font-size:0.95rem; color:var(--text-muted); margin-top:6px;">{{ item.accion }}</span>
+                <div class="extra" style="margin-top:12px; align-items:center;">
+                    <span class="rol">{{ item.modulo }}</span>
+                    <span style="margin-left:auto; font-weight:600; color:var(--text-muted);">{{ item.fecha|date:"Y-m-d H:i" }}</span>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="padding:40px; text-align:center; color:var(--text-muted); width:100%;">No hay registros de auditoría</div>
+        {% endfor %}
+    </div>
+</section>
 
 {% endblock %}

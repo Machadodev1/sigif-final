@@ -1,14 +1,12 @@
-<<<<<<< HEAD
 # Python cache
-=======
->>>>>>> origin/main
 __pycache__/
 *.pyc
 *.pyo
-
+.venv
 
 # Virtual env
 venv/
 
 # Logs
 *.log
+.env

@@ -1,55 +1,175 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
-{% block title %} Facturación {% endblock %}
+{% block title %}Facturación{% endblock %}
 
-{% block content %} 
+{% block content %}
 
 <header class="facturacion-header">
-    <h1>Gestión de facturación</h1>
-    <a href="{% url 'dashboard' %}"><i class="bg-secondary"></i></a>
+    <div>
+        <h1>Gestión de facturación</h1>
+    </div>
 </header>
 
-<!-- Menu horizontal con Bootstrap button group -->
+{# Mensajes específicos del módulo 'facturacion' #}
+{% if messages %}
+    {% for message in messages %}
+        {% if 'module-facturacion' in message.tags %}
+            <div class="alert {% if 'error' in message.tags %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show {{ message.tags }}" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
 <div class="menu-horizontal">
-    <a href="{% url 'facturacion' %}">Facturas</a>
-    <a href="{% url 'clientes' %}">Clientes</a>
-    <a href="{% url 'productos_facturacion' %}" class="active">Productos</a>
+    <a href="{% url 'factura-list' %}" class="{% if request.resolver_match.url_name == 'factura-list' %}active{% endif %}">Facturas</a>
+    <a href="{% url 'facturas_entrada' %}" class="{% if request.resolver_match.url_name == 'facturas_entrada' %}active{% endif %}">Facturas de entrada</a>
+    <a href="{% url 'registro_entradas' %}" class="{% if request.resolver_match.url_name == 'registro_entradas' %}active{% endif %}">Registro de entradas</a>
+    <a href="{% url 'clientes' %}" class="{% if request.resolver_match.url_name == 'clientes' %}active{% endif %}">Clientes</a>
+    <a href="{% url 'productos_facturacion' %}" class="{% if request.resolver_match.url_name == 'productos_facturacion' %}active{% endif %}">Productos</a>
 </div>
 
-        <!-- CONTENEDOR DEL LISTADO -->
-        <section class="facturacion-container2">
-            <div class="facturacion-header">
-                <div>
-                    <h2>Facturas recientes</h2>
-                    <p>Listado de las últimas facturas generadas</p>
+<section class="facturacion-container2">
+
+    <div class="fac-toolbar">
+        <div>
+            <h2 class="cv-title">Facturas recientes</h2>
+            <p class="cv-subtitle">Listado de todas las ventas generadas</p>
+        </div>
+        <div class="cv-search-wrapper">
+                <i class="bi bi-search cv-search-icon"></i>
+                <input type="text" id="buscadorFacturas" class="cv-search-input" placeholder="Buscar por id" value="{{ q|default:'' }}">
+            </div>
+        <div class="fac-resumen-pills">
+            <span class="fac-pill fac-pill-total">
+                <i class="bi bi-receipt"></i>
+                {{ facturas|length }} factura{{ facturas|length|pluralize:"s" }}
+            </span>
+        </div>
+    </div>
+
+    <div class="fac-grid">
+
+        {% for factura in facturas|dictsortreversed:"id" %}
+        <div class="tarjeta-factura" data-id="{{ factura.id }}">
+
+            <!-- Cabecera de tarjeta -->
+            <div class="tf-header">
+                <div class="tf-header-left">
+                    <div class="tf-icon-wrap">
+                        <i class="bi bi-receipt-cutoff tf-icon"></i>
+                    </div>
+                    <div>
+                        <span class="tf-num">Factura <strong>#{{ factura.id }}</strong></span>
+                        <span class="tf-fecha">
+                            <i class="bi bi-calendar3"></i>
+                            {{ factura.fecha|date:"d/m/Y H:i" }}
+                        </span>
+                    </div>
                 </div>
+                <span class="tf-total-badge">$ {{ factura.total|floatformat:0|intcomma }}</span>
             </div>
 
-            <!-- Tarjetas de facturas -->
-            <div class="tarjetas-facturacion">
-                <div class="facturacion-info">
-                    <strong>Factura #001</strong>
-                    <div class="extra">
-                        <span>Cliente: Juan Pérez</span>
-                        <span>Total: $150,000</span>
-                        <span>Fecha: 2024-06-01</span>
+            <!-- Cuerpo: cliente y vendedor -->
+            <a href="{% url 'exportar_factura_pdf' factura.id %}" class="btn btn-success">
+    Descargar Factura en PDF
+</a>
+            <div class="tf-body">
+                <div class="tf-meta-row">
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-person-fill"></i> Cliente</span>
+                        <span class="tf-meta-val">{{ factura.cliente.nombre }}</span>
+                    </div>
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-envelope-fill"></i> Correo</span>
+                        <span class="tf-meta-val">{{ factura.cliente.correo }}</span>
+                    </div>
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-person-badge-fill"></i> Vendedor</span>
+                        <span class="tf-meta-val">{{ factura.usuario }}</span>
+                    </div>
+                    {% if factura.descuento and factura.descuento > 0 %}
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-tag-fill"></i> Descuento</span>
+                        <span class="tf-meta-val tf-descuento">-${{ factura.descuento|floatformat:0 }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-cash"></i> Base Gravable</span>
+                        <span class="tf-meta-val">${{ factura.base_gravable|floatformat:0|intcomma }}</span>
+                    </div>
+                    <div class="tf-meta-item">
+                        <span class="tf-meta-label"><i class="bi bi-percent"></i> IVA (19%)</span>
+                        <span class="tf-meta-val">${{ factura.iva|floatformat:0|intcomma }}</span>
+                    </div>
+                </div>
+
+                <!-- Productos vendidos -->
+                <div class="tf-productos">
+                    <span class="tf-productos-label">Productos vendidos</span>
+                    <div class="tf-productos-lista">
+                        {% for detalle in factura.detalles.all %}
+                        <div class="tf-detalle-item">
+                            <div class="tf-detalle-info">
+                                <i class="bi bi-box-seam tf-detalle-icon"></i>
+                                <span class="tf-detalle-nombre">{{ detalle.producto.nombre }}</span>
+                            </div>
+                            <div class="tf-detalle-nums">
+                                <span class="tf-detalle-qty">x{{ detalle.cantidad }}</span>
+                                <span class="tf-detalle-precio">${{ detalle.subtotal|floatformat:0|intcomma}}</span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="tf-detalle-empty">Sin productos registrados</div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
 
-            <div class="tarjetas-facturacion">
-                <div class="facturacion-info">
-                    <strong>Factura #002</strong>
-                    <div class="extra">
-                        <span>Cliente: María Gómez</span>
-                        <span>Total: $200,000</span>
-                        <span>Fecha: 2024-06-02</span>
-                    </div>
-                </div>
+            <!-- Footer con total final -->
+            <div class="tf-footer">
+                <span class="tf-footer-label">Total de la factura</span>
+                <span class="tf-footer-total">${{ factura.total|floatformat:0|intcomma }}</span>
             </div>
 
-            <!-- Más tarjetas de facturas... -->
+        </div>
+        {% empty %}
+        <div class="fac-empty">
+            <i class="bi bi-receipt fac-empty-icon"></i>
+            <p>Todavía no se han generado facturas.</p>
+        </div>
+        {% endfor %}
 
-        </section>
+    </div>
+
+</section>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const buscador = document.getElementById("buscadorFacturas");
+    const facturas = document.querySelectorAll(".tarjeta-factura");
+
+    buscador.addEventListener("input", function () {
+
+        const texto = this.value.toLowerCase().trim();
+
+        facturas.forEach(function (factura) {
+
+            const id = factura.getAttribute("data-id").toLowerCase();
+
+            if (id.includes(texto)) {
+                factura.style.display = "";
+            } else {
+                factura.style.display = "none";
+            }
+
+        });
+
+    });
+
+});
+</script>
 
 {% endblock %}
