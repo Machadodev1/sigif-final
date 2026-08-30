@@ -15,4 +15,4 @@ reportlab==5.0.1
 rpds-py==2026.6.3
 sqlparse==0.6.0
 uritemplate==4.2.0
-dotenv==1.2.3
+python-dotenv==1.2.3
