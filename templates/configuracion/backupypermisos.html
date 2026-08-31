@@ -1,20 +1,25 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %} backups y permisos {% endblock %}
+{% block title %} Backups y Permisos {% endblock %}
 
 {% block content %}
 
 <header class="inventario-header">
-    <h1>Backups y Permisos del Sistema</h1>
+    <div>
+        <h1>Configuración del Sistema</h1>
+    </div>
 </header>
+
+{# Mensajes globales de alerta #}
 {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
+    {% for message in messages %}
+        <div class="alert {% if 'error' in message.tags or message.tags == 'error' %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags or message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
             {{ message }}
-            </div>
-            {% endfor %}
-        {% endif %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
 
 <div class="menu-horizontal">
     <a href="{% url 'configuracion' %}">General y Empresa</a>
@@ -22,156 +27,301 @@
 </div>
 
 <section class="inventario-container2">
-    <div class="inv-header">
-        <div>
-            <h2>Administración de Backups</h2>
-            <p>Realiza copias de seguridad y gestiona permisos del sistema</p>
+    <div class="cv-toolbar" style="margin-bottom: 25px;">
+        <div class="cv-toolbar-left">
+            <h2 class="cv-title">Backups y Permisos del Sistema</h2>
+            <p class="cv-subtitle">Administra copias de seguridad de datos y consulta el acceso real de los roles Administrador y Empleado</p>
         </div>
     </div>
 
-    <div class="contenedor-formularios">
+    <div class="row g-4">
 
-        <div class="form-configuracion" style="max-width: 500px;">
-            <h3>Realizar Backup del Sistema</h3>
-            <div class="form-body">
-                <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 15px;">
-                    Respalda la base de datos, imágenes de productos y configuraciones clave de SIGIF.
-                </p>
+        <!-- COLUMNA IZQUIERDA: GESTIÓN DE BACKUPS Y CAMBIO DE ROLES -->
+        <div class="col-lg-5">
+            <div class="d-flex flex-column gap-4">
 
-                <div class="tarjetas-inv" style="margin-bottom: 20px;">
-                    <div class="inv-info">
-                        <p style="margin-bottom: 12px; font-size: 0.95rem; color: #1e293b;">
-                            <strong>Último respaldo:</strong> Hace 2 días (Automático)
-                        </p>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button class="btn-guardar" style="background-color: #10b981; flex: 1; min-width: 160px;">
-                                Generar Respaldo Ahora
-                            </button>
+                <!-- TARJETA BACKUPS -->
+                <div class="form-producto-card" style="background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.03); overflow: hidden;">
+                    <div style="background: linear-gradient(135deg, #f8faff 0%, #eff4ff 100%); padding: 18px 22px; border-bottom: 1px solid #e8eef8; display: flex; align-items: center; gap: 14px;">
+                        <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #3a56e4, #5c7cfa); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">
+                            <i class="bi bi-database-check"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #1e293b;">Copias de Seguridad</h3>
+                            <span style="font-size: 0.82rem; color: #64748b;">Respaldos de base de datos e información clave</span>
                         </div>
                     </div>
-                </div>
 
-                <div style="border-top: 1px solid #e2e8f0; padding-top: 15px; margin-bottom: 20px;">
-                    <label
-                        style="color: #64748b; font-size: 0.85rem; font-weight: 500; text-transform: uppercase; display: block; margin-bottom: 8px;">
-                        Respaldos Automáticos
-                    </label>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <select class="form-input" style="flex: 1;">
-                            <option value="diario">Cada medianoche (Diario)</option>
-                            <option value="semanal" selected>Cada Domingo (Semanal)</option>
-                            <option value="mensual">Cada fin de mes (Mensual)</option>
-                            <option value="nunca">Desactivar automatización</option>
-                        </select>
-                        <button class="btn-guardar"
-                            style="background-color: #64748b; padding: 10px 12px;">Programar</button>
-                    </div>
-                </div>
+                    <div style="padding: 22px;">
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 20px;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span style="font-size: 0.85rem; font-weight: 600; color: #475569;">Último respaldo generado:</span>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Automático</span>
+                            </div>
+                            <div style="font-size: 0.95rem; font-weight: 700; color: #1e293b;">Hace 2 días (28 Mayo, 2026)</div>
+                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Tamaño estimado: 14.2 MB</div>
+                        </div>
 
-                <div style="border-top: 1px solid #e2e8f0; padding-top: 15px;">
-                    <label
-                        style="color: #64748b; font-size: 0.85rem; font-weight: 500; text-transform: uppercase; display: block; margin-bottom: 10px;">
-                        Historial de Respaldos Disponibles
-                    </label>
+                        <button class="btn btn-primary w-100 py-2 fw-semibold mb-3 d-flex align-items-center justify-content-center gap-2" style="background: linear-gradient(135deg, #3a56e4, #5c7cfa); border: none; border-radius: 8px;" onclick="alert('Iniciando proceso de generación de copia de seguridad...')">
+                            <i class="bi bi-cloud-arrow-up-fill"></i>
+                            <span>Generar Respaldo Ahora</span>
+                        </button>
 
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; margin-bottom: 20px;">
+                            <label class="form-label fw-semibold text-secondary small text-uppercase mb-2">Frecuencia de Respaldo Automático</label>
+                            <div class="d-flex gap-2">
+                                <select class="form-select form-select-sm" style="border-radius: 8px;">
+                                    <option value="diario">Cada medianoche (Diario)</option>
+                                    <option value="semanal" selected>Cada Domingo (Semanal)</option>
+                                    <option value="mensual">Cada fin de mes (Mensual)</option>
+                                    <option value="nunca">Desactivar automatización</option>
+                                </select>
+                                <button class="btn btn-outline-secondary btn-sm px-3 fw-semibold" style="border-radius: 8px;">Guardar</button>
+                            </div>
+                        </div>
 
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.85rem;">
-                            <div>
-                                <div style="font-weight: 600; color: #1e293b;">sigif_backup_2026_05_28.sql</div>
-                                <div style="color: #64748b; font-size: 0.8rem;">28 Mayo, 2026 • 14.2 MB • Automático
+                        <div style="border-top: 1px solid #f1f5f9; padding-top: 16px;">
+                            <label class="form-label fw-semibold text-secondary small text-uppercase mb-2">Respaldos Recientes</label>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0; font-size: 0.85rem;">
+                                    <div>
+                                        <div class="fw-bold text-dark">sigif_backup_2026_05_28.sql</div>
+                                        <div class="text-muted small">28 May 2026 • 14.2 MB • Automático</div>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-light border text-primary" title="Descargar"><i class="bi bi-download"></i></button>
+                                        <button class="btn btn-sm btn-light border text-danger" title="Restaurar" onclick="return confirm('¿Deseas restaurar este respaldo?')"><i class="bi bi-arrow-clockwise"></i></button>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0; font-size: 0.85rem;">
+                                    <div>
+                                        <div class="fw-bold text-dark">sigif_backup_2026_05_21.sql</div>
+                                        <div class="text-muted small">21 May 2026 • 13.9 MB • Manual</div>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-light border text-primary" title="Descargar"><i class="bi bi-download"></i></button>
+                                        <button class="btn btn-sm btn-light border text-danger" title="Restaurar" onclick="return confirm('¿Deseas restaurar este respaldo?')"><i class="bi bi-arrow-clockwise"></i></button>
+                                    </div>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 5px;">
-                                <button title="Descargar"
-                                    style="background: none; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 4px; cursor: pointer; color: #3b82f6;">📥</button>
-                                <button title="Restaurar Sistema"
-                                    style="background: none; border: 1px solid #fca5a5; padding: 4px 8px; border-radius: 4px; cursor: pointer; color: #ef4444;">🔄</button>
-                            </div>
                         </div>
-
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.85rem;">
-                            <div>
-                                <div style="font-weight: 600; color: #1e293b;">sigif_backup_2026_05_21.sql</div>
-                                <div style="color: #64748b; font-size: 0.8rem;">21 Mayo, 2026 • 13.9 MB • Manual por:
-                                    Admin</div>
-                            </div>
-                            <div style="display: flex; gap: 5px;">
-                                <button title="Descargar"
-                                    style="background: none; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 4px; cursor: pointer; color: #3b82f6;">📥</button>
-                                <button title="Restaurar Sistema"
-                                    style="background: none; border: 1px solid #fca5a5; padding: 4px 8px; border-radius: 4px; cursor: pointer; color: #ef4444;">🔄</button>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
+
+                
+
             </div>
         </div>
 
-        
-
-                <div class="tarjetas-inv" style="width: 100%; max-width: 100%; overflow: hidden; min-width: 0;">
-                    <label
-                        style="color: #64748b; font-size: 0.85rem; font-weight: 500; text-transform: uppercase; margin-bottom: 10px;">Matriz
-                        de Accesos por Rol</label>
-
-                    <div style="width: 100%; overflow-x: auto;">
-                        <div
-                            style="min-width: 520px; width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; font-size: 0.9rem;">
-                            <div
-                                style="background: #f8fafc; padding: 12px; display: flex; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; text-align: center;">
-                                <div style="flex: 2; text-align: left; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Módulo del Sistema</div>
-                                <div style="flex: 1; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">Administrador</div>
-                                <div style="flex: 1; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">Empleado</div>
-                            </div>
-
-                            <div
-                                style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
-                                <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Dashboard / Inicio
-                                </div>
-                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
-                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
-                            </div>
-
-                            <div
-                                style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
-                                <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Productos</div>
-                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
-                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
-                            </div>
-
-                            <div
-                                style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
-                                <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Inventario</div>
-                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
-                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
-                            </div>
-
-                            <div
-                                style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
-                                <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Facturación / Ventas</div>
-                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
-                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
-                            </div>
-
-                            <div
-                                style="padding: 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; text-align: center;">
-                                <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Auditoría e Historial</div>
-                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
-                                <div style="flex: 1; color: #ef4444; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">❌ Denegado</div>
-                            </div>
-
-                            <div style="padding: 12px; display: flex; align-items: center; text-align: center;">
-                                <div style="flex: 2; text-align: left; font-weight: 500; color: #1e293b; min-width: 220px; word-break: break-word; overflow-wrap: anywhere;">Copias de Seguridad / Ajustes</div>
-                                <div style="flex: 1; color: #10b981; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">✔ Acceso Total</div>
-                                <div style="flex: 1; color: #ef4444; font-weight: bold; min-width: 140px; word-break: break-word; overflow-wrap: anywhere;">❌ Denegado</div>
-                            </div>
+        <!-- COLUMNA DERECHA: MATRIZ REAL DE ACCESOS POR ROL (ADMIN Y EMPLEADO) -->
+        <div class="col-lg-7">
+            <div class="form-producto-card h-100" style="background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.03); overflow: hidden; display: flex; flex-direction: column;">
+                
+                <!-- ENCABEZADO DE LA MATRIZ -->
+                <div style="background: linear-gradient(135deg, #f8faff 0%, #eff4ff 100%); padding: 18px 25px; border-bottom: 1px solid #e8eef8; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #059669, #10b981); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #1e293b;">Matriz de Accesos por Rol</h3>
+                            <span style="font-size: 0.82rem; color: #64748b;">Permisos y niveles de seguridad reales en el sistema</span>
                         </div>
                     </div>
+                    <span class="badge bg-primary px-3 py-2" style="font-size: 0.75rem; letter-spacing: 0.3px;">ROLES ACTIVOS</span>
                 </div>
+
+                <div style="padding: 22px; flex: 1; display: flex; flex-direction: column; gap: 20px;">
+
+                    
+
+                    <!-- TABLA COMPARATIVA DE PERMISOS REALES -->
+                    <div class="table-responsive" style="border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+                            <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                                <tr>
+                                    <th style="padding: 12px 16px; color: #475569; font-weight: 700; width: 44%;">Módulo del Sistema</th>
+                                    <th class="text-center" style="padding: 12px 14px; color: #166534; font-weight: 700; width: 28%;">
+                                        <i class="bi bi-shield-shaded me-1"></i> Administrador
+                                    </th>
+                                    <th class="text-center" style="padding: 12px 14px; color: #1e40af; font-weight: 700; width: 28%;">
+                                        <i class="bi bi-person-badge me-1"></i> Empleado
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 1. Dashboard -->
+                                <tr>
+                                    <td style="padding: 14px 16px;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-house-door text-primary" style="font-size: 1.1rem;"></i>
+                                            <div>
+                                                <strong class="text-dark d-block">Dashboard / Inicio</strong>
+                                                <span class="text-muted" style="font-size: 0.76rem;">Panel general de métricas y resumen</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Acceso Total
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Acceso Total
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <!-- 2. Usuarios -->
+                                <tr>
+                                    <td style="padding: 14px 16px;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-people text-primary" style="font-size: 1.1rem;"></i>
+                                            <div>
+                                                <strong class="text-dark d-block">Usuarios y Perfil</strong>
+                                                <span class="text-muted" style="font-size: 0.76rem;">Gestión de usuarios y edición de datos personales</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Acceso Total
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-person-check-fill me-1"></i> Perfil Propio
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <!-- 3. Productos -->
+                                <tr>
+                                    <td style="padding: 14px 16px;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-box-seam text-primary" style="font-size: 1.1rem;"></i>
+                                            <div>
+                                                <strong class="text-dark d-block">Productos</strong>
+                                                <span class="text-muted" style="font-size: 0.76rem;">Catálogo, creación, precios y stock</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Acceso Total
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Acceso Total
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <!-- 4. Inventario -->
+                                <tr>
+                                    <td style="padding: 14px 16px;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-clipboard-data text-primary" style="font-size: 1.1rem;"></i>
+                                            <div>
+                                                <strong class="text-dark d-block">Inventario</strong>
+                                                <span class="text-muted" style="font-size: 0.76rem;">Control de stock, historial e ingresos</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Acceso Total
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Acceso Total
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <!-- 5. Facturación -->
+                                <tr>
+                                    <td style="padding: 14px 16px;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-file-earmark-text text-primary" style="font-size: 1.1rem;"></i>
+                                            <div>
+                                                <strong class="text-dark d-block">Facturación y Ventas</strong>
+                                                <span class="text-muted" style="font-size: 0.76rem;">Emisión de facturas, cobros y clientes</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Acceso Total
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Acceso Total
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <!-- 6. Auditoría -->
+                                <tr>
+                                    <td style="padding: 14px 16px;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-list-check text-primary" style="font-size: 1.1rem;"></i>
+                                            <div>
+                                                <strong class="text-dark d-block">Auditoría</strong>
+                                                <span class="text-muted" style="font-size: 0.76rem;">Logs del sistema y trazabilidad de eventos</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Acceso Total
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-x-circle-fill me-1"></i> Denegado
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <!-- 7. Configuración -->
+                                <tr>
+                                    <td style="padding: 14px 16px;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-gear text-primary" style="font-size: 1.1rem;"></i>
+                                            <div>
+                                                <strong class="text-dark d-block">Configuración y Backups</strong>
+                                                <span class="text-muted" style="font-size: 0.76rem;">Datos de empresa, respaldos y roles</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Acceso Total
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold px-2 py-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-x-circle-fill me-1"></i> Denegado
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- NOTA INFORMATIVA -->
+                    <div class="d-flex align-items-center gap-2 p-2 rounded-2" style="background: #f8fafc; border: 1px solid #e2e8f0; font-size: 0.78rem; color: #64748b;">
+                        <i class="bi bi-info-circle-fill text-primary"></i>
+                        <span>Los accesos mostrados corresponden a la validación estricta de decoradores y permisos activos del sistema.</span>
+                    </div>
+
+                </div>
+
             </div>
         </div>
 

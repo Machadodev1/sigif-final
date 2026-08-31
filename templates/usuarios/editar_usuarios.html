@@ -19,9 +19,15 @@
             <p class="cv-subtitle">Modifica la información personal, credenciales, permisos y estado del usuario</p>
         </div>
         <div class="cv-toolbar-right">
+            {% if request.session.logueado.rol == "Empleado" %}
+            <a href="{% url 'dashboard' %}" class="cs-filtro-btn" style="padding: 9px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #cbd5e1; color: #475569; font-weight: 600;">
+                <i class="bi bi-arrow-left"></i> Volver al inicio
+            </a>
+            {% else %}
             <a href="{% url 'usuarios' %}" class="cs-filtro-btn" style="padding: 9px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #cbd5e1; color: #475569; font-weight: 600;">
                 <i class="bi bi-arrow-left"></i> Volver a la lista
             </a>
+            {% endif %}
         </div>
     </div>
 
@@ -87,18 +93,18 @@
                     {% endif %}
                 </div>
                 <div class="col-12 col-md-6">
-    <label class="form-label fw-semibold text-secondary small">
-        <i class="bi bi-file-earmark-text me-1 text-primary"></i> {{ form.documento.label }}
-    </label>
+                    <label class="form-label fw-semibold text-secondary small">
+                        <i class="bi bi-file-earmark-text me-1 text-primary"></i> {{ form.documento.label }}
+                    </label>
 
-    <div class="form-control bg-light">
-        {{ form.documento.value }}
-    </div>
+                    <div class="form-control bg-light">
+                        {{ form.documento.value }}
+                    </div>
 
-    {% if form.documento.errors %}
-        <div class="text-danger small mt-1">{{ form.documento.errors|join:", " }}</div>
-    {% endif %}
-</div>
+                    {% if form.documento.errors %}
+                        <div class="text-danger small mt-1">{{ form.documento.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
 
                 <!-- Correo -->
                 <div class="col-12 col-md-6">
@@ -138,33 +144,46 @@
                     <label for="{{ form.cargo.id_for_label }}" class="form-label fw-semibold text-secondary small">
                         <i class="bi bi-shield-check me-1 text-primary"></i> {{ form.cargo.label }} <span class="text-danger">*</span>
                     </label>
+                    {% if request.session.logueado.rol == "Empleado" %}
+                    <div class="form-control bg-light fw-bold text-primary">
+                        {{ form.instance.cargo|default:"Empleado" }}
+                    </div>
+                    <input type="hidden" name="cargo" value="{{ form.instance.cargo|default:'Empleado' }}">
+                    {% else %}
                     {{ form.cargo }}
+                    {% endif %}
                     {% if form.cargo.errors %}
                         <div class="text-danger small mt-1">{{ form.cargo.errors|join:", " }}</div>
                     {% endif %}
                 </div>
 
                 <div class="col-12 col-md-6">
-    <label class="form-label fw-semibold text-secondary small">
-        <i class="bi bi-calendar-event me-1 text-primary"></i> {{ form.fecha_inicio.label }}
-    </label>
+                    <label class="form-label fw-semibold text-secondary small">
+                        <i class="bi bi-calendar-event me-1 text-primary"></i> {{ form.fecha_inicio.label }}
+                    </label>
 
-    <div class="form-control bg-light">
-        {{ form.fecha_inicio.value|date:"d/m/Y" }}
-    </div>
+                    <div class="form-control bg-light">
+                        {{ form.fecha_inicio.value|date:"d/m/Y" }}
+                    </div>
 
-    {% if form.fecha_inicio.errors %}
-        <div class="text-danger small mt-1">{{ form.fecha_inicio.errors|join:", " }}</div>
-    {% endif %}
-</div>
+                    {% if form.fecha_inicio.errors %}
+                        <div class="text-danger small mt-1">{{ form.fecha_inicio.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
 
             </div>
 
             <!-- Botones de Acción -->
             <div class="form-card-actions">
+                {% if request.session.logueado.rol == "Empleado" %}
+                <a href="{% url 'dashboard' %}" class="form-btn-cancel">
+                    Cancelar
+                </a>
+                {% else %}
                 <a href="{% url 'usuarios' %}" class="form-btn-cancel">
                     Cancelar
                 </a>
+                {% endif %}
                 <button type="submit" class="form-btn-submit">
                     <i class="bi bi-save"></i> Guardar Cambios
                 </button>
