@@ -10,7 +10,7 @@ from django.views.generic import ListView, DetailView
 from django.db import transaction
 from django.core.mail import EmailMessage
 from django.conf import settings
-
+from apps.auditoria.models import Auditoria
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -363,7 +363,11 @@ def confirmar_venta(request):
                 total=total_final,
                 descuento=valor_descuento
             )
-
+            Auditoria.objects.create(
+                usuario=request.session["logueado"]["nombre"],
+                accion=f"CREÓ FACTURA #{factura.id} - CLIENTE: {cliente.nombre} - TOTAL: {formato_cop(total_final)}",
+                modulo="FACTURACION"
+            )
             # --------------------------------------
             # DETALLES + INVENTARIO
             # --------------------------------------
