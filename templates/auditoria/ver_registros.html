@@ -10,58 +10,291 @@
 </header>
 
 <section class="auditoria-container2">
-        {# Mensajes específicos del módulo 'auditoria' #}
-        {% if messages %}
-            {% for message in messages %}
-                {% if 'module-auditoria' in message.tags %}
-                    <div class="alert {% if 'error' in message.tags %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show {{ message.tags }}" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+
+```
+{# Mensajes específicos del módulo 'auditoria' #}
+{% if messages %}
+    {% for message in messages %}
+        {% if 'module-auditoria' in message.tags %}
+            <div
+                class="alert
+                {% if 'error' in message.tags %}
+                    alert-danger
+                {% elif 'warning' in message.tags %}
+                    alert-warning
+                {% elif 'success' in message.tags %}
+                    alert-success
+                {% else %}
+                    alert-info
                 {% endif %}
-            {% endfor %}
-        {% endif %}
-    <form method="GET" class="filter-form" style="margin-bottom:20px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-        <input type="search" name="q" class="buscar" placeholder="Buscar por usuario o acción" value="{{ q|default_if_none:'' }}">
+                alert-dismissible fade show {{ message.tags }}"
+                role="alert"
+            >
+                {{ message }}
 
-        <select name="modulo" id="modulo" class="buscar">
-            <option value="">Todos los módulos</option>
-            {% for value, label in modulos %}
-            <option value="{{ value }}" {% if value == modulo_actual %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-
-        <label style="display:flex; gap:8px; align-items:center;">
-            Desde
-            <input type="date" name="fecha_desde" class="buscar" value="{{ fecha_desde|default_if_none:'' }}">
-        </label>
-        <label style="display:flex; gap:8px; align-items:center;">
-            Hasta
-            <input type="date" name="fecha_hasta" class="buscar" value="{{ fecha_hasta|default_if_none:'' }}">
-        </label>
-
-        <div style="margin-left:auto; display:flex; gap:8px;">
-            <button type="submit" class="btn-nuevo btn-sm">Filtrar</button>
-            <a href="{% url 'auditoria' %}" class="btn-delete btn-sm">Limpiar</a>
-        </div>
-    </form>
-
-    <div class="cards-grid">
-        {% for item in datos %}
-        <div class="tarjetas-productos">
-            <div class="pro-info">
-                <strong>{{ item.usuario }}</strong>
-                <span style="font-size:0.95rem; color:var(--text-muted); margin-top:6px;">{{ item.accion }}</span>
-                <div class="extra" style="margin-top:12px; align-items:center;">
-                    <span class="rol">{{ item.modulo }}</span>
-                    <span style="margin-left:auto; font-weight:600; color:var(--text-muted);">{{ item.fecha|date:"Y-m-d H:i" }}</span>
-                </div>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                ></button>
             </div>
-        </div>
-        {% empty %}
-        <div style="padding:40px; text-align:center; color:var(--text-muted); width:100%;">No hay registros de auditoría</div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+
+<!-- =====================================================
+     FILTROS
+====================================================== -->
+
+<form
+    method="GET"
+    class="filter-form"
+    style="
+        margin-bottom:20px;
+        display:flex;
+        gap:12px;
+        flex-wrap:wrap;
+        align-items:center;
+    "
+>
+
+    <!-- USUARIO -->
+
+    <input
+        type="search"
+        name="usuario"
+        class="buscar"
+        placeholder="Buscar por usuario"
+        value="{{ usuario_filtro|default_if_none:'' }}"
+    >
+
+
+    <!-- MÓDULO -->
+
+    <select
+        name="modulo"
+        id="modulo"
+        class="buscar"
+    >
+
+        <option value="">
+            Todos los módulos
+        </option>
+
+        {% for value, label in modulos %}
+
+            <option
+                value="{{ value }}"
+                {% if value == modulo_actual %}
+                    selected
+                {% endif %}
+            >
+                {{ label }}
+            </option>
+
         {% endfor %}
+
+    </select>
+
+
+    <!-- FECHA DESDE -->
+
+    <label
+        style="
+            display:flex;
+            gap:8px;
+            align-items:center;
+        "
+    >
+        Desde
+
+        <input
+            type="date"
+            name="fecha_desde"
+            value="{{ fecha_desde }}"
+            max="{{ hoy }}"
+        >
+
+    </label>
+
+
+    <!-- FECHA HASTA -->
+
+    <label
+        style="
+            display:flex;
+            gap:8px;
+            align-items:center;
+        "
+    >
+        Hasta
+
+        <input
+            type="date"
+            name="fecha_hasta"
+            value="{{ fecha_hasta }}"
+            max="{{ hoy }}"
+        >
+
+    </label>
+
+
+    <!-- =================================================
+         BOTONES
+    ================================================== -->
+
+    <div
+        style="
+            margin-left:auto;
+            display:flex;
+            gap:8px;
+            flex-wrap:wrap;
+        "
+    >
+
+        <!-- FILTRAR -->
+
+        <button
+            type="submit"
+            class="btn-nuevo btn-sm"
+        >
+            Filtrar
+        </button>
+
+
+        <!-- LIMPIAR -->
+
+        <a
+            href="{% url 'auditoria' %}"
+            class="btn-delete btn-sm"
+        >
+            Limpiar
+        </a>
+
+
+        <!-- PDF -->
+
+        <button
+            type="submit"
+            formaction="{% url 'exportar_pdf' %}"
+            formmethod="get"
+            class="btn-sm"
+            style="
+                background:#dc3545;
+                color:white;
+                border:none;
+                border-radius:6px;
+                padding:7px 14px;
+                cursor:pointer;
+                font-weight:600;
+            "
+        >
+            EXPORTAR EN PDF
+        </button>
+
+
+        <!-- EXCEL -->
+
+        <button
+            type="submit"
+            formaction="{% url 'exportar_excel' %}"
+            formmethod="get"
+            class="btn-sm"
+            style="
+                background:#198754;
+                color:white;
+                border:none;
+                border-radius:6px;
+                padding:7px 14px;
+                cursor:pointer;
+                font-weight:600;
+            "
+        >
+            EXPORTAR UN EXCEL
+        </button>
+
     </div>
+
+</form>
+
+
+<!-- =====================================================
+     REGISTROS
+====================================================== -->
+
+<div class="cards-grid">
+
+    {% for item in datos %}
+
+        <div class="tarjetas-productos">
+
+            <div class="pro-info">
+
+                <strong>
+                    {{ item.usuario }}
+                </strong>
+
+
+                <span
+                    style="
+                        font-size:0.95rem;
+                        color:var(--text-muted);
+                        margin-top:6px;
+                    "
+                >
+                    {{ item.accion }}
+                </span>
+
+
+                <div
+                    class="extra"
+                    style="
+                        margin-top:12px;
+                        align-items:center;
+                    "
+                >
+
+                    <span class="rol">
+                        {{ item.modulo }}
+                    </span>
+
+
+                    <span
+                        style="
+                            margin-left:auto;
+                            font-weight:600;
+                            color:var(--text-muted);
+                        "
+                    >
+                        {{ item.fecha|date:"Y-m-d H:i" }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    {% empty %}
+
+        <div
+            style="
+                padding:40px;
+                text-align:center;
+                color:var(--text-muted);
+                width:100%;
+            "
+        >
+            No hay registros de auditoría
+        </div>
+
+    {% endfor %}
+
+</div>
+```
+
 </section>
 
 {% endblock %}
