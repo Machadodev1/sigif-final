@@ -50,9 +50,10 @@ class UsuarioForm(forms.ModelForm):
 
     class Meta:
         model = Usuarios
-        fields = ['nombre', 'correo', 'contra', 'telefono', 'cargo', 'fecha_inicio', 'activo']
+        fields = ['nombre', 'documento', 'correo', 'contra', 'telefono', 'cargo', 'fecha_inicio', 'activo']
         labels = {
             'nombre': 'Nombre del empleado',
+            'documento': 'Documento de identidad',
             'contra': 'Contraseña',
             'telefono': 'Teléfono de contacto',
             'correo': 'Correo electrónico',
