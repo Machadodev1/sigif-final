@@ -1,6 +1,22 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 
+CATEGORIAS = [
+    ('Frenos', 'Frenos'),
+    ('Motor', 'Motor'),
+    ('Transmisión', 'Transmisión'),
+    ('Lubricantes y Fluidos', 'Lubricantes y Fluidos'),
+    ('Suspensión', 'Suspensión'),
+    ('Eléctrico', 'Eléctrico'),
+    ('Llantas y Ruedas', 'Llantas y Ruedas'),
+    ('Dirección', 'Dirección'),
+    ('Carrocería', 'Carrocería'),
+    ('Accesorios', 'Accesorios'),
+    ('Filtros', 'Filtros'),
+    ('Repuestos Generales', 'Repuestos Generales'),
+    ('Insumos de Taller', 'Insumos de Taller'),
+]
+
 class Producto (models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
