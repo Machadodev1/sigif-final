@@ -1,4 +1,6 @@
 # pyrefly: ignore [missing-import]
+from urllib import request
+
 from django.shortcuts import render, redirect, get_object_or_404
 # pyrefly: ignore [missing-import]
 from django.contrib import messages
@@ -103,7 +105,7 @@ def cambiar_estado_usuario(request, id):
     return redirect("usuarios")
 
 
-@requerir_rol(["SuperAdmin", "Admin"])
+@requerir_rol(["SuperAdmin", "Admin", "Empleado"])
 def usuarios(request):
     user = Usuarios.objects.all()
     q = request.GET.get('q', '').strip()
@@ -147,12 +149,12 @@ def editar_usuarios(request, id):
 
     if rol_actual == "Empleado" and usuario.id != usuario_actual_id:
         messages.error(
-            request,
-            "Solo tienes permiso para editar tu propio perfil."
-        )
-        return redirect("dashboard")
+        request,
+        "Solo tienes permiso para editar tu propio perfil."
+    )
+        return redirect("usuarios")
 
-    # Guardamos los valores originales
+
     cargo_original = usuario.cargo
     estado_original = usuario.activo
 
@@ -169,16 +171,9 @@ def editar_usuarios(request, id):
 
             nuevo_cargo = usuario_editado.cargo
 
-            # ==========================================
-            # 1. NADIE PUEDE CAMBIAR SU PROPIO ROL
-            # ==========================================
 
             if usuario.id == usuario_actual_id or rol_actual == "Empleado":
                 usuario_editado.cargo = cargo_original
-
-            # ==========================================
-            # 2. NO CAMBIAR ESTADO AL EDITAR
-            # ==========================================
 
             usuario_editado.activo = estado_original
 
@@ -188,7 +183,7 @@ def editar_usuarios(request, id):
 
             if (
                 rol_actual == "Admin"
-                and cargo_original == "SuperAdmin"
+                and cargo_original == "SuperAdmin" 
             ):
 
                 messages.error(
@@ -202,9 +197,6 @@ def editar_usuarios(request, id):
                     {"form": form}
                 )
 
-            # ==========================================
-            # 4. ADMIN NO PUEDE CREAR OTRO SUPERADMIN
-            # ==========================================
 
             if (
                 rol_actual == "Admin"
@@ -245,7 +237,7 @@ def editar_usuarios(request, id):
             )
 
             if rol_actual == "Empleado":
-                return redirect("dashboard")
+                return redirect("usuarios")
 
             return redirect("usuarios")
 
