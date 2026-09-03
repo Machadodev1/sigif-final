@@ -145,7 +145,7 @@ def cambiar_estado_usuario(request, id):
     return redirect("usuarios")
 
 
-@requerir_rol(["SuperAdmin", "Admin", "Empleado"])
+@requerir_rol(["SuperAdmin", "Admin"])
 def usuarios(request):
     user = Usuarios.objects.all()
     q = request.GET.get('q', '').strip()
