@@ -1,4 +1,6 @@
 # pyrefly: ignore [missing-import]
+from urllib import request
+
 from django.shortcuts import render, redirect, get_object_or_404
 # pyrefly: ignore [missing-import]
 from django.contrib import messages
@@ -103,7 +105,7 @@ def cambiar_estado_usuario(request, id):
     return redirect("usuarios")
 
 
-@requerir_rol(["SuperAdmin", "Admin"])
+@requerir_rol(["SuperAdmin", "Admin", "Empleado"])
 def usuarios(request):
     user = Usuarios.objects.all()
     q = request.GET.get('q', '').strip()
@@ -142,17 +144,19 @@ def editar_usuarios(request, id):
 
     usuario = get_object_or_404(Usuarios, id=id)
 
-    # Usuario que está realizando la acción
     usuario_actual_id = request.session["logueado"]["id"]
     rol_actual = request.session["logueado"]["rol"]
 
-    # Restringir a Empleado para que solo pueda editar su propio perfil
     if rol_actual == "Empleado" and usuario.id != usuario_actual_id:
-        messages.error(request, "Solo tienes permiso para editar tu propio perfil.")
-        return redirect("dashboard")
+        messages.error(
+        request,
+        "Solo tienes permiso para editar tu propio perfil."
+    )
+        return redirect("usuarios")
 
-    # Cargo original del usuario que estamos editando
+
     cargo_original = usuario.cargo
+    estado_original = usuario.activo
 
     if request.method == "POST":
 
@@ -167,15 +171,24 @@ def editar_usuarios(request, id):
 
             nuevo_cargo = usuario_editado.cargo
 
-            # ==========================================
-            # 1. NADIE PUEDE CAMBIAR SU PROPIO ROL / EMPLEADO NO PUEDE ALTERAR CARGO
-            # ==========================================
 
             if usuario.id == usuario_actual_id or rol_actual == "Empleado":
                 usuario_editado.cargo = cargo_original
 
+            usuario_editado.activo = estado_original
+
+
+            print("USUARIO EDITADO:", usuario)
+            print("USUARIO LOGUEADO:", request.user)
+            print("ID EDITADO:", usuario.id)
+            print("ID LOGUEADO:", request.user.id)
+            print("ROL ACTUAL:", rol_actual)
+            print("CARGO ORIGINAL:", cargo_original)
+
+            usuario_logueado = request.session.get("logueado")
+
             # ==========================================
-            # 2. ADMIN NO PUEDE MODIFICAR AL SUPERADMIN
+            # 3. ADMIN NO PUEDE MODIFICAR AL SUPERADMIN
             # ==========================================
 
             if (
@@ -185,7 +198,7 @@ def editar_usuarios(request, id):
 
                 messages.error(
                     request,
-                    "Un Administrador no puede modificar al SuperAdmin."
+                    "Un Admin no puede modificar al SuperAdmin."
                 )
 
                 return render(
@@ -195,7 +208,7 @@ def editar_usuarios(request, id):
                 )
 
             # ==========================================
-            # 3. ADMIN NO PUEDE CREAR OTRO SUPERADMIN
+            # 4. ADMIN NO PUEDE CREAR OTRO SUPERADMIN
             # ==========================================
 
             if (
@@ -216,12 +229,11 @@ def editar_usuarios(request, id):
                 )
 
             # ==========================================
-            # 4. GUARDAR CAMBIOS
+            # 5. GUARDAR
             # ==========================================
 
             usuario_editado.save()
 
-            # Actualizar nombre en la sesión actual si editó su propio usuario
             if usuario_editado.id == usuario_actual_id:
                 request.session["logueado"]["nombre"] = usuario_editado.nombre
                 request.session.modified = True
@@ -238,7 +250,7 @@ def editar_usuarios(request, id):
             )
 
             if rol_actual == "Empleado":
-                return redirect("dashboard")
+                return redirect("usuarios")
 
             return redirect("usuarios")
 
