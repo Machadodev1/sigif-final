@@ -10,4 +10,3 @@ venv/
 # Logs
 *.log
 .env
-db.sqlite3
