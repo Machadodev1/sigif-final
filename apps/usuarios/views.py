@@ -182,6 +182,18 @@ def editar_usuarios(request, id):
 
             usuario_editado.activo = estado_original
 
+
+
+
+            print("USUARIO EDITADO:", usuario)
+            print("USUARIO LOGUEADO:", request.user)
+            print("ID EDITADO:", usuario.id)
+            print("ID LOGUEADO:", request.user.id)
+            print("ROL ACTUAL:", rol_actual)
+            print("CARGO ORIGINAL:", cargo_original)
+
+            usuario_logueado = request.session.get("logueado")
+
             # ==========================================
             # 3. ADMIN NO PUEDE MODIFICAR AL SUPERADMIN
             # ==========================================
@@ -193,7 +205,7 @@ def editar_usuarios(request, id):
 
                 messages.error(
                     request,
-                    "Un Administrador no puede modificar al SuperAdmin."
+                    "Un Admin no puede modificar al SuperAdmin."
                 )
 
                 return render(
@@ -201,6 +213,29 @@ def editar_usuarios(request, id):
                     "usuarios/editar_usuarios.html",
                     {"form": form}
                 )
+
+            # ==========================================
+            # ADMIN NO PUEDE MODIFICAR A OTRO ADMIN
+            # ==========================================
+            
+            
+            if (
+                rol_actual == "Admin"
+                and cargo_original == "Admin"
+                and usuario_logueado
+                and usuario.id != usuario_logueado["id"]
+            ):
+                    messages.error(
+                    request,
+                        "Un Admin no puede modificar al Admin."
+                    )
+            
+                    return render(
+                        request,
+                    "usuarios/editar_usuarios.html",
+                    {"form": form}
+                )
+            
 
             # ==========================================
             # 4. ADMIN NO PUEDE CREAR OTRO SUPERADMIN
