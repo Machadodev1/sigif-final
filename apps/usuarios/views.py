@@ -178,8 +178,6 @@ def editar_usuarios(request, id):
             usuario_editado.activo = estado_original
 
 
-
-
             print("USUARIO EDITADO:", usuario)
             print("USUARIO LOGUEADO:", request.user)
             print("ID EDITADO:", usuario.id)
