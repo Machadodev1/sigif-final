@@ -237,6 +237,9 @@ def confirmar_venta(request):
 
         productos = data.get("productos", [])
         descuento = Decimal(str(data.get("descuento", 0)))
+        metodo_pago = str(data.get("metodo_pago", "efectivo")).upper()
+        if metodo_pago not in dict(Factura.METODOS_PAGO):
+            metodo_pago = 'EFECTIVO'
 
         cliente_id = data.get("cliente_id")
         nombre = data.get("nombre", "").strip()
@@ -386,7 +389,9 @@ def confirmar_venta(request):
                 cliente=cliente,
                 usuario=usuario,
                 total=total_final,
-                descuento=valor_descuento
+                descuento=valor_descuento,
+                metodo_pago=metodo_pago,
+                valor_pagado=total_final if metodo_pago != 'CREDITO' else Decimal('0'),
             )
             Auditoria.objects.create(
                 usuario=request.session["logueado"]["nombre"],

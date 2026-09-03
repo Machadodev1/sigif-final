@@ -29,6 +29,7 @@
         <li><a href="{% url 'productos' %}" class="{% if request.resolver_match.url_name == 'productos' %}active{% endif %}">Productos</a></li>
         <li><a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Inventario</a></li>
         <li><a href="{% url 'factura-list' %}" class="{% if request.resolver_match.url_name == 'factura-list' or request.resolver_match.url_name == 'factura-crear' or request.resolver_match.url_name == 'factura-detalle' %}active{% endif %}">Facturación</a></li>
+        <li><a href="{% url 'finanzas:finanzas_dashboard' %}" class="{% if request.resolver_match.namespace == 'finanzas' %}active{% endif %}">Finanzas</a></li>
         <li><a href="{% url 'auditoria' %}" class="{% if request.resolver_match.url_name == 'auditoria' %}active{% endif %}">Auditoría</a></li>
         <li><a href="{% url 'configuracion' %}" class="{% if request.resolver_match.url_name == 'configuracion' %}active{% endif %}">Configuración</a></li>
       </ul>

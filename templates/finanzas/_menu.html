@@ -1,0 +1,8 @@
+<header class="facturacion-header"><div><h1>Gestión financiera</h1></div></header>
+<div class="menu-horizontal">
+  <a href="{% url 'finanzas:finanzas_dashboard' %}" class="{% if request.resolver_match.url_name == 'finanzas_dashboard' %}active{% endif %}">Dashboard</a>
+  <a href="{% url 'finanzas:ingresos' %}" class="{% if request.resolver_match.url_name == 'ingresos' %}active{% endif %}">Ingresos</a>
+  <a href="{% url 'finanzas:gastos' %}" class="{% if request.resolver_match.url_name == 'gastos' %}active{% endif %}">Gastos</a>
+  <a href="{% url 'finanzas:rentabilidad' %}" class="{% if request.resolver_match.url_name == 'rentabilidad' %}active{% endif %}">Rentabilidad por producto</a>
+  <a href="{% url 'finanzas:reportes' %}" class="{% if request.resolver_match.url_name == 'reportes' %}active{% endif %}">Reportes</a>
+</div>
