@@ -1,0 +1,602 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+{% include 'finanzas/_menu.html' %}
+
+<div class="container-fluid px-3 px-md-4 py-2 pg-rentabilidad">
+
+  <!-- Cabecera Ejecutiva -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 pb-2 border-bottom">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold">
+          <i class="bi bi-box-seam me-1"></i>Rotación y Márgenes
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Rentabilidad de Inventario</h2>
+      </div>
+      <p class="text-muted small mb-0">
+        Márgenes de ganancia obtenidos por la rotación y comercialización de repuestos y productos en stock.
+      </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="badge bg-white text-muted border px-3 py-2 rounded-pill shadow-xs d-flex align-items-center gap-2">
+        <i class="bi bi-tags-fill text-primary"></i>
+        <strong class="text-dark">{{ productos_rentabilidad|length }}</strong> productos analizados
+      </span>
+
+      <button class="btn btn-outline-secondary btn-sm rounded-2 d-flex align-items-center gap-1 shadow-xs" onclick="window.print()">
+        <i class="bi bi-printer"></i> Imprimir informe
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtro de Período -->
+  {% include 'finanzas/_periodo.html' %}
+
+  <!-- KPI Grid: Métricas Clave de Rentabilidad -->
+  <div class="row g-3 mb-4">
+    <!-- Margen Bruto Generado -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Ganancia Bruta en Productos</span>
+            <div class="pg-kpi-value text-primary fw-bold fs-4 mt-1">${{ utilidad_bruta|floatformat:0|intcomma }}</div>
+          </div>
+          <div class="pg-kpi-icon bg-primary-subtle text-primary rounded-3 p-2">
+            <i class="bi bi-graph-up-arrow fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-shield-check text-primary"></i>
+          <span>Ingresos menos costo de mercancía</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ingresos por Ventas -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Ingresos Totales (Venta)</span>
+            <div class="pg-kpi-value text-success fw-bold fs-4 mt-1">${{ ingresos|floatformat:0|intcomma }}</div>
+          </div>
+          <div class="pg-kpi-icon bg-success-subtle text-success rounded-3 p-2">
+            <i class="bi bi-cash-stack fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-receipt text-success"></i>
+          <span>{{ ventas }} transacciones con productos</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Costo de Mercancía (COGS) -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Costo Mercancía Vendida (COGS)</span>
+            <div class="pg-kpi-value text-secondary fw-bold fs-4 mt-1">${{ costos|floatformat:0|intcomma }}</div>
+          </div>
+          <div class="pg-kpi-icon bg-secondary-subtle text-secondary rounded-3 p-2">
+            <i class="bi bi-boxes fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-truck text-secondary"></i>
+          <span>Costo de compra en inventario</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Margen Bruto Porcentual -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Margen Bruto Promedio</span>
+            <div class="pg-kpi-value text-info-emphasis fw-bold fs-4 mt-1">
+              {% if ingresos > 0 %}{% widthratio utilidad_bruta ingresos 100 %}%{% else %}0%{% endif %}
+            </div>
+          </div>
+          <div class="pg-kpi-icon bg-info-subtle text-info-emphasis rounded-3 p-2">
+            <i class="bi bi-pie-chart fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-speedometer2 text-info"></i>
+          <span>Rendimiento neto sobre facturación</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Destacados / Spotlight (Producto Estrella vs Líder en Volumen) -->
+  {% if productos_rentabilidad %}
+  <div class="row g-3 mb-4">
+    <!-- Producto de Mayor Ganancia -->
+    {% with estrella=productos_rentabilidad.0 %}
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-3 p-3 bg-white h-100 pg-spotlight-card border-start border-4 border-success">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="me-3">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 small fw-semibold">
+                <i class="bi bi-trophy-fill me-1"></i>Producto Estrella (Mayor Ganancia)
+              </span>
+              <span class="badge bg-light text-muted border small">{{ estrella.producto.categoria }}</span>
+            </div>
+            <h4 class="h5 fw-bold text-dark mb-1">{{ estrella.producto.nombre }}</h4>
+            <p class="text-muted small mb-0">Líder en generación de utilidad neta para el negocio en este período.</p>
+          </div>
+          <div class="text-end">
+            <span class="d-block small text-muted text-uppercase fw-semibold">Ganancia</span>
+            <span class="fs-4 fw-bold text-success">${{ estrella.ganancia|floatformat:0|intcomma }}</span>
+            <span class="badge bg-success text-white d-block mt-1">{{ estrella.margen|floatformat:1 }}% margen</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endwith %}
+
+    <!-- Producto Más Vendido -->
+    {% with rotacion=mas_vendidos.0 %}
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-3 p-3 bg-white h-100 pg-spotlight-card border-start border-4 border-primary">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="me-3">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 small fw-semibold">
+                <i class="bi bi-fire me-1"></i>Líder en Rotación (Más Vendido)
+              </span>
+              <span class="badge bg-light text-muted border small">{{ rotacion.producto.categoria }}</span>
+            </div>
+            <h4 class="h5 fw-bold text-dark mb-1">{{ rotacion.producto.nombre }}</h4>
+            <p class="text-muted small mb-0">Mayor demanda operativa con el volumen más alto de unidades comercializadas.</p>
+          </div>
+          <div class="text-end">
+            <span class="d-block small text-muted text-uppercase fw-semibold">Volumen</span>
+            <span class="fs-4 fw-bold text-primary">{{ rotacion.cantidad }} unds</span>
+            <span class="d-block small text-muted mt-1">${{ rotacion.ingresos|floatformat:0|intcomma }} en ventas</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endwith %}
+  </div>
+  {% endif %}
+
+  <!-- Sección de Gráficos Corporativos -->
+  <div class="row g-3 mb-4">
+    <!-- Gráfico 1: Top Productos por Ganancia Neta -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-3 p-4 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h3 class="h6 fw-bold text-dark mb-1">
+              <i class="bi bi-bar-chart-fill text-primary me-2"></i>Top Productos por Ganancia ($ COP)
+            </h3>
+            <p class="text-muted small mb-0">Productos que mayor beneficio económico aportan al balance</p>
+          </div>
+          <span class="badge bg-light text-muted border px-2 py-1 small">Top Rentables</span>
+        </div>
+        <div class="chart-container position-relative" style="height: 310px;">
+          <canvas id="chartRentabilidad"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico 2: Comparativa Ingresos vs Costos -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-3 p-4 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h3 class="h6 fw-bold text-dark mb-1">
+              <i class="bi bi-pie-chart-fill text-success me-2"></i>Ingreso vs. Costo (Top 5)
+            </h3>
+            <p class="text-muted small mb-0">Relación de facturación frente al costo de adquisición</p>
+          </div>
+          <span class="badge bg-light text-muted border px-2 py-1 small">Margen Comparativo</span>
+        </div>
+        <div class="chart-container position-relative" style="height: 310px;">
+          <canvas id="chartComparativa"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fila de Rankings: Top 5 Vendidos y Top 5 Mayor Margen % -->
+  <div class="row g-3 mb-4">
+    <!-- Top 5 Más Vendidos -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-3 p-4 bg-white h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="h6 fw-bold text-dark mb-0">
+            <i class="bi bi-bag-check-fill text-primary me-2"></i>Top 5 Productos Más Vendidos
+          </h3>
+          <span class="badge bg-primary-subtle text-primary small">Por Unidades</span>
+        </div>
+        <div class="list-group list-group-flush">
+          {% for item in mas_vendidos %}
+          <div class="list-group-item px-0 py-2 border-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+              <span class="badge {% if forloop.counter == 1 %}bg-warning text-dark{% elif forloop.counter == 2 %}bg-secondary text-white{% elif forloop.counter == 3 %}bg-danger-subtle text-danger{% else %}bg-light text-muted border{% endif %} rounded-circle p-2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
+                {{ forloop.counter }}
+              </span>
+              <div>
+                <span class="fw-semibold text-dark d-block small">{{ item.producto.nombre }}</span>
+                <span class="text-muted" style="font-size: 0.75rem;">{{ item.producto.categoria }}</span>
+              </div>
+            </div>
+            <div class="text-end">
+              <span class="fw-bold text-dark d-block small">{{ item.cantidad }} unds</span>
+              <span class="text-muted" style="font-size: 0.75rem;">${{ item.ingresos|floatformat:0|intcomma }}</span>
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-muted small my-3 text-center">No hay productos vendidos en este período.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Top 5 Mayor Margen Porcentual -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-3 p-4 bg-white h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="h6 fw-bold text-dark mb-0">
+            <i class="bi bi-percent text-success me-2"></i>Top 5 Mayor Margen Porcentual (%)
+          </h3>
+          <span class="badge bg-success-subtle text-success small">Mayor Eficiencia</span>
+        </div>
+        <div class="list-group list-group-flush">
+          {% for item in mayor_margen %}
+          <div class="list-group-item px-0 py-2 border-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+              <span class="badge {% if forloop.counter == 1 %}bg-success text-white{% elif forloop.counter == 2 %}bg-info text-white{% elif forloop.counter == 3 %}bg-primary-subtle text-primary{% else %}bg-light text-muted border{% endif %} rounded-circle p-2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
+                {{ forloop.counter }}
+              </span>
+              <div>
+                <span class="fw-semibold text-dark d-block small">{{ item.producto.nombre }}</span>
+                <span class="text-muted" style="font-size: 0.75rem;">{{ item.producto.categoria }}</span>
+              </div>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-success-subtle text-success fw-bold d-inline-block small px-2 py-1">
+                {{ item.margen|floatformat:1 }}%
+              </span>
+              <span class="text-muted d-block" style="font-size: 0.75rem;">+${{ item.ganancia|floatformat:0|intcomma }}</span>
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-muted small my-3 text-center">No hay productos vendidos en este período.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla Detallada de Rentabilidad por Producto -->
+  <div class="card border-0 shadow-sm rounded-3 p-4 mb-4 bg-white">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+      <div>
+        <h3 class="h6 fw-bold text-dark mb-1">
+          <i class="bi bi-table text-primary me-2"></i>Detalle de Rentabilidad por Producto
+        </h3>
+        <p class="text-muted small mb-0">Consolidado general de ingresos, costos directos y rentabilidad neta por ítem</p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <div class="input-group input-group-sm" style="max-width: 280px;">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" id="filtroProductoInput" class="form-control bg-light border-start-0 shadow-none" placeholder="Buscar por producto o categoría...">
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 pg-tabla-rentabilidad" id="tablaRentabilidad">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3 text-uppercase text-muted small fw-semibold" style="width: 50px;">#</th>
+            <th class="text-uppercase text-muted small fw-semibold">Producto / Línea</th>
+            <th class="text-center text-uppercase text-muted small fw-semibold">Vendidos</th>
+            <th class="text-end text-uppercase text-muted small fw-semibold">Ingreso Total</th>
+            <th class="text-end text-uppercase text-muted small fw-semibold">Costo Total (COGS)</th>
+            <th class="text-end text-uppercase text-muted small fw-semibold">Ganancia Neta</th>
+            <th class="text-center text-uppercase text-muted small fw-semibold" style="width: 140px;">Margen</th>
+            <th class="text-center text-uppercase text-muted small fw-semibold pe-3" style="width: 120px;">Desempeño</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in productos_rentabilidad %}
+          <tr class="fila-producto">
+            <td class="ps-3 text-muted small fw-medium">{{ forloop.counter }}</td>
+            <td>
+              <div class="fw-semibold text-dark producto-nombre">{{ item.producto.nombre }}</div>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <span class="badge bg-light text-muted border small producto-categoria">{{ item.producto.categoria }}</span>
+                <span class="text-muted" style="font-size: 0.75rem;">Stock act.: <strong>{{ item.producto.stock }}</strong></span>
+              </div>
+            </td>
+            <td class="text-center fw-bold text-dark">{{ item.cantidad }}</td>
+            <td class="text-end fw-semibold text-dark">${{ item.ingresos|floatformat:0|intcomma }}</td>
+            <td class="text-end fw-medium text-secondary">-${{ item.costos|floatformat:0|intcomma }}</td>
+            <td class="text-end fw-bold {% if item.ganancia >= 0 %}text-success{% else %}text-danger{% endif %}">
+              ${{ item.ganancia|floatformat:0|intcomma }}
+            </td>
+            <td class="text-center">
+              {% if item.margen >= 35 %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold">
+                  {{ item.margen|floatformat:1 }}%
+                </span>
+              {% elif item.margen >= 20 %}
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold">
+                  {{ item.margen|floatformat:1 }}%
+                </span>
+              {% else %}
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill fw-semibold">
+                  {{ item.margen|floatformat:1 }}%
+                </span>
+              {% endif %}
+            </td>
+            <td class="pe-3">
+              <div class="progress" style="height: 6px; background-color: #f1f5f9;" title="{{ item.margen|floatformat:1 }}% de margen">
+                <div class="progress-bar {% if item.margen >= 35 %}bg-success{% elif item.margen >= 20 %}bg-primary{% else %}bg-warning{% endif %} rounded-pill"
+                     role="progressbar"
+                     style="width: {% if item.margen > 100 %}100{% elif item.margen < 0 %}0{% else %}{{ item.margen|floatformat:0 }}{% endif %}%;"
+                     aria-valuenow="{{ item.margen|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100">
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center py-5 text-muted">
+              <i class="bi bi-box-seam fs-1 d-block mb-2 text-secondary opacity-50"></i>
+              <h6 class="fw-semibold text-dark">No se registran ventas de productos en este período</h6>
+              <p class="small mb-0">Selecciona otro rango en el filtro de fechas para visualizar la rentabilidad.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Estilos Corporativos Exclusivos de Rentabilidad -->
+<style>
+  .pg-rentabilidad {
+    color: #1e293b;
+  }
+  .pg-kpi-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    border-color: #e2e8f0 !important;
+  }
+  .pg-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06) !important;
+    border-color: #cbd5e1 !important;
+  }
+  .pg-kpi-label {
+    letter-spacing: 0.03em;
+    font-size: 0.72rem;
+  }
+  .pg-kpi-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pg-spotlight-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .pg-spotlight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06) !important;
+  }
+  .pg-tabla-rentabilidad th, .pg-tabla-rentabilidad td {
+    padding: 12px 14px;
+  }
+  .shadow-xs {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+</style>
+
+<!-- Chart.js Engine y Configuración de Gráficos -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Función auxiliar de formateo monetario corporativo
+  const formatCOP = (value) => {
+    const num = Math.round(Number(value) || 0);
+    return '$ ' + num.toLocaleString('es-CO');
+  };
+
+  // Configuración de fuentes y estilo global
+  Chart.defaults.font.family = "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+  Chart.defaults.color = '#64748b';
+
+  const corporateTooltipConfig = {
+    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+    titleColor: '#f8fafc',
+    bodyColor: '#f8fafc',
+    titleFont: { weight: '600', size: 13 },
+    bodyFont: { size: 12 },
+    padding: 12,
+    cornerRadius: 8,
+    boxPadding: 6,
+    usePointStyle: true,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    callbacks: {
+      label: function (context) {
+        let label = context.dataset.label || context.label || '';
+        if (label) label += ': ';
+        const rawVal = context.parsed.y !== undefined ? context.parsed.y : (context.parsed.x !== undefined ? context.parsed.x : context.parsed);
+        label += formatCOP(rawVal);
+        return label;
+      }
+    }
+  };
+
+  // 1. Gráfico de Top Productos por Ganancia
+  const ctxRent = document.getElementById('chartRentabilidad');
+  if (ctxRent) {
+    const labels = [
+      {% for item in productos_rentabilidad|slice:":6" %}
+        '{{ item.producto.nombre|truncatechars:20 }}',
+      {% endfor %}
+    ];
+    const ganancias = [
+      {% for item in productos_rentabilidad|slice:":6" %}
+        {{ item.ganancia|default:0 }},
+      {% endfor %}
+    ];
+
+    new Chart(ctxRent, {
+      type: 'bar',
+      data: {
+        labels: labels.length > 0 ? labels : ['Sin datos'],
+        datasets: [{
+          label: 'Ganancia Neta ($)',
+          data: ganancias.length > 0 ? ganancias : [0],
+          backgroundColor: 'rgba(37, 99, 235, 0.85)', // Sapphire Blue
+          borderColor: '#2563eb',
+          borderWidth: 1.5,
+          borderRadius: 8,
+          borderSkipped: false,
+          maxBarThickness: 40
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: corporateTooltipConfig
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(226, 232, 240, 0.65)', drawBorder: false },
+            ticks: {
+              callback: function (val) { return formatCOP(val); },
+              font: { size: 11 }
+            }
+          },
+          x: {
+            grid: { display: false, drawBorder: false },
+            ticks: { font: { weight: '500', size: 11 } }
+          }
+        }
+      }
+    });
+  }
+
+  // 2. Gráfico Comparativo: Ingresos vs Costos (Top 5)
+  const ctxComp = document.getElementById('chartComparativa');
+  if (ctxComp) {
+    const compLabels = [
+      {% for item in productos_rentabilidad|slice:":5" %}
+        '{{ item.producto.nombre|truncatechars:15 }}',
+      {% endfor %}
+    ];
+    const compIngresos = [
+      {% for item in productos_rentabilidad|slice:":5" %}
+        {{ item.ingresos|default:0 }},
+      {% endfor %}
+    ];
+    const compCostos = [
+      {% for item in productos_rentabilidad|slice:":5" %}
+        {{ item.costos|default:0 }},
+      {% endfor %}
+    ];
+
+    new Chart(ctxComp, {
+      type: 'bar',
+      data: {
+        labels: compLabels.length > 0 ? compLabels : ['Sin datos'],
+        datasets: [
+          {
+            label: 'Ingresos',
+            data: compIngresos.length > 0 ? compIngresos : [0],
+            backgroundColor: 'rgba(16, 185, 129, 0.85)', // Emerald
+            borderColor: '#10b981',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            borderSkipped: false,
+            maxBarThickness: 24
+          },
+          {
+            label: 'Costo (COGS)',
+            data: compCostos.length > 0 ? compCostos : [0],
+            backgroundColor: 'rgba(100, 116, 139, 0.85)', // Slate
+            borderColor: '#64748b',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            borderSkipped: false,
+            maxBarThickness: 24
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              pointStyle: 'circle',
+              padding: 12,
+              font: { size: 12, weight: '500' }
+            }
+          },
+          tooltip: corporateTooltipConfig
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(226, 232, 240, 0.65)', drawBorder: false },
+            ticks: {
+              callback: function (val) { return formatCOP(val); },
+              font: { size: 11 }
+            }
+          },
+          x: {
+            grid: { display: false, drawBorder: false },
+            ticks: { font: { weight: '500', size: 11 } }
+          }
+        }
+      }
+    });
+  }
+
+  // 3. Filtrado en tiempo real en la tabla de productos
+  const inputFiltro = document.getElementById('filtroProductoInput');
+  if (inputFiltro) {
+    inputFiltro.addEventListener('input', function () {
+      const query = this.value.toLowerCase().trim();
+      const filas = document.querySelectorAll('#tablaRentabilidad tbody tr.fila-producto');
+      filas.forEach(function (fila) {
+        const nombre = fila.querySelector('.producto-nombre')?.textContent.toLowerCase() || '';
+        const categoria = fila.querySelector('.producto-categoria')?.textContent.toLowerCase() || '';
+        if (nombre.includes(query) || categoria.includes(query)) {
+          fila.style.display = '';
+        } else {
+          fila.style.display = 'none';
+        }
+      });
+    });
+  }
+});
+</script>
+{% endblock %}

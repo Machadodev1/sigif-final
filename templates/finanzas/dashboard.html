@@ -1,1 +1,663 @@
-{% extends 'base.html' %}{% load humanize %}{% block content %}{% include 'finanzas/_menu.html' %}<div class="container-fluid py-4">{% include 'finanzas/_periodo.html' %}<div class="row g-3"><div class="col-md-3"><div class="card p-3"><small>Ingresos</small><strong class="fs-4 text-success">${{ ingresos|floatformat:0|intcomma }}</strong></div></div><div class="col-md-3"><div class="card p-3"><small>Gastos</small><strong class="fs-4 text-danger">${{ gastos_total|floatformat:0|intcomma }}</strong></div></div><div class="col-md-3"><div class="card p-3"><small>Costos de productos</small><strong class="fs-4">${{ costos|floatformat:0|intcomma }}</strong></div></div><div class="col-md-3"><div class="card p-3"><small>Utilidad neta</small><strong class="fs-4 text-primary">${{ utilidad_neta|floatformat:0|intcomma }}</strong></div></div><div class="col-md-3"><div class="card p-3"><small>Utilidad bruta</small><strong class="fs-4">${{ utilidad_bruta|floatformat:0|intcomma }}</strong></div></div><div class="col-md-3"><div class="card p-3"><small>Ventas</small><strong class="fs-4">{{ ventas }}</strong></div></div><div class="col-md-3"><div class="card p-3"><small>Ticket promedio</small><strong class="fs-4">${{ ticket|floatformat:0|intcomma }}</strong></div></div></div><div class="row g-3 mt-2"><div class="col-lg-6"><div class="card p-3"><h2 class="h6">Ingresos vs. gastos</h2><canvas id="resumenChart"></canvas></div></div><div class="col-lg-6"><div class="card p-3"><h2 class="h6">Ingresos por método de pago</h2><canvas id="metodosChart"></canvas></div></div><div class="col-lg-7"><div class="card p-3"><h2 class="h6">Evolución de ganancias</h2><canvas id="evolucionChart"></canvas></div></div><div class="col-lg-5"><div class="card p-3"><h2 class="h6">Gastos por categoría</h2>{% for gasto in gastos_categoria %}<div class="d-flex justify-content-between border-bottom py-2"><span>{{ gasto.categoria }}</span><span>${{ gasto.total|floatformat:0|intcomma }}</span></div>{% empty %}<p class="text-muted">Sin gastos.</p>{% endfor %}</div></div></div></div><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script>const l=[{% for d,v in dias.items %}'{{d}}',{%endfor%}],v=[{%for d,v in dias.items%}{{v}},{%endfor%}];new Chart(document.getElementById('resumenChart'),{type:'bar',data:{labels:['Ingresos','Gastos','Utilidad'],datasets:[{data:[{{ingresos}},{{gastos_total}},{{utilidad_neta}}]}]}});new Chart(document.getElementById('metodosChart'),{type:'doughnut',data:{labels:[{%for m,v in metodos_pago.items%}'{{m}}',{%endfor%}],datasets:[{data:[{%for m,v in metodos_pago.items%}{{v}},{%endfor%}]}]}});new Chart(document.getElementById('evolucionChart'),{type:'line',data:{labels:l,datasets:[{label:'Flujo neto',data:v}]}});</script>{% endblock %}
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+{% include 'finanzas/_menu.html' %}
+
+<div class="container-fluid px-3 px-md-4 py-2 pg-dashboard">
+
+  <!-- Cabecera Ejecutiva -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 pb-2 border-bottom">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold">
+          <i class="bi bi-file-earmark-spreadsheet me-1"></i>P&amp;G
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Estado de resultados (P&amp;G)</h2>
+      </div>
+      <p class="text-muted small mb-0">
+        Balance financiero consolidado de ingresos, costos, egresos y margen de rentabilidad neta.
+      </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      {% if utilidad_neta >= 0 %}
+        <div class="pg-badge-status pg-status-positive d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-xs">
+          <span class="status-indicator-dot bg-success"></span>
+          <span class="fw-semibold small">Ejercicio Rentable (+{{ margen|floatformat:1 }}%)</span>
+        </div>
+      {% else %}
+        <div class="pg-badge-status pg-status-negative d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-xs">
+          <span class="status-indicator-dot bg-danger"></span>
+          <span class="fw-semibold small">Déficit Operativo ({{ margen|floatformat:1 }}%)</span>
+        </div>
+      {% endif %}
+      
+      <button class="btn btn-outline-secondary btn-sm rounded-2 d-flex align-items-center gap-1 shadow-xs" onclick="window.print()">
+        <i class="bi bi-printer"></i> Imprimir informe
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtro de Período -->
+  {% include 'finanzas/_periodo.html' %}
+
+  <!-- KPI Grid: Nivel 1 - Flujo Financiero Principal -->
+  <div class="row g-3 mb-4">
+    <!-- Ingresos -->
+    <div class="col-xl-3 col-md-6">
+      <div class="pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Ingresos Operacionales</span>
+            <div class="pg-kpi-value text-dark fw-bold fs-4 mt-1">${{ ingresos|floatformat:0|intcomma }}</div>
+          </div>
+          <div class="pg-kpi-icon bg-success-subtle text-success rounded-3 p-2">
+            <i class="bi bi-cash-stack fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-check2-circle text-success"></i>
+          <span>{{ ventas }} ventas cobradas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Costos de Mercancía -->
+    <div class="col-xl-3 col-md-6">
+      <div class="pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Costo de Ventas (COGS)</span>
+            <div class="pg-kpi-value text-dark fw-bold fs-4 mt-1">${{ costos|floatformat:0|intcomma }}</div>
+          </div>
+          <div class="pg-kpi-icon bg-secondary-subtle text-secondary rounded-3 p-2">
+            <i class="bi bi-box-seam fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-boxes text-secondary"></i>
+          <span>Costo directo de mercancía</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Utilidad Bruta -->
+    <div class="col-xl-3 col-md-6">
+      <div class="pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Utilidad Bruta</span>
+            <div class="pg-kpi-value text-dark fw-bold fs-4 mt-1">${{ utilidad_bruta|floatformat:0|intcomma }}</div>
+          </div>
+          <div class="pg-kpi-icon bg-info-subtle text-info-emphasis rounded-3 p-2">
+            <i class="bi bi-pie-chart fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-percent text-info"></i>
+          <span>Ingresos menos costos directos</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gastos Operacionales -->
+    <div class="col-xl-3 col-md-6">
+      <div class="pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Gastos Operativos</span>
+            <div class="pg-kpi-value text-danger fw-bold fs-4 mt-1">${{ gastos_total|floatformat:0|intcomma }}</div>
+          </div>
+          <div class="pg-kpi-icon bg-danger-subtle text-danger rounded-3 p-2">
+            <i class="bi bi-arrow-up-right-circle fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-receipt text-danger"></i>
+          <span>Egresos y gastos operativos</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Grid: Nivel 2 - Resultado Neto y Rendimiento -->
+  <div class="row g-3 mb-4">
+    <!-- Utilidad Neta (Hero Card) -->
+    <div class="col-xl-6 col-lg-6">
+      <div class="pg-kpi-hero shadow-sm p-3 rounded-3 border bg-white h-100 position-relative overflow-hidden">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-primary text-white rounded-pill px-2 py-1 small">Resultado Final</span>
+              <span class="text-muted small fw-semibold text-uppercase">Utilidad Neta del Ejercicio</span>
+            </div>
+            <div class="mt-2 mb-1">
+              <span class="display-6 fw-bold {% if utilidad_neta >= 0 %}text-primary{% else %}text-danger{% endif %}">
+                ${{ utilidad_neta|floatformat:0|intcomma }}
+              </span>
+            </div>
+            <p class="text-muted small mb-0">Beneficio disponible tras deducir costos de venta y gastos operativos.</p>
+          </div>
+          <div class="text-end">
+            <div class="pg-margin-pill {% if utilidad_neta >= 0 %}bg-success-subtle text-success border border-success-subtle{% else %}bg-danger-subtle text-danger border border-danger-subtle{% endif %} px-3 py-2 rounded-3 text-center">
+              <span class="d-block small text-uppercase fw-semibold">Margen Neto</span>
+              <span class="fs-5 fw-bold">{{ margen|floatformat:1 }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ticket Promedio -->
+    <div class="col-xl-3 col-md-6">
+      <div class="pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Ticket Promedio</span>
+            <div class="pg-kpi-value text-dark fw-bold fs-4 mt-1">${{ ticket|floatformat:0|intcomma }}</div>
+          </div>
+          <div class="pg-kpi-icon bg-warning-subtle text-warning-emphasis rounded-3 p-2">
+            <i class="bi bi-tag fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-calculator text-warning-emphasis"></i>
+          <span>Valor medio por factura</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transacciones -->
+    <div class="col-xl-3 col-md-6">
+      <div class="pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Volumen de Operaciones</span>
+            <div class="pg-kpi-value text-dark fw-bold fs-4 mt-1">{{ ventas }}</div>
+          </div>
+          <div class="pg-kpi-icon bg-primary-subtle text-primary rounded-3 p-2">
+            <i class="bi bi-receipt-cutoff fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-graph-up text-primary"></i>
+          <span>Facturas emitidas en el rango</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección de Gráficos Corporativos (Fila 1) -->
+  <div class="row g-3 mb-4">
+    <!-- Gráfico 1: Estructura Financiera (P&G) -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-3 p-4 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h3 class="h6 fw-bold text-dark mb-1">
+              <i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Estructura Financiera (P&amp;G)
+            </h3>
+            <p class="text-muted small mb-0">Comparativa consolidada: Ingresos, Costos, Gastos y Utilidad Neta</p>
+          </div>
+          <span class="badge bg-light text-muted border px-2 py-1 small">Balance General</span>
+        </div>
+        <div class="chart-container position-relative" style="height: 290px;">
+          <canvas id="resumenChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico 2: Mix de Métodos de Pago -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-3 p-4 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h3 class="h6 fw-bold text-dark mb-1">
+              <i class="bi bi-pie-chart-fill text-success me-2"></i>Ingresos por Método de Pago
+            </h3>
+            <p class="text-muted small mb-0">Distribución de canales de recaudo comercial</p>
+          </div>
+        </div>
+        <div class="chart-container position-relative d-flex align-items-center justify-content-center" style="height: 290px;">
+          <canvas id="metodosChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección de Gráficos Corporativos (Fila 2) -->
+  <div class="row g-3 mb-4">
+    <!-- Gráfico 3: Evolución de Ganancias y Flujo Diario -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-3 p-4 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h3 class="h6 fw-bold text-dark mb-1">
+              <i class="bi bi-graph-up text-primary me-2"></i>Evolución del Flujo Financiero Neto
+            </h3>
+            <p class="text-muted small mb-0">Histórico cronológico de margen neto generado por día</p>
+          </div>
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 small">Línea de Tiempo</span>
+        </div>
+        <div class="chart-container position-relative" style="height: 280px;">
+          <canvas id="evolucionChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desglose de Gastos por Categoría con Barras de Progreso -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-3 p-4 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h3 class="h6 fw-bold text-dark mb-1">
+              <i class="bi bi-layers-fill text-danger me-2"></i>Gastos por Categoría
+            </h3>
+            <p class="text-muted small mb-0">Concentración porcentual del egreso operativo</p>
+          </div>
+          <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 small">
+            Total: ${{ gastos_total|floatformat:0|intcomma }}
+          </span>
+        </div>
+
+        <div class="pg-gastos-list overflow-auto pe-1" style="max-height: 280px;">
+          {% for gasto in gastos_categoria %}
+            <div class="pg-gasto-item mb-3 pb-2 border-bottom">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-semibold text-dark small d-flex align-items-center gap-2">
+                  <span class="pg-cat-bullet"></span>
+                  {{ gasto.categoria|default:"Varios / Otros" }}
+                </span>
+                <span class="fw-bold text-dark small">${{ gasto.total|floatformat:0|intcomma }}</span>
+              </div>
+              <div class="progress" style="height: 6px; background-color: #f1f5f9;">
+                <div class="progress-bar bg-danger rounded-pill" role="progressbar"
+                     style="width: {% if gastos_total > 0 %}{% widthratio gasto.total gastos_total 100 %}%{% else %}0%{% endif %};"
+                     aria-valuenow="{% if gastos_total > 0 %}{% widthratio gasto.total gastos_total 100 %}{% else %}0{% endif %}"
+                     aria-valuemin="0" aria-valuemax="100">
+                </div>
+              </div>
+              <div class="d-flex justify-content-end mt-1">
+                <span class="text-muted" style="font-size: 0.75rem;">
+                  {% if gastos_total > 0 %}{% widthratio gasto.total gastos_total 100 %}% del total{% endif %}
+                </span>
+              </div>
+            </div>
+          {% empty %}
+            <div class="text-center py-5 text-muted">
+              <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary opacity-50"></i>
+              <p class="mb-0 small">No se registraron gastos operativos en este período.</p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cascada Contable: Resumen Estructurado del P&G -->
+  <div class="card border-0 shadow-sm rounded-3 p-4 mb-4 bg-white">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h3 class="h6 fw-bold text-dark mb-1">
+          <i class="bi bi-receipt text-dark me-2"></i>Estado de Resultados Resumido (Cascada P&amp;G)
+        </h3>
+        <p class="text-muted small mb-0">Estructura estándar contable de pérdidas y ganancias del ejercicio</p>
+      </div>
+      <span class="badge bg-secondary-subtle text-secondary px-2 py-1 small">Norma General</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 pg-table-resumen">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3 text-uppercase text-muted small fw-semibold">Concepto Contable</th>
+            <th class="text-end text-uppercase text-muted small fw-semibold">Monto del Período</th>
+            <th class="text-end text-uppercase text-muted small fw-semibold pe-3">% Sobre Ingresos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="ps-3 fw-semibold text-dark">
+              <i class="bi bi-plus-circle-fill text-success me-2"></i>(+) Ingresos Operacionales (Ventas)
+            </td>
+            <td class="text-end fw-bold text-dark">${{ ingresos|floatformat:0|intcomma }}</td>
+            <td class="text-end pe-3 fw-medium text-muted">100.0%</td>
+          </tr>
+          <tr>
+            <td class="ps-3 fw-semibold text-muted ps-4">
+              <i class="bi bi-dash-circle-fill text-secondary me-2"></i>(-) Costo de Mercancía Vendida (COGS)
+            </td>
+            <td class="text-end fw-semibold text-secondary">-${{ costos|floatformat:0|intcomma }}</td>
+            <td class="text-end pe-3 fw-medium text-muted">
+              {% if ingresos > 0 %}{% widthratio costos ingresos 100 %}%{% else %}0%{% endif %}
+            </td>
+          </tr>
+          <tr class="table-light border-top border-bottom">
+            <td class="ps-3 fw-bold text-dark">
+              <i class="bi bi-arrow-right-circle-fill text-info me-2"></i>(=) Utilidad Bruta Operacional
+            </td>
+            <td class="text-end fw-bold text-dark">${{ utilidad_bruta|floatformat:0|intcomma }}</td>
+            <td class="text-end pe-3 fw-bold text-info">
+              {% if ingresos > 0 %}{% widthratio utilidad_bruta ingresos 100 %}%{% else %}0%{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td class="ps-3 fw-semibold text-muted ps-4">
+              <i class="bi bi-dash-circle-fill text-danger me-2"></i>(-) Gastos Operativos (Administración y Ventas)
+            </td>
+            <td class="text-end fw-semibold text-danger">-${{ gastos_total|floatformat:0|intcomma }}</td>
+            <td class="text-end pe-3 fw-medium text-muted">
+              {% if ingresos > 0 %}{% widthratio gastos_total ingresos 100 %}%{% else %}0%{% endif %}
+            </td>
+          </tr>
+          <tr class="table-primary fw-bold">
+            <td class="ps-3 fs-6">
+              <i class="bi bi-check-circle-fill text-primary me-2"></i>(=) Utilidad Neta del Ejercicio
+            </td>
+            <td class="text-end fs-6 {% if utilidad_neta >= 0 %}text-primary{% else %}text-danger{% endif %}">
+              ${{ utilidad_neta|floatformat:0|intcomma }}
+            </td>
+            <td class="text-end pe-3 fs-6 {% if utilidad_neta >= 0 %}text-primary{% else %}text-danger{% endif %}">
+              {{ margen|floatformat:1 }}%
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Estilos Corporativos Exclusivos de Finanzas -->
+<style>
+  .pg-dashboard {
+    color: #1e293b;
+  }
+  .pg-kpi-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    border-color: #e2e8f0 !important;
+  }
+  .pg-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06) !important;
+    border-color: #cbd5e1 !important;
+  }
+  .pg-kpi-hero {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-color: #cbd5e1 !important;
+    border-left: 4px solid #3a56e4 !important;
+  }
+  .pg-kpi-hero:hover {
+    box-shadow: 0 8px 22px rgba(58, 86, 228, 0.08) !important;
+  }
+  .pg-kpi-label {
+    letter-spacing: 0.03em;
+    font-size: 0.72rem;
+  }
+  .pg-kpi-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pg-badge-status {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+  }
+  .pg-status-positive {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #166534;
+  }
+  .pg-status-negative {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+  }
+  .status-indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .pg-cat-bullet {
+    width: 8px;
+    height: 8px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .shadow-xs {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .pg-table-resumen th, .pg-table-resumen td {
+    padding: 12px 16px;
+  }
+</style>
+
+<!-- Chart.js Engine & Corporate Setup -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Función auxiliar de formateo monetario corporativo
+  const formatCOP = (value) => {
+    const num = Math.round(Number(value) || 0);
+    return '$ ' + num.toLocaleString('es-CO');
+  };
+
+  // Configuración de fuentes y estilo global de Chart.js
+  Chart.defaults.font.family = "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+  Chart.defaults.color = '#64748b';
+
+  // Tooltip corporativo reutilizable
+  const corporateTooltipConfig = {
+    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+    titleColor: '#f8fafc',
+    bodyColor: '#f8fafc',
+    titleFont: { weight: '600', size: 13 },
+    bodyFont: { size: 12 },
+    padding: 12,
+    cornerRadius: 8,
+    boxPadding: 6,
+    usePointStyle: true,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    callbacks: {
+      label: function (context) {
+        let label = context.dataset.label || context.label || '';
+        if (label) label += ': ';
+        const rawVal = context.parsed.y !== undefined ? context.parsed.y : context.parsed;
+        label += formatCOP(rawVal);
+        return label;
+      }
+    }
+  };
+
+  // 1. Gráfico de Estructura Financiera P&G (Barras Corporativas)
+  const ctxResumen = document.getElementById('resumenChart');
+  if (ctxResumen) {
+    const ingresosVal = Number('{{ ingresos|default:0 }}') || 0;
+    const costosVal = Number('{{ costos|default:0 }}') || 0;
+    const gastosVal = Number('{{ gastos_total|default:0 }}') || 0;
+    const utilidadVal = Number('{{ utilidad_neta|default:0 }}') || 0;
+
+    new Chart(ctxResumen, {
+      type: 'bar',
+      data: {
+        labels: ['Ingresos', 'Costos (COGS)', 'Gastos Operativos', 'Utilidad Neta'],
+        datasets: [{
+          data: [ingresosVal, costosVal, gastosVal, utilidadVal],
+          backgroundColor: [
+            'rgba(16, 185, 129, 0.88)', // Emerald
+            'rgba(100, 116, 139, 0.85)', // Slate
+            'rgba(239, 68, 68, 0.85)',   // Crimson
+            utilidadVal >= 0 ? 'rgba(37, 99, 235, 0.9)' : 'rgba(220, 38, 38, 0.9)' // Blue / Dark Red
+          ],
+          borderColor: [
+            '#10b981',
+            '#64748b',
+            '#ef4444',
+            utilidadVal >= 0 ? '#2563eb' : '#dc2626'
+          ],
+          borderWidth: 1.5,
+          borderRadius: 8,
+          borderSkipped: false,
+          maxBarThickness: 52
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: corporateTooltipConfig
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(226, 232, 240, 0.65)',
+              drawBorder: false
+            },
+            ticks: {
+              callback: function (val) {
+                return formatCOP(val);
+              },
+              font: { size: 11 }
+            }
+          },
+          x: {
+            grid: { display: false, drawBorder: false },
+            ticks: {
+              font: { weight: '500', size: 12 }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // 2. Gráfico de Métodos de Pago (Doughnut Ejecutivo)
+  const ctxMetodos = document.getElementById('metodosChart');
+  if (ctxMetodos) {
+    const metodosLabels = [{% for m, v in metodos_pago.items %}'{{ m }}',{% endfor %}];
+    const metodosData = [{% for m, v in metodos_pago.items %}{{ v|default:0 }},{% endfor %}];
+
+    // Colores corporativos coordinados
+    const palette = [
+      '#2563eb', // Sapphire Blue
+      '#10b981', // Emerald
+      '#f59e0b', // Amber
+      '#8b5cf6', // Violet
+      '#06b6d4', // Cyan
+      '#ec4899', // Rose Pink
+      '#64748b'  // Slate
+    ];
+
+    if (metodosLabels.length === 0) {
+      metodosLabels.push('Sin recaudos');
+      metodosData.push(1);
+    }
+
+    new Chart(ctxMetodos, {
+      type: 'doughnut',
+      data: {
+        labels: metodosLabels,
+        datasets: [{
+          data: metodosData,
+          backgroundColor: metodosLabels[0] === 'Sin recaudos' ? ['#e2e8f0'] : palette.slice(0, metodosLabels.length),
+          borderWidth: 2,
+          borderColor: '#ffffff',
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              pointStyle: 'circle',
+              padding: 15,
+              font: { size: 12, weight: '500' }
+            }
+          },
+          tooltip: metodosLabels[0] === 'Sin recaudos' ? { enabled: false } : corporateTooltipConfig
+        }
+      }
+    });
+  }
+
+  // 3. Gráfico de Evolución de Ganancias / Flujo Neto (Spline Line con Área)
+  const ctxEvolucion = document.getElementById('evolucionChart');
+  if (ctxEvolucion) {
+    const diasLabels = [{% for d, v in dias.items %}'{{ d }}',{% endfor %}];
+    const diasValues = [{% for d, v in dias.items %}{{ v|default:0 }},{% endfor %}];
+
+    const ctx = ctxEvolucion.getContext('2d');
+    let gradient = null;
+    if (ctx) {
+      gradient = ctx.createLinearGradient(0, 0, 0, 260);
+      gradient.addColorStop(0, 'rgba(37, 99, 235, 0.25)');
+      gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+    }
+
+    new Chart(ctxEvolucion, {
+      type: 'line',
+      data: {
+        labels: diasLabels.length > 0 ? diasLabels : ['Sin datos'],
+        datasets: [{
+          label: 'Flujo Neto Diario',
+          data: diasValues.length > 0 ? diasValues : [0],
+          borderColor: '#2563eb',
+          backgroundColor: gradient || 'rgba(37, 99, 235, 0.1)',
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2.5,
+          pointBackgroundColor: '#2563eb',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#1d4ed8',
+          pointHoverBorderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: corporateTooltipConfig
+        },
+        scales: {
+          y: {
+            grid: {
+              color: 'rgba(226, 232, 240, 0.65)',
+              drawBorder: false
+            },
+            ticks: {
+              callback: function (val) {
+                return formatCOP(val);
+              },
+              font: { size: 11 }
+            }
+          },
+          x: {
+            grid: { display: false, drawBorder: false },
+            ticks: {
+              font: { size: 11 }
+            }
+          }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

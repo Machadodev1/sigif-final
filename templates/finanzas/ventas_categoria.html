@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+{% include 'finanzas/_menu.html' %}
+
+<div class="container-fluid px-3 px-md-4 py-2 pg-ventas-categoria">
+
+  <!-- Cabecera Ejecutiva -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 pb-2 border-bottom">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold">
+          <i class="bi bi-grid-3x3-gap me-1"></i>Líneas de Negocio
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Reporte de Ventas por Categoría</h2>
+      </div>
+      <p class="text-muted small mb-0">
+        Identifica qué categorías (Frenos, Carrocería, Transmisión, Lubricantes, etc.) generan mayor facturación y margen.
+      </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="badge bg-white text-muted border px-3 py-2 rounded-pill shadow-xs d-flex align-items-center gap-2">
+        <i class="bi bi-tags-fill text-primary"></i>
+        <strong class="text-dark">{{ categorias_resumen|length }}</strong> categorías con ventas
+      </span>
+      <button class="btn btn-outline-secondary btn-sm rounded-2 d-flex align-items-center gap-1 shadow-xs" onclick="window.print()">
+        <i class="bi bi-printer"></i> Imprimir reporte
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtro de Período -->
+  {% include 'finanzas/_periodo.html' %}
+
+  <!-- KPI Grid: Indicadores por Categoría -->
+  <div class="row g-3 mb-4">
+    <!-- Categoría Líder en Ingresos -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Categoría Líder (Ventas)</span>
+            <div class="pg-kpi-value text-primary fw-bold fs-5 mt-1">
+              {{ categoria_lider.categoria|default:"Sin datos" }}
+            </div>
+          </div>
+          <div class="pg-kpi-icon bg-primary-subtle text-primary rounded-3 p-2">
+            <i class="bi bi-trophy fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-cash-stack text-success"></i>
+          <span>${{ categoria_lider.ingresos|default:0|floatformat:0|intcomma }} facturados</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categoría Más Rentable -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Mayor Utilidad Neta</span>
+            <div class="pg-kpi-value text-success fw-bold fs-5 mt-1">
+              {{ categoria_rentable.categoria|default:"Sin datos" }}
+            </div>
+          </div>
+          <div class="pg-kpi-icon bg-success-subtle text-success rounded-3 p-2">
+            <i class="bi bi-graph-up-arrow fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-percent text-success"></i>
+          <span>+${{ categoria_rentable.ganancia|default:0|floatformat:0|intcomma }} ({{ categoria_rentable.margen|default:0|floatformat:1 }}%)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Ingresos -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Facturación en Período</span>
+            <div class="pg-kpi-value text-dark fw-bold fs-4 mt-1">${{ ingresos|floatformat:0|intcomma }}</div>
+          </div>
+          <div class="pg-kpi-icon bg-info-subtle text-info-emphasis rounded-3 p-2">
+            <i class="bi bi-currency-dollar fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-receipt text-info"></i>
+          <span>{{ ventas }} ventas registradas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Unidades Vendidas -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Repuestos Despachados</span>
+            <div class="pg-kpi-value text-dark fw-bold fs-4 mt-1">{{ total_unidades }} unds</div>
+          </div>
+          <div class="pg-kpi-icon bg-warning-subtle text-warning-emphasis rounded-3 p-2">
+            <i class="bi bi-box-seam fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-pie-chart text-warning-emphasis"></i>
+          <span>Distribuidos en {{ categorias_resumen|length }} categorías</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección de Gráficos Corporativos -->
+  <div class="row g-3 mb-4">
+    <!-- Gráfico 1: Ingresos y Ganancias por Categoría -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-3 p-4 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h3 class="h6 fw-bold text-dark mb-1">
+              <i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Facturación y Ganancia por Categoría
+            </h3>
+            <p class="text-muted small mb-0">Comparativa directa de ingresos generados frente a la utilidad neta</p>
+          </div>
+          <span class="badge bg-light text-muted border px-2 py-1 small">Top Categorías</span>
+        </div>
+        <div class="chart-container position-relative" style="height: 310px;">
+          <canvas id="chartCategoriasBar"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico 2: Participación de Mercado (%) -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-3 p-4 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h3 class="h6 fw-bold text-dark mb-1">
+              <i class="bi bi-pie-chart-fill text-success me-2"></i>Participación en Ventas (%)
+            </h3>
+            <p class="text-muted small mb-0">Cuota relativa de facturación de cada línea</p>
+          </div>
+        </div>
+        <div class="chart-container position-relative d-flex align-items-center justify-content-center" style="height: 310px;">
+          <canvas id="chartCategoriasDoughnut"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla Detallada por Categoría -->
+  <div class="card border-0 shadow-sm rounded-3 p-4 mb-4 bg-white">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+      <div>
+        <h3 class="h6 fw-bold text-dark mb-1">
+          <i class="bi bi-table text-primary me-2"></i>Desglose Comercial por Categoría
+        </h3>
+        <p class="text-muted small mb-0">Tabla detallada de facturación, costos de compra, ganancia y margen</p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <div class="input-group input-group-sm" style="max-width: 280px;">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" id="filtroCategoriaInput" class="form-control bg-light border-start-0 shadow-none" placeholder="Buscar categoría...">
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 pg-tabla-cat" id="tablaCategorias">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3 text-uppercase text-muted small fw-semibold" style="width: 50px;">#</th>
+            <th class="text-uppercase text-muted small fw-semibold">Línea / Categoría</th>
+            <th class="text-center text-uppercase text-muted small fw-semibold">SKUs Vendidos</th>
+            <th class="text-center text-uppercase text-muted small fw-semibold">Unidades</th>
+            <th class="text-end text-uppercase text-muted small fw-semibold">Ingresos Totales</th>
+            <th class="text-end text-uppercase text-muted small fw-semibold">Costo (COGS)</th>
+            <th class="text-end text-uppercase text-muted small fw-semibold">Ganancia Neta</th>
+            <th class="text-center text-uppercase text-muted small fw-semibold" style="width: 130px;">Margen</th>
+            <th class="text-center text-uppercase text-muted small fw-semibold pe-3" style="width: 140px;">Participación</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in categorias_resumen %}
+          <tr class="fila-categoria">
+            <td class="ps-3 text-muted small fw-medium">{{ forloop.counter }}</td>
+            <td>
+              <span class="fw-semibold text-dark nombre-categoria d-block">{{ item.categoria }}</span>
+              <span class="text-muted" style="font-size: 0.75rem;">{{ item.transacciones }} ventas asociadas</span>
+            </td>
+            <td class="text-center">
+              <span class="badge bg-light text-dark border">{{ item.total_skus }} repuestos</span>
+            </td>
+            <td class="text-center fw-bold text-dark">{{ item.unidades }}</td>
+            <td class="text-end fw-semibold text-dark">${{ item.ingresos|floatformat:0|intcomma }}</td>
+            <td class="text-end text-secondary">-${{ item.costos|floatformat:0|intcomma }}</td>
+            <td class="text-end fw-bold {% if item.ganancia >= 0 %}text-success{% else %}text-danger{% endif %}">
+              ${{ item.ganancia|floatformat:0|intcomma }}
+            </td>
+            <td class="text-center">
+              {% if item.margen >= 35 %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold">
+                  {{ item.margen|floatformat:1 }}%
+                </span>
+              {% elif item.margen >= 20 %}
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold">
+                  {{ item.margen|floatformat:1 }}%
+                </span>
+              {% else %}
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill fw-semibold">
+                  {{ item.margen|floatformat:1 }}%
+                </span>
+              {% endif %}
+            </td>
+            <td class="pe-3">
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height: 6px; background-color: #f1f5f9;">
+                  <div class="progress-bar bg-primary rounded-pill" role="progressbar"
+                       style="width: {% if ingresos > 0 %}{% widthratio item.ingresos ingresos 100 %}%{% else %}0%{% endif %};">
+                  </div>
+                </div>
+                <span class="text-muted small" style="font-size: 0.72rem; min-width: 32px;">
+                  {% if ingresos > 0 %}{% widthratio item.ingresos ingresos 100 %}%{% else %}0%{% endif %}
+                </span>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9" class="text-center py-5 text-muted">
+              <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>
+              <h6 class="fw-semibold text-dark">No se registran ventas en este período</h6>
+              <p class="small mb-0">Selecciona otro rango en el filtro de fechas.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Estilos Corporativos -->
+<style>
+  .pg-ventas-categoria { color: #1e293b; }
+  .pg-kpi-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-color: #e2e8f0 !important;
+  }
+  .pg-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06) !important;
+  }
+  .pg-kpi-label { letter-spacing: 0.03em; font-size: 0.72rem; }
+  .pg-kpi-icon {
+    width: 42px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pg-tabla-cat th, .pg-tabla-cat td { padding: 12px 14px; }
+  .shadow-xs { box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+</style>
+
+<!-- Chart.js Setup -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const formatCOP = (val) => '$ ' + Math.round(Number(val) || 0).toLocaleString('es-CO');
+
+  Chart.defaults.font.family = "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+  Chart.defaults.color = '#64748b';
+
+  const labels = [{% for c in categorias_resumen|slice:":7" %}'{{ c.categoria }}',{% endfor %}];
+  const dataIngresos = [{% for c in categorias_resumen|slice:":7" %}{{ c.ingresos|default:0 }},{% endfor %}];
+  const dataGanancias = [{% for c in categorias_resumen|slice:":7" %}{{ c.ganancia|default:0 }},{% endfor %}];
+
+  // 1. Gráfico de Barras: Facturación vs Ganancia
+  const ctxBar = document.getElementById('chartCategoriasBar');
+  if (ctxBar) {
+    new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: labels.length > 0 ? labels : ['Sin datos'],
+        datasets: [
+          {
+            label: 'Ingresos Totales',
+            data: dataIngresos.length > 0 ? dataIngresos : [0],
+            backgroundColor: 'rgba(37, 99, 235, 0.85)',
+            borderColor: '#2563eb',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            maxBarThickness: 30
+          },
+          {
+            label: 'Ganancia Neta',
+            data: dataGanancias.length > 0 ? dataGanancias : [0],
+            backgroundColor: 'rgba(16, 185, 129, 0.85)',
+            borderColor: '#10b981',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            maxBarThickness: 30
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { usePointStyle: true, pointStyle: 'circle', padding: 12 }
+          },
+          tooltip: {
+            callbacks: {
+              label: (c) => c.dataset.label + ': ' + formatCOP(c.parsed.y)
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(226, 232, 240, 0.65)' },
+            ticks: { callback: (v) => formatCOP(v), font: { size: 10 } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 11, weight: '500' } }
+          }
+        }
+      }
+    });
+  }
+
+  // 2. Gráfico de Dona: Participación
+  const ctxDoughnut = document.getElementById('chartCategoriasDoughnut');
+  if (ctxDoughnut) {
+    const palette = ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#64748b'];
+    new Chart(ctxDoughnut, {
+      type: 'doughnut',
+      data: {
+        labels: labels.length > 0 ? labels : ['Sin datos'],
+        datasets: [{
+          data: dataIngresos.length > 0 ? dataIngresos : [1],
+          backgroundColor: labels.length > 0 ? palette.slice(0, labels.length) : ['#e2e8f0'],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '66%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { usePointStyle: true, pointStyle: 'circle', padding: 10, font: { size: 11 } }
+          },
+          tooltip: labels.length === 0 ? { enabled: false } : {
+            callbacks: {
+              label: (c) => c.label + ': ' + formatCOP(c.parsed)
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // 3. Filtro de búsqueda en la tabla
+  const inputFiltro = document.getElementById('filtroCategoriaInput');
+  if (inputFiltro) {
+    inputFiltro.addEventListener('input', function () {
+      const q = this.value.toLowerCase().trim();
+      document.querySelectorAll('#tablaCategorias tbody tr.fila-categoria').forEach(function (fila) {
+        const cat = fila.querySelector('.nombre-categoria')?.textContent.toLowerCase() || '';
+        fila.style.display = cat.includes(q) ? '' : 'none';
+      });
+    });
+  }
+});
+</script>
+{% endblock %}

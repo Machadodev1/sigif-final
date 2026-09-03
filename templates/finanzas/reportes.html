@@ -1,1 +1,609 @@
-{% extends 'base.html' %}{% load humanize %}{% block content %}<div class="container-fluid py-4"><div class="d-flex justify-content-between"><div><h1 class="h3">Reportes financieros</h1><p class="text-muted">Resumen consolidado para el rango seleccionado.</p></div><button class="btn btn-outline-secondary" onclick="window.print()">Imprimir / Guardar PDF</button></div>{% include 'finanzas/_periodo.html' %}<div class="card border-0 shadow-sm p-4"><h2 class="h5">Indicadores</h2><div class="row g-3"><div class="col-md-4">Ingresos <strong class="d-block fs-5">${{ ingresos|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Gastos <strong class="d-block fs-5">${{ gastos_total|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Costos <strong class="d-block fs-5">${{ costos|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Utilidad bruta <strong class="d-block fs-5">${{ utilidad_bruta|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Utilidad neta <strong class="d-block fs-5">${{ utilidad_neta|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Margen neto <strong class="d-block fs-5">{{ margen|floatformat:1 }}%</strong></div><div class="col-md-4">Número de ventas <strong class="d-block fs-5">{{ ventas }}</strong></div><div class="col-md-4">Ticket promedio <strong class="d-block fs-5">${{ ticket|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Pendiente por pagar <strong class="d-block fs-5">${{ cuentas_pendientes|floatformat:0|intcomma }}</strong></div></div><hr><h2 class="h5">Productos más rentables</h2><ol>{% for producto in productos_rentabilidad %}<li>{{ producto.producto }} — ${{ producto.ganancia|floatformat:0|intcomma }} ({{ producto.margen|floatformat:1 }}%)</li>{% empty %}<li class="text-muted">Sin ventas en el período.</li>{% endfor %}</ol><h2 class="h5">Gastos por categoría</h2><ul>{% for gasto in gastos_categoria %}<li>{{ gasto.categoria }}: ${{ gasto.total|floatformat:0|intcomma }}</li>{% empty %}<li class="text-muted">Sin gastos.</li>{% endfor %}</ul></div></div>{% endblock %}
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="no-print">
+  {% include 'finanzas/_menu.html' %}
+</div>
+
+<div class="container-fluid px-3 px-md-4 py-2 pg-reportes-container">
+
+  <!-- Barra de Herramientas de Reporte (Solo Pantalla) -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 pb-2 border-bottom no-print">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold">
+          <i class="bi bi-file-earmark-text-fill me-1"></i>Reporte Oficial
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Reporte Financiero Consolidado</h2>
+      </div>
+      <p class="text-muted small mb-0">
+        Informe ejecutivo auditado con balance de pérdidas y ganancias, costos, gastos y retorno de inversión.
+      </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <button class="btn btn-primary btn-sm rounded-2 d-flex align-items-center gap-2 shadow-sm px-3 py-2 fw-medium" onclick="window.print()">
+        <i class="bi bi-printer-fill"></i> Imprimir / Exportar PDF
+      </button>
+      <button class="btn btn-outline-secondary btn-sm rounded-2 d-flex align-items-center gap-2 shadow-xs px-3 py-2" id="btnExportCSV">
+        <i class="bi bi-filetype-csv"></i> Descargar CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtro de Período (Solo Pantalla) -->
+  <div class="no-print">
+    {% include 'finanzas/_periodo.html' %}
+  </div>
+
+  <!-- Hoja Documental del Reporte (Diseño Ejecutivo A4 / Carta) -->
+  <div class="card border-0 shadow-sm rounded-3 bg-white p-4 p-md-5 reporte-documento mb-5">
+
+    <!-- Membrete y Datos Institucionales del Reporte -->
+    <div class="row align-items-start pb-4 mb-4 border-bottom border-2 border-dark">
+      <div class="col-md-7">
+        <div class="d-flex align-items-center gap-3 mb-2">
+          <div class="reporte-logo-box bg-dark text-white rounded-3 d-flex align-items-center justify-content-center fw-bold fs-4">
+            <i class="bi bi-building"></i>
+          </div>
+          <div>
+            <h1 class="h4 fw-bold text-dark mb-0">SIGIF AUTO &amp; MOTO S.A.S.</h1>
+            <p class="text-muted small mb-0">Sistema Integrado de Gestión Financiera y Control de Inventarios</p>
+          </div>
+        </div>
+        <div class="text-muted small">
+          <div><i class="bi bi-geo-alt me-1"></i> NIT: 901.482.355-1 &bull; Régimen Común &bull; Bogotá D.C., Colombia</div>
+          <div><i class="bi bi-telephone me-1"></i> PBX: (+57) 601 745-8900 &bull; info@sigif-erp.com</div>
+        </div>
+      </div>
+
+      <div class="col-md-5 text-md-end mt-3 mt-md-0">
+        <div class="reporte-meta-box p-3 bg-light rounded-3 border d-inline-block text-start">
+          <div class="d-flex justify-content-between gap-3 mb-1">
+            <span class="text-muted small fw-semibold">Informe N°:</span>
+            <strong class="text-dark small">REP-FIN-{{ fecha_generacion|date:'Ymd' }}-{{ request.session.logueado.id|default:'01' }}</strong>
+          </div>
+          <div class="d-flex justify-content-between gap-3 mb-1">
+            <span class="text-muted small fw-semibold">Período Auditado:</span>
+            <span class="text-dark small fw-medium">{{ inicio|date:'d/m/Y' }} al {{ fin|date:'d/m/Y' }}</span>
+          </div>
+          <div class="d-flex justify-content-between gap-3 mb-1">
+            <span class="text-muted small fw-semibold">Fecha Emisión:</span>
+            <span class="text-dark small">{{ fecha_generacion|date:'d/m/Y H:i' }}</span>
+          </div>
+          <div class="d-flex justify-content-between gap-3">
+            <span class="text-muted small fw-semibold">Elaborado por:</span>
+            <span class="text-dark small fw-medium">{{ request.session.logueado.nombre|default:"Usuario Activo"|title }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Título Principal del Informe -->
+    <div class="text-center my-3 pb-3">
+      <h2 class="h4 fw-bold text-uppercase text-dark mb-1 letter-spacing-1">
+        Informe Consolidado de Rendimiento Financiero
+      </h2>
+      <p class="text-muted small mb-0">
+        Estado de Resultados, Flujo de Caja, Rentabilidad de Inventario y Control de Egresos Operacionales
+      </p>
+      <div class="mt-2">
+        <span class="badge bg-light text-dark border px-3 py-1 fw-semibold small">
+          Rango: {{ inicio|date:'d M Y' }} &mdash; {{ fin|date:'d M Y' }} (Filtro: {{ periodo|title }})
+        </span>
+      </div>
+    </div>
+
+    <!-- Sección 1: Tablero de Indicadores Financieros (Executive Scorecard) -->
+    <div class="mb-5">
+      <h3 class="h6 fw-bold text-uppercase text-dark mb-3 pb-1 border-bottom d-flex align-items-center gap-2">
+        <i class="bi bi-speedometer text-primary"></i> 1. Resumen Ejecutivo de Indicadores Clave
+      </h3>
+
+      <div class="row g-3">
+        <!-- Ingresos Operacionales -->
+        <div class="col-md-4 col-sm-6">
+          <div class="p-3 border rounded-3 bg-light-subtle h-100">
+            <span class="text-muted small fw-semibold d-block text-uppercase">Ingresos Operacionales (Ventas)</span>
+            <div class="fs-4 fw-bold text-success mt-1">${{ ingresos|floatformat:0|intcomma }}</div>
+            <span class="text-muted small" style="font-size: 0.75rem;">{{ ventas }} transacciones registradas</span>
+          </div>
+        </div>
+
+        <!-- Costo de Ventas (COGS) -->
+        <div class="col-md-4 col-sm-6">
+          <div class="p-3 border rounded-3 bg-light-subtle h-100">
+            <span class="text-muted small fw-semibold d-block text-uppercase">Costo de Ventas (COGS)</span>
+            <div class="fs-4 fw-bold text-secondary mt-1">${{ costos|floatformat:0|intcomma }}</div>
+            <span class="text-muted small" style="font-size: 0.75rem;">
+              {% if ingresos > 0 %}{% widthratio costos ingresos 100 %}% de los ingresos{% else %}0%{% endif %}
+            </span>
+          </div>
+        </div>
+
+        <!-- Utilidad Bruta -->
+        <div class="col-md-4 col-sm-6">
+          <div class="p-3 border rounded-3 bg-light-subtle h-100">
+            <span class="text-muted small fw-semibold d-block text-uppercase">Utilidad Bruta Operacional</span>
+            <div class="fs-4 fw-bold text-dark mt-1">${{ utilidad_bruta|floatformat:0|intcomma }}</div>
+            <span class="text-info small fw-semibold" style="font-size: 0.75rem;">
+              {% if ingresos > 0 %}{% widthratio utilidad_bruta ingresos 100 %}% margen bruto{% else %}0%{% endif %}
+            </span>
+          </div>
+        </div>
+
+        <!-- Gastos Operativos -->
+        <div class="col-md-4 col-sm-6">
+          <div class="p-3 border rounded-3 bg-light-subtle h-100">
+            <span class="text-muted small fw-semibold d-block text-uppercase">Gastos Operacionales (Egresos)</span>
+            <div class="fs-4 fw-bold text-danger mt-1">${{ gastos_total|floatformat:0|intcomma }}</div>
+            <span class="text-muted small" style="font-size: 0.75rem;">
+              {% if ingresos > 0 %}{% widthratio gastos_total ingresos 100 %}% sobre ventas{% else %}0%{% endif %}
+            </span>
+          </div>
+        </div>
+
+        <!-- Utilidad Neta -->
+        <div class="col-md-4 col-sm-6">
+          <div class="p-3 border rounded-3 h-100 {% if utilidad_neta >= 0 %}bg-primary-subtle border-primary-subtle{% else %}bg-danger-subtle border-danger-subtle{% endif %}">
+            <span class="text-muted small fw-semibold d-block text-uppercase">Utilidad Neta del Ejercicio</span>
+            <div class="fs-4 fw-bold {% if utilidad_neta >= 0 %}text-primary{% else %}text-danger{% endif %} mt-1">
+              ${{ utilidad_neta|floatformat:0|intcomma }}
+            </div>
+            <span class="fw-bold small {% if utilidad_neta >= 0 %}text-primary{% else %}text-danger{% endif %}" style="font-size: 0.75rem;">
+              Margen Neto: {{ margen|floatformat:1 }}%
+            </span>
+          </div>
+        </div>
+
+        <!-- Cuentas por Cobrar (Pendiente) -->
+        <div class="col-md-4 col-sm-6">
+          <div class="p-3 border rounded-3 bg-light-subtle h-100">
+            <span class="text-muted small fw-semibold d-block text-uppercase">Cartera Pendiente por Cobrar</span>
+            <div class="fs-4 fw-bold text-warning-emphasis mt-1">${{ cuentas_pendientes|floatformat:0|intcomma }}</div>
+            <span class="text-muted small" style="font-size: 0.75rem;">Ticket Promedio: ${{ ticket|floatformat:0|intcomma }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección 2: Estado de Resultados Formal (Estructura Contable) -->
+    <div class="mb-5 page-break-inside-avoid">
+      <h3 class="h6 fw-bold text-uppercase text-dark mb-3 pb-1 border-bottom d-flex align-items-center gap-2">
+        <i class="bi bi-file-earmark-spreadsheet text-primary"></i> 2. Estado de Pérdidas y Ganancias (P&amp;G) Consolidado
+      </h3>
+
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle mb-0 reporte-tabla">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3 text-uppercase text-muted small fw-bold" style="width: 15%;">Código</th>
+              <th class="text-uppercase text-muted small fw-bold">Concepto Contable</th>
+              <th class="text-end text-uppercase text-muted small fw-bold" style="width: 25%;">Valor ($ COP)</th>
+              <th class="text-end text-uppercase text-muted small fw-bold pe-3" style="width: 15%;">% Participación</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ps-3 font-monospace text-muted small">4135</td>
+              <td class="fw-semibold text-dark">(+) Ingresos Operacionales por Ventas</td>
+              <td class="text-end fw-bold text-dark">${{ ingresos|floatformat:0|intcomma }}</td>
+              <td class="text-end pe-3 fw-medium text-muted">100.0%</td>
+            </tr>
+            <tr>
+              <td class="ps-3 font-monospace text-muted small">6135</td>
+              <td class="text-muted ps-4">(-) Costo de Mercancía Vendida (COGS)</td>
+              <td class="text-end fw-semibold text-secondary">-${{ costos|floatformat:0|intcomma }}</td>
+              <td class="text-end pe-3 fw-medium text-muted">
+                {% if ingresos > 0 %}{% widthratio costos ingresos 100 %}%{% else %}0%{% endif %}
+              </td>
+            </tr>
+            <tr class="table-light fw-bold">
+              <td class="ps-3 font-monospace text-dark">SUBTOTAL</td>
+              <td class="text-dark">(=) Utilidad Bruta Operacional</td>
+              <td class="text-end text-dark">${{ utilidad_bruta|floatformat:0|intcomma }}</td>
+              <td class="text-end pe-3 text-info">
+                {% if ingresos > 0 %}{% widthratio utilidad_bruta ingresos 100 %}%{% else %}0%{% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td class="ps-3 font-monospace text-muted small">51/52</td>
+              <td class="text-muted ps-4">(-) Gastos Operacionales (Administración y Ventas)</td>
+              <td class="text-end fw-semibold text-danger">-${{ gastos_total|floatformat:0|intcomma }}</td>
+              <td class="text-end pe-3 fw-medium text-muted">
+                {% if ingresos > 0 %}{% widthratio gastos_total ingresos 100 %}%{% else %}0%{% endif %}
+              </td>
+            </tr>
+            <tr class="table-primary fw-bold">
+              <td class="ps-3 font-monospace text-primary">RESULTADO</td>
+              <td class="text-primary">(=) Utilidad Neta del Ejercicio</td>
+              <td class="text-end text-primary fs-6">${{ utilidad_neta|floatformat:0|intcomma }}</td>
+              <td class="text-end pe-3 text-primary fs-6">{{ margen|floatformat:1 }}%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sección 3: Gráficos Ejecutivos (Visibles en pantalla y en PDF) -->
+    <div class="mb-5 page-break-inside-avoid">
+      <h3 class="h6 fw-bold text-uppercase text-dark mb-3 pb-1 border-bottom d-flex align-items-center gap-2">
+        <i class="bi bi-bar-chart-line text-primary"></i> 3. Visualización Gráfica del Desempeño
+      </h3>
+
+      <div class="row g-3">
+        <div class="col-md-7">
+          <div class="border rounded-3 p-3 bg-white h-100">
+            <span class="small fw-bold text-dark d-block mb-1">Estructura Financiera del Período</span>
+            <p class="text-muted small mb-2" style="font-size: 0.75rem;">Comparativa de Ingresos vs. Costos, Gastos y Utilidad</p>
+            <div class="chart-container position-relative" style="height: 250px;">
+              <canvas id="reporteBarChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-5">
+          <div class="border rounded-3 p-3 bg-white h-100">
+            <span class="small fw-bold text-dark d-block mb-1">Distribución de Egresos Operativos</span>
+            <p class="text-muted small mb-2" style="font-size: 0.75rem;">Concentración porcentual de gastos por rubro</p>
+            <div class="chart-container position-relative d-flex align-items-center justify-content-center" style="height: 250px;">
+              <canvas id="reporteDoughnutChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección 4: Top 10 Productos Más Rentables -->
+    <div class="mb-5 page-break-inside-avoid">
+      <h3 class="h6 fw-bold text-uppercase text-dark mb-3 pb-1 border-bottom d-flex align-items-center gap-2">
+        <i class="bi bi-trophy text-primary"></i> 4. Top Productos de Mayor Contribución y Rentabilidad
+      </h3>
+
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle mb-0 reporte-tabla">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3 text-uppercase text-muted small fw-bold" style="width: 5%;">#</th>
+              <th class="text-uppercase text-muted small fw-bold">Producto / SKU</th>
+              <th class="text-uppercase text-muted small fw-bold">Categoría</th>
+              <th class="text-center text-uppercase text-muted small fw-bold">Unidades</th>
+              <th class="text-end text-uppercase text-muted small fw-bold">Ingreso Total</th>
+              <th class="text-end text-uppercase text-muted small fw-bold">Costo (COGS)</th>
+              <th class="text-end text-uppercase text-muted small fw-bold">Ganancia Neta</th>
+              <th class="text-end text-uppercase text-muted small fw-bold pe-3">Margen %</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in productos_rentabilidad %}
+            <tr>
+              <td class="ps-3 fw-bold text-muted small">{{ forloop.counter }}</td>
+              <td class="fw-semibold text-dark">{{ item.producto.nombre }}</td>
+              <td><span class="badge bg-light text-muted border small">{{ item.producto.categoria }}</span></td>
+              <td class="text-center fw-bold text-dark">{{ item.cantidad }}</td>
+              <td class="text-end fw-semibold text-dark">${{ item.ingresos|floatformat:0|intcomma }}</td>
+              <td class="text-end text-secondary">-${{ item.costos|floatformat:0|intcomma }}</td>
+              <td class="text-end fw-bold text-success">${{ item.ganancia|floatformat:0|intcomma }}</td>
+              <td class="text-end pe-3 fw-bold text-primary">{{ item.margen|floatformat:1 }}%</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8" class="text-center py-4 text-muted small">
+                No se registraron ventas de productos en este rango de fechas.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sección 5: Distribución de Gastos por Categoría -->
+    <div class="mb-5 page-break-inside-avoid">
+      <h3 class="h6 fw-bold text-uppercase text-dark mb-3 pb-1 border-bottom d-flex align-items-center gap-2">
+        <i class="bi bi-pie-chart text-primary"></i> 5. Desglose de Gastos Operacionales por Categoría
+      </h3>
+
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle mb-0 reporte-tabla">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3 text-uppercase text-muted small fw-bold" style="width: 5%;">#</th>
+              <th class="text-uppercase text-muted small fw-bold">Categoría de Gasto</th>
+              <th class="text-end text-uppercase text-muted small fw-bold" style="width: 30%;">Total Desembolsado</th>
+              <th class="text-end text-uppercase text-muted small fw-bold pe-3" style="width: 25%;">% Sobre Total Gastos</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for gasto in gastos_categoria %}
+            <tr>
+              <td class="ps-3 text-muted small">{{ forloop.counter }}</td>
+              <td class="fw-semibold text-dark">{{ gasto.categoria|default:"Otros / Administrativos" }}</td>
+              <td class="text-end fw-bold text-danger">${{ gasto.total|floatformat:0|intcomma }}</td>
+              <td class="text-end pe-3 fw-medium text-muted">
+                {% if gastos_total > 0 %}{% widthratio gasto.total gastos_total 100 %}%{% else %}0%{% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-center py-4 text-muted small">
+                No se registraron egresos operacionales en el período auditado.
+              </td>
+            </tr>
+            {% endfor %}
+            <tr class="table-light fw-bold border-top border-2 border-dark">
+              <td colspan="2" class="ps-3 text-dark text-uppercase">Total Gastos Operacionales</td>
+              <td class="text-end text-danger fs-6">${{ gastos_total|floatformat:0|intcomma }}</td>
+              <td class="text-end pe-3 text-dark">100.0%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sección 6: Cláusula de Certificación y Firmas Oficiales -->
+    <div class="mt-5 pt-4 border-top border-2 border-dark page-break-inside-avoid">
+      <div class="row g-5">
+        <div class="col-6">
+          <div class="text-center">
+            <div class="reporte-firma-linea mx-auto mb-2 border-bottom border-dark" style="max-width: 280px; height: 50px;"></div>
+            <strong class="d-block text-dark small text-uppercase">Representante Legal / Gerencia General</strong>
+            <span class="text-muted small d-block">SIGIF AUTO &amp; MOTO S.A.S.</span>
+            <span class="text-muted small" style="font-size: 0.7rem;">C.C. _______________________</span>
+          </div>
+        </div>
+
+        <div class="col-6">
+          <div class="text-center">
+            <div class="reporte-firma-linea mx-auto mb-2 border-bottom border-dark" style="max-width: 280px; height: 50px;"></div>
+            <strong class="d-block text-dark small text-uppercase">Contador Público / Revisor Fiscal</strong>
+            <span class="text-muted small d-block">Departamento de Contabilidad y Finanzas</span>
+            <span class="text-muted small" style="font-size: 0.7rem;">T.P. N° ___________________</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie de página legal -->
+      <div class="text-center text-muted small mt-5 pt-3 border-top" style="font-size: 0.75rem;">
+        <p class="mb-1">
+          <strong>AVISO DE CONFIDENCIALIDAD:</strong> Este documento contiene información financiera y comercial confidencial, emitida para el análisis de la administración y directivos de la entidad.
+        </p>
+        <p class="mb-0">
+          Documento contable oficial emitido por el sistema <strong>SIGIF ERP</strong> el {{ fecha_generacion|date:'d/m/Y' }} a las {{ fecha_generacion|date:'H:i:s' }}.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Estilos para Pantalla e Impresión Profesional -->
+<style>
+  .pg-reportes-container {
+    color: #1e293b;
+  }
+  .reporte-documento {
+    max-width: 1080px;
+    margin: 0 auto;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+  }
+  .reporte-logo-box {
+    width: 48px;
+    height: 48px;
+  }
+  .reporte-meta-box {
+    min-width: 280px;
+    border-color: #cbd5e1 !important;
+  }
+  .letter-spacing-1 {
+    letter-spacing: 0.04em;
+  }
+  .reporte-tabla th, .reporte-tabla td {
+    padding: 10px 14px;
+    font-size: 0.88rem;
+  }
+  .shadow-xs {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  /* REGLAS ESTRICTAS DE IMPRESIÓN / PDF */
+  @media print {
+    @page {
+      size: letter portrait;
+      margin: 1.2cm 1cm 1.2cm 1cm;
+    }
+    body {
+      background-color: #ffffff !important;
+      color: #000000 !important;
+    }
+    .sidebar,
+    .user-header-wrapper,
+    .menu-horizontal,
+    .facturacion-header,
+    .no-print,
+    header,
+    nav {
+      display: none !important;
+      visibility: hidden !important;
+    }
+    .main-container {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    .reporte-documento {
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      max-width: 100% !important;
+    }
+    .page-break-inside-avoid {
+      page-break-inside: avoid;
+    }
+    .chart-container {
+      max-height: 220px !important;
+    }
+    .table-bordered, .table-bordered th, .table-bordered td {
+      border-color: #94a3b8 !important;
+    }
+    /* Asegurar colores de fondo en la impresión */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  }
+</style>
+
+<!-- Chart.js y Exportador CSV -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const formatCOP = (val) => '$ ' + Math.round(Number(val) || 0).toLocaleString('es-CO');
+
+  Chart.defaults.font.family = "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+  Chart.defaults.color = '#64748b';
+
+  // 1. Gráfico de Barras: Estructura Financiera
+  const ctxBar = document.getElementById('reporteBarChart');
+  if (ctxBar) {
+    new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: ['Ingresos', 'Costos (COGS)', 'Gastos', 'Utilidad Neta'],
+        datasets: [{
+          data: [
+            Number('{{ ingresos|default:0 }}') || 0,
+            Number('{{ costos|default:0 }}') || 0,
+            Number('{{ gastos_total|default:0 }}') || 0,
+            Number('{{ utilidad_neta|default:0 }}') || 0
+          ],
+          backgroundColor: [
+            'rgba(16, 185, 129, 0.88)',
+            'rgba(100, 116, 139, 0.85)',
+            'rgba(239, 68, 68, 0.85)',
+            'rgba(37, 99, 235, 0.9)'
+          ],
+          borderColor: ['#10b981', '#64748b', '#ef4444', '#2563eb'],
+          borderWidth: 1.5,
+          borderRadius: 6,
+          maxBarThickness: 45
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (c) => formatCOP(c.parsed.y)
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(226, 232, 240, 0.65)' },
+            ticks: {
+              callback: (v) => formatCOP(v),
+              font: { size: 10 }
+            }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 11, weight: '500' } }
+          }
+        }
+      }
+    });
+  }
+
+  // 2. Gráfico de Dona: Gastos por Categoría
+  const ctxDoughnut = document.getElementById('reporteDoughnutChart');
+  if (ctxDoughnut) {
+    const catLabels = [{% for g in gastos_categoria %}'{{ g.categoria }}',{% endfor %}];
+    const catValues = [{% for g in gastos_categoria %}{{ g.total|default:0 }},{% endfor %}];
+    const palette = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b981', '#06b6d4', '#64748b'];
+
+    if (catLabels.length === 0) {
+      catLabels.push('Sin gastos');
+      catValues.push(1);
+    }
+
+    new Chart(ctxDoughnut, {
+      type: 'doughnut',
+      data: {
+        labels: catLabels,
+        datasets: [{
+          data: catValues,
+          backgroundColor: catLabels[0] === 'Sin gastos' ? ['#e2e8f0'] : palette.slice(0, catLabels.length),
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              pointStyle: 'circle',
+              padding: 10,
+              font: { size: 10, weight: '500' }
+            }
+          },
+          tooltip: catLabels[0] === 'Sin gastos' ? { enabled: false } : {
+            callbacks: {
+              label: (c) => (c.label || '') + ': ' + formatCOP(c.parsed)
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // 3. Exportar Datos a CSV
+  const btnCSV = document.getElementById('btnExportCSV');
+  if (btnCSV) {
+    btnCSV.addEventListener('click', function () {
+      let csv = 'SIGIF ERP - Reporte Financiero Consolidado\r\n';
+      csv += 'Periodo: {{ inicio|date:"d/m/Y" }} al {{ fin|date:"d/m/Y" }}\r\n';
+      csv += 'Fecha de Emision: {{ fecha_generacion|date:"d/m/Y H:i" }}\r\n\r\n';
+      
+      csv += 'INDICADORES PRINCIPALES\r\n';
+      csv += 'Concepto,Monto ($ COP)\r\n';
+      csv += 'Ingresos Operacionales,{{ ingresos }}\r\n';
+      csv += 'Costo de Ventas (COGS),{{ costos }}\r\n';
+      csv += 'Utilidad Bruta,{{ utilidad_bruta }}\r\n';
+      csv += 'Gastos Operativos,{{ gastos_total }}\r\n';
+      csv += 'Utilidad Neta,{{ utilidad_neta }}\r\n';
+      csv += 'Margen Neto (%),{{ margen|floatformat:2 }}%\r\n';
+      csv += 'Cartera Pendiente,{{ cuentas_pendientes }}\r\n\r\n';
+
+      csv += 'TOP PRODUCTOS RENTABLES\r\n';
+      csv += 'Producto,Categoria,Unidades,Ingreso,Costo,Ganancia,Margen (%)\r\n';
+      {% for p in productos_rentabilidad %}
+        csv += '"{{ p.producto.nombre }}","{{ p.producto.categoria }}",{{ p.cantidad }},{{ p.ingresos }},{{ p.costos }},{{ p.ganancia }},{{ p.margen|floatformat:2 }}\r\n';
+      {% endfor %}
+
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'Reporte_Financiero_{{ fecha_generacion|date:"Ymd_His" }}.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  }
+});
+</script>
+{% endblock %}
