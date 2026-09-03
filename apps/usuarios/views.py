@@ -59,20 +59,29 @@ def login_view(request):
 
 
 
-@requerir_rol(["SuperAdmin", "Admin", "Empleado" ])
+@requerir_rol(["SuperAdmin", "Admin"])
 def cambiar_estado_usuario(request, id):
     usuario = get_object_or_404(Usuarios, id=id)
 
-    rol_actual = request.session["logueado"]["rol"]
+    usuario_logueado = request.session.get("logueado")
 
-    # Un Empleado no puede cambiar estados
+    rol_actual = usuario_logueado["rol"]
+    id_usuario_logueado = usuario_logueado["id"]
+
+    # EMPLEADO NO PUEDE CAMBIAR ESTADOS
+
+
     if rol_actual == "Empleado":
         messages.error(
             request,
             "No tienes permiso para cambiar el estado de los usuarios."
         )
         return redirect("usuarios")
-    # El SuperAdmin no se puede desactivar
+
+
+    # SUPERADMIN NO PUEDE SER DESACTIVADO
+
+
     if usuario.cargo == "SuperAdmin":
         messages.error(
             request,
@@ -80,13 +89,35 @@ def cambiar_estado_usuario(request, id):
         )
         return redirect("usuarios")
 
-    # No permitir que el usuario se desactive a sí mismo
-    if usuario.id == request.session["logueado"]["id"]:
+
+    # NADIE PUEDE DESACTIVARSE A SÍ MISMO
+
+
+    if usuario.id == id_usuario_logueado:
         messages.error(
             request,
             "No puedes desactivar tu propio usuario."
         )
         return redirect("usuarios")
+
+
+  
+    # ADMIN NO PUEDE DESACTIVAR A OTRO ADMIN
+
+
+    if (
+        rol_actual == "Admin"
+        and usuario.cargo == "Admin"
+    ):
+        messages.error(
+            request,
+            "Un Admin no puede desactivar a otro Admin."
+        )
+        return redirect("usuarios")
+
+
+    # CAMBIAR ESTADO
+
 
     if request.method == "POST":
         usuario.activo = not usuario.activo
@@ -95,21 +126,21 @@ def cambiar_estado_usuario(request, id):
         estado = "ACTIVO" if usuario.activo else "INACTIVO"
 
         Auditoria.objects.create(
-            usuario=request.session["logueado"]["nombre"],
+            usuario=usuario_logueado["nombre"],
             accion=f"CAMBIO ESTADO USUARIO: {usuario.nombre} → {estado}",
             modulo="USUARIOS"
         )
 
         if usuario.activo:
-         messages.success(
-        request,
-        f"El usuario {usuario.nombre} ahora está activo."
-    )
+            messages.success(
+                request,
+                f"El usuario {usuario.nombre} ahora está activo."
+            )
         else:
             messages.error(
-        request,
-        f"El usuario {usuario.nombre} ahora está inactivo."
-    )
+                request,
+                f"El usuario {usuario.nombre} ahora está inactivo."
+            )
 
     return redirect("usuarios")
 
