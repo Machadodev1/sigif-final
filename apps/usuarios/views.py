@@ -207,6 +207,25 @@ def editar_usuarios(request, id):
                     {"form": form}
                 )
 
+            if (
+                 rol_actual == "Admin"
+                and cargo_original == "Admin" 
+                and usuario_logueado
+                and usuario.id != usuario_logueado["id"]
+            ):
+            
+                messages.error(
+                    request,
+                    "Un Admin no puede modificar al Admin."
+                )
+            
+                return render(
+                    request,
+                    "usuarios/editar_usuarios.html",
+                    {"form": form}
+                )
+            
+
             # ==========================================
             # 4. ADMIN NO PUEDE CREAR OTRO SUPERADMIN
             # ==========================================
