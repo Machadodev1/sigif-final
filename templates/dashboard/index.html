@@ -9,27 +9,31 @@
     <p>Resumen general de tu negocio</p>
 </header>
 
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-            {{ message }}
+<div class="alerts-container">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if low_stock > 0 %}
+        <div class="alert warning">
+            Hay {{ low_stock }} producto{{ low_stock|pluralize }} con stock bajo.
+            <a href="{% url 'inv_control' %}?filtro=bajo">Ver detalles</a>
         </div>
-    {% endfor %}
-{% endif %}
+    {% endif %}
 
-{% if low_stock > 0 %}
-    <div class="alert warning">
-        Hay {{ low_stock }} producto{{ low_stock|pluralize }} con stock bajo.
-        <a href="{% url 'inv_control' %}?filtro=bajo">Ver detalles</a>
-    </div>
-{% endif %}
+    {% if out_of_stock > 0 %}
+        <div class="alert danger">
+            Hay {{ out_of_stock }} producto{{ out_of_stock|pluralize }} agotado{{ out_of_stock|pluralize }}.
+            <a href="{% url 'inv_control' %}?filtro=agotado">Ver detalles</a>
+        </div>
+    {% endif %}
 
-{% if out_of_stock > 0 %}
-    <div class="alert danger">
-        Hay {{ out_of_stock }} producto{{ out_of_stock|pluralize }} agotado{{ out_of_stock|pluralize }}.
-        <a href="{% url 'inv_control' %}?filtro=agotado">Ver detalles</a>
-    </div>
-{% endif %}
+</div>
 
 <section class="metricas">
 
