@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="no-print">
+  {% include 'finanzas/_menu.html' %}
+</div>
+
+<div class="container-fluid px-3 px-md-4 py-2 pg-caja-conciliacion">
+
+  <!-- Cabecera Ejecutiva (no-print) -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 pb-2 border-bottom no-print">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold">
+          <i class="bi bi-cash-coin me-1"></i>Tesorería y Arqueo
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Reporte de Caja y Conciliación</h2>
+      </div>
+      <p class="text-muted small mb-0">
+        Cortes de caja diarios, balance de entradas y salidas en efectivo, y conciliación de medios electrónicos.
+      </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <button class="btn btn-primary btn-sm rounded-2 d-flex align-items-center gap-2 shadow-sm px-3 py-2 fw-medium" onclick="window.print()">
+        <i class="bi bi-printer-fill"></i> Imprimir acta de arqueo
+      </button>
+      <button class="btn btn-outline-secondary btn-sm rounded-2 d-flex align-items-center gap-2 shadow-xs px-3 py-2" id="btnExportCajaCSV">
+        <i class="bi bi-filetype-csv"></i> Exportar corte
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtro de Período (no-print) -->
+  <div class="no-print">
+    {% include 'finanzas/_periodo.html' %}
+  </div>
+
+  <!-- Hoja de Arqueo y Conciliación -->
+  <div class="card border-0 shadow-sm rounded-3 bg-white p-4 p-md-5 caja-documento mb-5">
+
+    <!-- Encabezado Institucional del Arqueo -->
+    <div class="row align-items-start pb-4 mb-4 border-bottom border-2 border-dark">
+      <div class="col-md-7">
+        <div class="d-flex align-items-center gap-3 mb-2">
+          <div class="caja-logo-box bg-dark text-white rounded-3 d-flex align-items-center justify-content-center fw-bold fs-4">
+            <i class="bi bi-safe2"></i>
+          </div>
+          <div>
+            <h1 class="h4 fw-bold text-dark mb-0">SIGIF AUTO &amp; MOTO S.A.S.</h1>
+            <p class="text-muted small mb-0">Acta Oficial de Corte de Caja y Conciliación de Tesorería</p>
+          </div>
+        </div>
+        <div class="text-muted small">
+          <div><i class="bi bi-geo-alt me-1"></i> NIT: 901.482.355-1 &bull; Punto de Venta Principal</div>
+        </div>
+      </div>
+
+      <div class="col-md-5 text-md-end mt-3 mt-md-0">
+        <div class="caja-meta-box p-3 bg-light rounded-3 border d-inline-block text-start">
+          <div class="d-flex justify-content-between gap-3 mb-1">
+            <span class="text-muted small fw-semibold">Acta N°:</span>
+            <strong class="text-dark small">ARQ-CAJA-{{ fecha_generacion|date:'Ymd' }}-{{ request.session.logueado.id|default:'01' }}</strong>
+          </div>
+          <div class="d-flex justify-content-between gap-3 mb-1">
+            <span class="text-muted small fw-semibold">Rango del Corte:</span>
+            <span class="text-dark small fw-medium">{{ inicio|date:'d/m/Y' }} al {{ fin|date:'d/m/Y' }}</span>
+          </div>
+          <div class="d-flex justify-content-between gap-3">
+            <span class="text-muted small fw-semibold">Responsable:</span>
+            <span class="text-dark small fw-medium">{{ request.session.logueado.nombre|default:"Administrador"|title }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Grid: Balance de Caja y Tesorería -->
+    <div class="mb-5">
+      <div class="row g-3">
+        <!-- Saldo Físico en Caja -->
+        <div class="col-xl-4 col-md-6">
+          <div class="p-3 border rounded-3 bg-success-subtle border-success-subtle h-100">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <span class="text-muted small fw-semibold text-uppercase">Efectivo Físico en Caja (Arqueo)</span>
+              <i class="bi bi-cash-stack text-success fs-5"></i>
+            </div>
+            <div class="display-6 fw-bold text-success mt-1">${{ saldo_efectivo_en_caja|floatformat:0|intcomma }}</div>
+            <span class="text-muted small d-block mt-2">
+              Ventas en efectivo (${{ total_efectivo_ventas|floatformat:0|intcomma }}) menos egresos menores (${{ total_gastos_efectivo|floatformat:0|intcomma }}).
+            </span>
+          </div>
+        </div>
+
+        <!-- Total Entradas -->
+        <div class="col-xl-4 col-md-6">
+          <div class="p-3 border rounded-3 bg-light-subtle h-100">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <span class="text-muted small fw-semibold text-uppercase">Total Entradas Brutas (Recaudos)</span>
+              <i class="bi bi-arrow-down-left-circle text-primary fs-5"></i>
+            </div>
+            <div class="display-6 fw-bold text-dark mt-1">${{ ingresos|floatformat:0|intcomma }}</div>
+            <span class="text-muted small d-block mt-2">
+              Suma consolidada de todos los medios de pago recibidos.
+            </span>
+          </div>
+        </div>
+
+        <!-- Total Salidas -->
+        <div class="col-xl-4 col-md-12">
+          <div class="p-3 border rounded-3 bg-light-subtle h-100">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <span class="text-muted small fw-semibold text-uppercase">Total Egresos Operativos</span>
+              <i class="bi bi-arrow-up-right-circle text-danger fs-5"></i>
+            </div>
+            <div class="display-6 fw-bold text-danger mt-1">${{ gastos_total|floatformat:0|intcomma }}</div>
+            <span class="text-muted small d-block mt-2">
+              Gastos de operación (Efectivo + Transferencias bancarias).
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conciliación por Medio de Pago -->
+    <div class="mb-5 page-break-inside-avoid">
+      <h3 class="h6 fw-bold text-uppercase text-dark mb-3 pb-1 border-bottom d-flex align-items-center gap-2">
+        <i class="bi bi-credit-card text-primary"></i> 1. Conciliación y Cuadre por Canal de Pago
+      </h3>
+
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle mb-0 caja-tabla">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3 text-uppercase text-muted small fw-bold">Canal / Medio de Recaudo</th>
+              <th class="text-end text-uppercase text-muted small fw-bold">Entradas ($ COP)</th>
+              <th class="text-end text-uppercase text-muted small fw-bold">Salidas ($ COP)</th>
+              <th class="text-end text-uppercase text-muted small fw-bold">Saldo Neto ($ COP)</th>
+              <th class="text-center text-uppercase text-muted small fw-bold pe-3" style="width: 140px;">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ps-3 fw-semibold text-dark">
+                <i class="bi bi-cash me-2 text-success"></i>Efectivo en Caja (Billetes y Monedas)
+              </td>
+              <td class="text-end fw-semibold text-success">${{ total_efectivo_ventas|floatformat:0|intcomma }}</td>
+              <td class="text-end text-danger">-${{ total_gastos_efectivo|floatformat:0|intcomma }}</td>
+              <td class="text-end fw-bold text-dark">${{ saldo_efectivo_en_caja|floatformat:0|intcomma }}</td>
+              <td class="text-center pe-3">
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill small">
+                  <i class="bi bi-check-circle me-1"></i>En Custodia
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td class="ps-3 fw-semibold text-dark">
+                <i class="bi bi-credit-card-2-front me-2 text-primary"></i>Tarjetas Débito / Crédito (Datafono)
+              </td>
+              <td class="text-end fw-semibold text-dark">${{ total_tarjeta_ventas|floatformat:0|intcomma }}</td>
+              <td class="text-end text-muted">$0</td>
+              <td class="text-end fw-bold text-primary">${{ total_tarjeta_ventas|floatformat:0|intcomma }}</td>
+              <td class="text-center pe-3">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill small">
+                  <i class="bi bi-bank me-1"></i>Acredita Banco
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td class="ps-3 fw-semibold text-dark">
+                <i class="bi bi-arrow-left-right me-2 text-info"></i>Transferencias Bancarias (Bancolombia/PSE)
+              </td>
+              <td class="text-end fw-semibold text-dark">${{ total_transf_ventas|floatformat:0|intcomma }}</td>
+              <td class="text-end text-danger">-${{ total_gastos_otros|floatformat:0|intcomma }}</td>
+              <td class="text-end fw-bold text-dark">
+                ${% widthratio total_transf_ventas 1 1 as tv %}{{ total_transf_ventas|floatformat:0|intcomma }}
+              </td>
+              <td class="text-center pe-3">
+                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1 rounded-pill small">
+                  <i class="bi bi-shield-check me-1"></i>Conciliado
+                </span>
+              </td>
+            </tr>
+            {% if total_credito_ventas > 0 %}
+            <tr>
+              <td class="ps-3 fw-semibold text-muted">
+                <i class="bi bi-clock-history me-2 text-warning"></i>Ventas a Crédito (Por Cobrar)
+              </td>
+              <td class="text-end text-warning-emphasis">${{ total_credito_ventas|floatformat:0|intcomma }}</td>
+              <td class="text-end text-muted">$0</td>
+              <td class="text-end text-warning-emphasis">${{ total_credito_ventas|floatformat:0|intcomma }}</td>
+              <td class="text-center pe-3">
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill small">
+                  Pendiente
+                </span>
+              </td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sección 2: Histórico de Cortes y Cuadre Diario -->
+    <div class="mb-5 page-break-inside-avoid">
+      <h3 class="h6 fw-bold text-uppercase text-dark mb-3 pb-1 border-bottom d-flex align-items-center gap-2">
+        <i class="bi bi-calendar-check text-primary"></i> 2. Libro de Cortes y Balance Diario
+      </h3>
+
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle mb-0 caja-tabla" id="tablaCortesDiarios">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3 text-uppercase text-muted small fw-bold">Fecha del Corte</th>
+              <th class="text-center text-uppercase text-muted small fw-bold">Transacciones</th>
+              <th class="text-end text-uppercase text-muted small fw-bold">Ventas Efectivo</th>
+              <th class="text-end text-uppercase text-muted small fw-bold">Ventas Electrónicas</th>
+              <th class="text-end text-uppercase text-muted small fw-bold">Egresos Efectivo</th>
+              <th class="text-end text-uppercase text-muted small fw-bold">Saldo Efectivo Día</th>
+              <th class="text-center text-uppercase text-muted small fw-bold pe-3" style="width: 120px;">Cuadre</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for corte in cortes_diarios %}
+            <tr>
+              <td class="ps-3 fw-bold text-dark font-monospace">{{ corte.fecha|date:'d/m/Y' }}</td>
+              <td class="text-center">
+                <span class="badge bg-light text-dark border">{{ corte.num_ventas }} vtas &bull; {{ corte.num_gastos }} gtos</span>
+              </td>
+              <td class="text-end fw-semibold text-success">${{ corte.ventas_efectivo|floatformat:0|intcomma }}</td>
+              <td class="text-end fw-semibold text-primary">
+                ${{ corte.ventas_tarjeta|add:corte.ventas_transferencia|floatformat:0|intcomma }}
+              </td>
+              <td class="text-end text-danger">-${{ corte.gastos_efectivo|floatformat:0|intcomma }}</td>
+              <td class="text-end fw-bold {% if corte.saldo_caja_efectivo >= 0 %}text-dark{% else %}text-danger{% endif %} fs-6">
+                ${{ corte.saldo_caja_efectivo|floatformat:0|intcomma }}
+              </td>
+              <td class="text-center pe-3">
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill small">
+                  <i class="bi bi-check2 me-1"></i>Conforme
+                </span>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-4 text-muted small">
+                No hay movimientos de caja en el período seleccionado.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sección 3: Firmas de Certificación de Arqueo -->
+    <div class="mt-5 pt-4 border-top border-2 border-dark page-break-inside-avoid">
+      <div class="row g-5">
+        <div class="col-6">
+          <div class="text-center">
+            <div class="caja-firma-linea mx-auto mb-2 border-bottom border-dark" style="max-width: 280px; height: 50px;"></div>
+            <strong class="d-block text-dark small text-uppercase">Cajero(a) / Entrega de Turno</strong>
+            <span class="text-muted small d-block">Responsable de Caja Física</span>
+            <span class="text-muted small" style="font-size: 0.7rem;">C.C. _______________________</span>
+          </div>
+        </div>
+
+        <div class="col-6">
+          <div class="text-center">
+            <div class="caja-firma-linea mx-auto mb-2 border-bottom border-dark" style="max-width: 280px; height: 50px;"></div>
+            <strong class="d-block text-dark small text-uppercase">Administrador(a) / Recibe de Turno</strong>
+            <span class="text-muted small d-block">Revisión y Custodia de Tesorería</span>
+            <span class="text-muted small" style="font-size: 0.7rem;">C.C. _______________________</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie de página -->
+      <div class="text-center text-muted small mt-5 pt-3 border-top" style="font-size: 0.75rem;">
+        <p class="mb-0">
+          Documento emitido por el módulo financiero de <strong>SIGIF ERP</strong> el {{ fecha_generacion|date:'d/m/Y' }} a las {{ fecha_generacion|date:'H:i:s' }}.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Estilos e Impresión -->
+<style>
+  .pg-caja-conciliacion { color: #1e293b; }
+  .caja-documento {
+    max-width: 1080px;
+    margin: 0 auto;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+  }
+  .caja-logo-box { width: 48px; height: 48px; }
+  .caja-meta-box { min-width: 280px; border-color: #cbd5e1 !important; }
+  .caja-tabla th, .caja-tabla td { padding: 10px 14px; font-size: 0.88rem; }
+  .shadow-xs { box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+
+  @media print {
+    @page { size: letter portrait; margin: 1.2cm 1cm 1.2cm 1cm; }
+    body { background-color: #ffffff !important; color: #000000 !important; }
+    .sidebar, .user-header-wrapper, .menu-horizontal, .facturacion-header, .no-print, header, nav {
+      display: none !important;
+    }
+    .main-container { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    .caja-documento { border: none !important; box-shadow: none !important; padding: 0 !important; }
+    .page-break-inside-avoid { page-break-inside: avoid; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  }
+</style>
+
+<!-- Script para exportar CSV -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const btnCSV = document.getElementById('btnExportCajaCSV');
+  if (btnCSV) {
+    btnCSV.addEventListener('click', function () {
+      let csv = 'SIGIF ERP - Reporte de Caja y Conciliacion Diaria\r\n';
+      csv += 'Rango: {{ inicio|date:"d/m/Y" }} al {{ fin|date:"d/m/Y" }}\r\n';
+      csv += 'Fecha de Emision: {{ fecha_generacion|date:"d/m/Y H:i" }}\r\n\r\n';
+      
+      csv += 'RESUMEN DE CAJA Y ARQUEO\r\n';
+      csv += 'Saldo Efectivo en Caja (Arqueo),{{ saldo_efectivo_en_caja }}\r\n';
+      csv += 'Ventas en Efectivo,{{ total_efectivo_ventas }}\r\n';
+      csv += 'Gastos Pagados en Efectivo,{{ total_gastos_efectivo }}\r\n';
+      csv += 'Ventas con Tarjeta (Datafono),{{ total_tarjeta_ventas }}\r\n';
+      csv += 'Ventas por Transferencia,{{ total_transf_ventas }}\r\n\r\n';
+
+      csv += 'CORTES DIARIOS\r\n';
+      csv += 'Fecha,Ventas Efectivo,Ventas Electronicas,Egresos Efectivo,Saldo Efectivo Dia\r\n';
+      {% for corte in cortes_diarios %}
+        csv += '{{ corte.fecha|date:"d/m/Y" }},{{ corte.ventas_efectivo }},{{ corte.ventas_tarjeta|add:corte.ventas_transferencia }},{{ corte.gastos_efectivo }},{{ corte.saldo_caja_efectivo }}\r\n';
+      {% endfor %}
+
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'Corte_Caja_Conciliacion_{{ fecha_generacion|date:"Ymd_His" }}.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  }
+});
+</script>
+{% endblock %}

@@ -1,8 +1,33 @@
-<header class="facturacion-header"><div><h1>Gestión financiera</h1></div></header>
-<div class="menu-horizontal">
-  <a href="{% url 'finanzas:finanzas_dashboard' %}" class="{% if request.resolver_match.url_name == 'finanzas_dashboard' %}active{% endif %}">Dashboard</a>
-  <a href="{% url 'finanzas:ingresos' %}" class="{% if request.resolver_match.url_name == 'ingresos' %}active{% endif %}">Ingresos</a>
-  <a href="{% url 'finanzas:gastos' %}" class="{% if request.resolver_match.url_name == 'gastos' %}active{% endif %}">Gastos</a>
-  <a href="{% url 'finanzas:rentabilidad' %}" class="{% if request.resolver_match.url_name == 'rentabilidad' %}active{% endif %}">Rentabilidad por producto</a>
-  <a href="{% url 'finanzas:reportes' %}" class="{% if request.resolver_match.url_name == 'reportes' %}active{% endif %}">Reportes</a>
+<header class="facturacion-header d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <div>
+    <h1 class="m-0 fs-3 fw-bold text-dark">Gestión financiera</h1>
+    <p class="text-muted mb-0 small">Control contable, flujo de caja, gastos operativos y rentabilidad de inventario</p>
+  </div>
+</header>
+<div class="menu-horizontal mb-4">
+  <a href="{% url 'finanzas:finanzas_dashboard' %}"
+    class="{% if request.resolver_match.url_name == 'finanzas_dashboard' %}active{% endif %}"
+    title="Pérdidas y ganancias (Ingresos menos egresos en un período)">
+    <i class="bi bi-file-earmark-bar-graph me-1"></i> Estado de resultados (P&amp;G)
+  </a>
+  <a href="{% url 'finanzas:ventas_categoria' %}"
+    class="{% if request.resolver_match.url_name == 'ventas_categoria' or request.resolver_match.url_name == 'ingresos' %}active{% endif %}"
+    title="Reporte de ventas por categoría (Frenos, Motor, Transmisión, etc.)">
+    <i class="bi bi-grid-3x3-gap me-1"></i> Ventas por categoría
+  </a>
+  <a href="{% url 'finanzas:gastos' %}"
+    class="{% if request.resolver_match.url_name == 'gastos' %}active{% endif %}"
+    title="Historial de gastos operativos (alquiler, repuestos, servicios, etc.)">
+    <i class="bi bi-receipt-cutoff me-1"></i> Historial de gastos
+  </a>
+  <a href="{% url 'finanzas:rentabilidad' %}"
+    class="{% if request.resolver_match.url_name == 'rentabilidad' %}active{% endif %}"
+    title="Rentabilidad de inventario y rotación de repuestos">
+    <i class="bi bi-box-seam me-1"></i> Rentabilidad de inventario
+  </a>
+  <a href="{% url 'finanzas:caja_conciliacion' %}"
+    class="{% if request.resolver_match.url_name == 'caja_conciliacion' or request.resolver_match.url_name == 'reportes' %}active{% endif %}"
+    title="Cortes de caja y balance de entradas/salidas diarias">
+    <i class="bi bi-cash-coin me-1"></i> Caja y conciliación
+  </a>
 </div>

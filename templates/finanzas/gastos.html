@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+{% include 'finanzas/_menu.html' %}
+
+<div class="container-fluid px-3 px-md-4 py-2 pg-gastos">
+
+  <!-- Cabecera Ejecutiva -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 pb-2 border-bottom">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded-pill fw-semibold">
+          <i class="bi bi-receipt-cutoff me-1"></i>Egresos Operacionales
+        </span>
+        <h2 class="h3 fw-bold text-dark mb-0">Historial de Gastos Operativos</h2>
+      </div>
+      <p class="text-muted small mb-0">
+        Control y auditoría de egresos del negocio (alquiler, nómina, repuestos de stock, servicios públicos, etc.).
+      </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      {% if request.session.logueado.rol != 'Empleado' %}
+      <button class="btn btn-danger btn-sm rounded-2 d-flex align-items-center gap-1 shadow-sm px-3 py-2 fw-medium" data-bs-toggle="modal" data-bs-target="#modalNuevoGasto">
+        <i class="bi bi-plus-circle-fill"></i> Registrar nuevo gasto
+      </button>
+      {% endif %}
+      <button class="btn btn-outline-secondary btn-sm rounded-2 d-flex align-items-center gap-1 shadow-xs px-3 py-2" onclick="window.print()">
+        <i class="bi bi-printer"></i> Imprimir
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtro de Período -->
+  {% include 'finanzas/_periodo.html' %}
+
+  <!-- KPI Grid: Indicadores de Gastos -->
+  <div class="row g-3 mb-4">
+    <!-- Total Gastos -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Total Gastos Operativos</span>
+            <div class="pg-kpi-value text-danger fw-bold fs-4 mt-1">${{ gastos_total|floatformat:0|intcomma }}</div>
+          </div>
+          <div class="pg-kpi-icon bg-danger-subtle text-danger rounded-3 p-2">
+            <i class="bi bi-arrow-down-circle fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-receipt text-danger"></i>
+          <span>{{ gastos.count }} egresos contabilizados</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rubro Principal -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Mayor Rubro de Gasto</span>
+            <div class="pg-kpi-value text-dark fw-bold fs-5 mt-1 text-truncate" style="max-width: 190px;">
+              {{ categoria_mayor_gasto.categoria|default:"Sin gastos" }}
+            </div>
+          </div>
+          <div class="pg-kpi-icon bg-warning-subtle text-warning-emphasis rounded-3 p-2">
+            <i class="bi bi-pie-chart fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-cash text-warning-emphasis"></i>
+          <span>${{ categoria_mayor_gasto.total|default:0|floatformat:0|intcomma }} acumulado</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gastos en Efectivo (Caja Menor) -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Salidas en Efectivo</span>
+            <div class="pg-kpi-value text-dark fw-bold fs-4 mt-1">${{ gastos_efectivo|floatformat:0|intcomma }}</div>
+          </div>
+          <div class="pg-kpi-icon bg-secondary-subtle text-secondary rounded-3 p-2">
+            <i class="bi bi-cash-stack fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-wallet2 text-secondary"></i>
+          <span>Egresos directos de caja física</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gastos Bancarios / Transferencia -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Pagos Bancarizados</span>
+            <div class="pg-kpi-value text-primary fw-bold fs-4 mt-1">${{ gastos_bancos|floatformat:0|intcomma }}</div>
+          </div>
+          <div class="pg-kpi-icon bg-primary-subtle text-primary rounded-3 p-2">
+            <i class="bi bi-bank fs-5"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
+          <i class="bi bi-credit-card text-primary"></i>
+          <span>Transferencias y tarjetas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección de Gráficos de Gastos -->
+  <div class="row g-3 mb-4">
+    <!-- Gráfico 1: Concentración de Gastos por Categoría -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-3 p-4 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h3 class="h6 fw-bold text-dark mb-1">
+              <i class="bi bi-bar-chart-fill text-danger me-2"></i>Desembolsos por Categoría
+            </h3>
+            <p class="text-muted small mb-0">Total gastado en cada rubro operativo durante el período</p>
+          </div>
+          <span class="badge bg-danger-subtle text-danger small">Distribución</span>
+        </div>
+        <div class="chart-container position-relative" style="height: 280px;">
+          <canvas id="chartGastosBar"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico 2: Participación Porcentual -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-3 p-4 h-100 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h3 class="h6 fw-bold text-dark mb-1">
+              <i class="bi bi-pie-chart-fill text-warning me-2"></i>Composición de Gastos (%)
+            </h3>
+            <p class="text-muted small mb-0">Cuota porcentual sobre el total desembolsado</p>
+          </div>
+        </div>
+        <div class="chart-container position-relative d-flex align-items-center justify-content-center" style="height: 280px;">
+          <canvas id="chartGastosDoughnut"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla del Historial de Gastos con Filtros Rápidos -->
+  <div class="card border-0 shadow-sm rounded-3 p-4 mb-4 bg-white">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+      <div>
+        <h3 class="h6 fw-bold text-dark mb-1">
+          <i class="bi bi-list-check text-danger me-2"></i>Detalle Cronológico de Egresos
+        </h3>
+        <p class="text-muted small mb-0">Listado de comprobantes y pagos operativos registrados</p>
+      </div>
+      
+      <!-- Filtros rápidos por Categoría y Método -->
+      <form method="get" class="d-flex align-items-center gap-2 flex-wrap">
+        <input type="hidden" name="periodo" value="{{ periodo }}">
+        <input type="hidden" name="desde" value="{{ inicio|date:'Y-m-d' }}">
+        <input type="hidden" name="hasta" value="{{ fin|date:'Y-m-d' }}">
+        
+        <select name="categoria" class="form-select form-select-sm shadow-none" onchange="this.form.submit()" style="max-width: 170px;">
+          <option value="">Todas las categorías</option>
+          {% for val, label in categorias_opciones %}
+            <option value="{{ val }}" {% if filtro_categoria_actual == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+
+        <select name="metodo_pago" class="form-select form-select-sm shadow-none" onchange="this.form.submit()" style="max-width: 150px;">
+          <option value="">Todos los medios</option>
+          {% for val, label in metodos_opciones %}
+            <option value="{{ val }}" {% if filtro_metodo_actual == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+
+        <a href="{% url 'finanzas:gastos' %}?periodo={{ periodo }}" class="btn btn-sm btn-light border text-muted" title="Limpiar filtros">
+          <i class="bi bi-arrow-counterclockwise"></i>
+        </a>
+      </form>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 pg-tabla-gastos">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3 text-uppercase text-muted small fw-semibold" style="width: 120px;">Fecha</th>
+            <th class="text-uppercase text-muted small fw-semibold">Concepto / Motivo</th>
+            <th class="text-uppercase text-muted small fw-semibold">Categoría</th>
+            <th class="text-uppercase text-muted small fw-semibold">Proveedor / Beneficiario</th>
+            <th class="text-uppercase text-muted small fw-semibold">Método</th>
+            <th class="text-uppercase text-muted small fw-semibold">Usuario</th>
+            <th class="text-end text-uppercase text-muted small fw-semibold" style="width: 140px;">Valor</th>
+            <th class="text-center text-uppercase text-muted small fw-semibold pe-3" style="width: 80px;">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for gasto in gastos %}
+          <tr>
+            <td class="ps-3 fw-medium text-dark small">{{ gasto.fecha|date:'d/m/Y' }}</td>
+            <td>
+              <span class="fw-semibold text-dark d-block">{{ gasto.concepto }}</span>
+              {% if gasto.descripcion %}
+                <small class="text-muted text-truncate d-block" style="max-width: 250px;">{{ gasto.descripcion }}</small>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded-pill small">
+                {{ gasto.get_categoria_display }}
+              </span>
+            </td>
+            <td class="text-muted small">{{ gasto.proveedor|default:'—' }}</td>
+            <td>
+              <span class="badge bg-light text-muted border small">{{ gasto.get_metodo_pago_display }}</span>
+            </td>
+            <td class="text-muted small">{{ gasto.usuario|default:'Admin' }}</td>
+            <td class="text-end fw-bold text-danger fs-6">${{ gasto.valor|floatformat:0|intcomma }}</td>
+            <td class="text-center pe-3">
+              {% if request.session.logueado.rol != 'Empleado' %}
+              <form method="post" action="{% url 'finanzas:eliminar_gasto' gasto.id %}" onsubmit="return confirm('¿Eliminar el gasto «{{ gasto.concepto }}»?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Eliminar gasto">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </form>
+              {% else %}
+                <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center py-5 text-muted">
+              <i class="bi bi-receipt fs-1 d-block mb-2 text-secondary opacity-50"></i>
+              <h6 class="fw-semibold text-dark">No hay gastos registrados en este período</h6>
+              <p class="small mb-0">Utiliza el botón «Registrar nuevo gasto» para agregar comprobantes.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal para Registrar Gasto -->
+<div class="modal fade" id="modalNuevoGasto" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content border-0 shadow-lg rounded-3" method="post" action="{% url 'finanzas:nuevo_gasto' %}">
+      {% csrf_token %}
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+          <i class="bi bi-receipt-cutoff text-danger"></i> Registrar Gasto Operativo
+        </h5>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Concepto / Motivo *</label>
+          <input type="text" class="form-control rounded-2 shadow-none" name="concepto" placeholder="Ej: Arriendo local, Servicios, Compra insumos" required>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold text-muted">Categoría *</label>
+            <select class="form-select rounded-2 shadow-none" name="categoria" required>
+              {% for val, label in categorias_opciones %}
+                <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold text-muted">Valor ($ COP) *</label>
+            <input type="number" step="100" class="form-control rounded-2 shadow-none" name="valor" placeholder="0" required>
+          </div>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold text-muted">Fecha *</label>
+            <input type="date" class="form-control rounded-2 shadow-none" name="fecha" value="{% now 'Y-m-d' %}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold text-muted">Método de Pago *</label>
+            <select class="form-select rounded-2 shadow-none" name="metodo_pago" required>
+              {% for val, label in metodos_opciones %}
+                <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Proveedor / Beneficiario</label>
+          <input type="text" class="form-control rounded-2 shadow-none" name="proveedor" placeholder="Nombre de la empresa o persona">
+        </div>
+        <div class="mb-0">
+          <label class="form-label small fw-semibold text-muted">Descripción u Observaciones</label>
+          <textarea class="form-control rounded-2 shadow-none" name="descripcion" rows="2" placeholder="Detalle adicional..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer border-top bg-light">
+        <button type="button" class="btn btn-sm btn-outline-secondary rounded-2" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-sm btn-danger rounded-2 px-3 fw-medium">Guardar gasto</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Estilos -->
+<style>
+  .pg-gastos { color: #1e293b; }
+  .pg-kpi-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-color: #e2e8f0 !important;
+  }
+  .pg-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06) !important;
+  }
+  .pg-kpi-label { letter-spacing: 0.03em; font-size: 0.72rem; }
+  .pg-kpi-icon {
+    width: 42px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pg-tabla-gastos th, .pg-tabla-gastos td { padding: 12px 14px; }
+  .shadow-xs { box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+</style>
+
+<!-- Chart.js Setup -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const formatCOP = (val) => '$ ' + Math.round(Number(val) || 0).toLocaleString('es-CO');
+
+  Chart.defaults.font.family = "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+  Chart.defaults.color = '#64748b';
+
+  const catLabels = [{% for g in gastos_por_categoria %}'{{ g.categoria }}',{% endfor %}];
+  const catTotals = [{% for g in gastos_por_categoria %}{{ g.total|default:0 }},{% endfor %}];
+
+  // 1. Gráfico de Barras: Gastos por Categoría
+  const ctxBar = document.getElementById('chartGastosBar');
+  if (ctxBar) {
+    new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: catLabels.length > 0 ? catLabels : ['Sin gastos'],
+        datasets: [{
+          label: 'Total Gastado ($)',
+          data: catTotals.length > 0 ? catTotals : [0],
+          backgroundColor: 'rgba(239, 68, 68, 0.85)',
+          borderColor: '#ef4444',
+          borderWidth: 1.5,
+          borderRadius: 6,
+          maxBarThickness: 35
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: (c) => formatCOP(c.parsed.y) }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(226, 232, 240, 0.65)' },
+            ticks: { callback: (v) => formatCOP(v), font: { size: 10 } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 11, weight: '500' } }
+          }
+        }
+      }
+    });
+  }
+
+  // 2. Gráfico de Dona
+  const ctxDoughnut = document.getElementById('chartGastosDoughnut');
+  if (ctxDoughnut) {
+    const palette = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b981', '#06b6d4', '#ec4899', '#64748b'];
+    new Chart(ctxDoughnut, {
+      type: 'doughnut',
+      data: {
+        labels: catLabels.length > 0 ? catLabels : ['Sin gastos'],
+        datasets: [{
+          data: catTotals.length > 0 ? catTotals : [1],
+          backgroundColor: catLabels.length > 0 ? palette.slice(0, catLabels.length) : ['#e2e8f0'],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '66%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { usePointStyle: true, pointStyle: 'circle', padding: 10, font: { size: 11 } }
+          },
+          tooltip: catLabels.length === 0 ? { enabled: false } : {
+            callbacks: { label: (c) => c.label + ': ' + formatCOP(c.parsed) }
+          }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
