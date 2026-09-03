@@ -59,10 +59,19 @@ def login_view(request):
 
 
 
-@requerir_rol(["SuperAdmin", "Admin"])
+@requerir_rol(["SuperAdmin", "Admin", "Empleado" ])
 def cambiar_estado_usuario(request, id):
     usuario = get_object_or_404(Usuarios, id=id)
 
+    rol_actual = request.session["logueado"]["rol"]
+
+    # Un Empleado no puede cambiar estados
+    if rol_actual == "Empleado":
+        messages.error(
+            request,
+            "No tienes permiso para cambiar el estado de los usuarios."
+        )
+        return redirect("usuarios")
     # El SuperAdmin no se puede desactivar
     if usuario.cargo == "SuperAdmin":
         messages.error(
