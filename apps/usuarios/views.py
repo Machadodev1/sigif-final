@@ -309,7 +309,7 @@ def editar_usuarios(request, id):
             )
 
             if rol_actual == "Empleado":
-                return redirect("usuarios")
+                return redirect("dashboard")
 
             return redirect("usuarios")
 
