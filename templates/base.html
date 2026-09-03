@@ -10,14 +10,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{% static 'css/style1.css' %}?v=7">
+    <link rel="stylesheet" href="{% static 'css/style1.css' %}?v=9">
 </head>
 
 <body>
 
   <aside class="sidebar">
     <div class="logo">
-      <img src="{% static 'img/logo123.png' %}" alt="">
+      <img src="{% static 'img/logologin.png' %}" alt="">
     </div>
     <div class="user-Info" style="padding-bottom: 0;">
       <!-- Usuario removido de aquí para colocarlo a la derecha -->
@@ -39,17 +39,43 @@
     </div>
   </aside>
 
-  <div class="main-container">
-    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 25px;">
-        <div style="display: flex; align-items: center; gap: 12px; background: #fff; padding: 6px 20px 6px 8px; border-radius: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #e8eef8;">
-            <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #3a56e4, #5c7cfa); color: #fff; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 1rem;">
-                {{ request.session.logueado.nombre|default:"U"|first|upper }}
-            </div>
-            <div style="display: flex; flex-direction: column; justify-content: center;">
-                <span style="font-size: 0.88rem; font-weight: 700; color: #1e293b; line-height: 1.1;">{{ request.session.logueado.nombre|default:"Usuario Activo"|title }}</span>
-                <span style="font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 2px;">
-                    {{ request.session.logueado.rol|default:"Operador" }}
-                </span>
+<div class="main-container">
+    <div class="user-header-wrapper">
+        <div class="user-menu-container position-relative">
+            <button class="user-profile-card" id="userMenuButton" type="button" onclick="toggleUserMenu()" aria-expanded="false">
+                <div class="user-avatar">
+                    {{ request.session.logueado.nombre|default:"U"|first|upper }}
+                </div>
+                <div class="user-info-container">
+                    <span class="user-name">{{ request.session.logueado.nombre|default:"Usuario Activo"|title }}</span>
+                    <span class="user-role">
+                        {{ request.session.logueado.rol|default:"Operador" }}
+                    </span>
+                </div>
+                <i class="bi bi-chevron-down user-chevron"></i>
+            </button>
+            <div class="user-dropdown-menu" id="userDropdownMenu">
+                <div class="user-dropdown-header">
+                    <p class="user-dropdown-name">{{ request.session.logueado.nombre|default:"Usuario Activo"|title }}</p>
+                    <span class="user-dropdown-badge">{{ request.session.logueado.rol|default:"Operador" }}</span>
+                </div>
+                <div class="user-dropdown-divider"></div>
+                {% if request.session.logueado.id %}
+                <a href="{% url 'editar_usuarios' request.session.logueado.id %}" class="user-dropdown-item">
+                    <i class="bi bi-person-gear"></i>
+                    <span>Editar perfil</span>
+                </a>
+                {% else %}
+                <a href="{% url 'usuarios' %}" class="user-dropdown-item">
+                    <i class="bi bi-person-gear"></i>
+                    <span>Editar perfil</span>
+                </a>
+                {% endif %}
+                <div class="user-dropdown-divider"></div>
+                <a href="{% url 'logout' %}" class="user-dropdown-item logout" onclick="return confirm('¿Estás seguro de que quieres cerrar sesión?')">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Cerrar sesión</span>
+                </a>
             </div>
         </div>
     </div>
@@ -86,6 +112,31 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // Función para mostrar u ocultar el menú al hacer clic en el usuario
+    function toggleUserMenu() {
+        const menu = document.getElementById('userDropdownMenu');
+        const button = document.getElementById('userMenuButton');
+        if (menu) {
+            const isShown = menu.classList.toggle('show');
+            if (button) {
+                button.setAttribute('aria-expanded', isShown ? 'true' : 'false');
+            }
+        }
+    }
+
+    // Cerrar el menu si se hace clic en cualquier otra parte de la pantalla
+    window.addEventListener('click', function(e) {
+        const container = document.querySelector('.user-menu-container');
+        const menu = document.getElementById('userDropdownMenu');
+        const button = document.getElementById('userMenuButton');
+        
+        if (container && menu && !container.contains(e.target)) {
+            menu.classList.remove('show');
+            if (button) {
+                button.setAttribute('aria-expanded', 'false');
+            }
+        }
+    });
     (function(){
       let formToSubmit = null;
       const modalEl = document.getElementById('confirmDeleteModal');

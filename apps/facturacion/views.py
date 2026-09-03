@@ -10,7 +10,7 @@ from django.views.generic import ListView, DetailView
 from django.db import transaction
 from django.core.mail import EmailMessage
 from django.conf import settings
-
+from apps.auditoria.models import Auditoria
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -93,7 +93,7 @@ class FacturaListView(ListView):
         # Si por alguna razón no tiene un rol válido,
         # no mostrar ninguna factura
         return Factura.objects.none()
-    
+
 
 # ============================================================
 # DETALLE DE FACTURA
@@ -149,10 +149,35 @@ def productos_facturacion_view(request):
         '-factura__fecha'
     )
 
+    # Agrupar los movimientos por producto
+    productos = {}
+
+    for detalle in detalles:
+        producto_id = detalle.producto_id
+
+        if producto_id not in productos:
+            productos[producto_id] = {
+                'producto': detalle.producto,
+                'movimientos': [],
+                'total_vendido': 0,
+                'total_ingresos': 0,
+            }
+
+        productos[producto_id]['movimientos'].append(detalle)
+        productos[producto_id]['total_vendido'] += detalle.cantidad
+        productos[producto_id]['total_ingresos'] += detalle.subtotal
+
+    productos_lista = sorted(
+        productos.values(),
+        key=lambda p: p['total_ingresos'],
+        reverse=True
+    )
+
     return render(
         request,
         'facturacion/productos_facturacion.html',
         {
+            'productos': productos_lista,
             'detalles': detalles
         }
     )
@@ -363,7 +388,11 @@ def confirmar_venta(request):
                 total=total_final,
                 descuento=valor_descuento
             )
-
+            Auditoria.objects.create(
+                usuario=request.session["logueado"]["nombre"],
+                accion=f"CREÓ FACTURA #{factura.id} - CLIENTE: {cliente.nombre} - TOTAL: {formato_cop(total_final)}",
+                modulo="FACTURACION"
+            )
             # --------------------------------------
             # DETALLES + INVENTARIO
             # --------------------------------------

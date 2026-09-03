@@ -3,7 +3,7 @@ from django.contrib import messages
 from apps.usuarios.models import Usuarios
 from .models import EmpresaConfig
 from core.decoradores import requerir_rol
-
+from apps.auditoria.models import Auditoria
 
 @requerir_rol(["SuperAdmin", "Admin"])
 def configuracion(request):
@@ -26,7 +26,13 @@ def configuracion(request):
                 config.correo_contacto = request.POST.get('correo_contacto')
                 messages.success(request, "La configuración del sistema fue actualizada correctamente.", extra_tags='module-configuracion')
 
-            config.save() 
+            config.save()
+
+            Auditoria.objects.create(
+                usuario=request.session["logueado"]["nombre"],
+                accion="ACTUALIZÓ LA CONFIGURACIÓN DE LA EMPRESA",
+                modulo="CONFIGURACION"
+            ) 
             
     return render(request, 'configuracion/configuracion.html', {'config': config})
 
@@ -53,6 +59,11 @@ def backupypermisos(request):
     
             usuario.cargo = cargo
             usuario.save()
+            Auditoria.objects.create(
+                usuario=request.session["logueado"]["nombre"],
+                accion=f"ACTUALIZÓ EL CARGO DE {usuario.nombre}: {cargo}",
+                modulo="CONFIGURACION"
+            )
 
             usuario.refresh_from_db()
 

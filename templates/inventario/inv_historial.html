@@ -1,64 +1,76 @@
 {% extends 'base.html' %}
-{%load humanize %}
-{%block title %}Historial{% endblock %}
+{% load humanize %}
+{% block title %}Historial de Movimientos{% endblock %}
 
-{%block content %}  
+{% block content %}  
 
 <header class="inventario-header">
-    <h1>Gestión de inventario</h1>
+    <div>
+        <h1>Gestión de inventario</h1>
+    </div>
 </header>
 
 <div class="menu-horizontal">
-    <a href="{% url 'inv_control' %}" class="{% if request.resolver_match.url_name == 'inv_control' %}active{% endif %}">
-        Control de stock
-    </a>
-
-    <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">
-        Catalogo de ventas
-    </a>
-
-    <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">
-        Historial de movimientos
-    </a>
+    <a href="{% url 'inv_control' %}" class="{% if request.resolver_match.url_name == 'inv_control' %}active{% endif %}">Control de stock</a>
+    <a href="{% url 'inv_ingresos' %}" class="{% if request.resolver_match.url_name == 'inv_ingresos' %}active{% endif %}">Ingresos al inventario</a>
+    <a href="{% url 'inventario' %}" class="{% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">Catalogo de ventas</a>
+    <a href="{% url 'inv_historial' %}" class="{% if request.resolver_match.url_name == 'inv_historial' %}active{% endif %}">Historial de movimientos</a>
 </div>
 
 <section class="inventario-container2">
 
+    <!-- TOOLBAR -->
     <div class="cv-toolbar">
         <div class="cv-toolbar-left">
             <h2 class="cv-title">Historial de Movimientos</h2>
-            <p class="cv-subtitle">Registro completo de entradas y salidas de inventario</p>
+            <p class="cv-subtitle">Registro cronológico y detallado de entradas y salidas de inventario</p>
         </div>
+        
     </div>
 
-    <!-- SECCIONES DE ENTRADAS Y SALIDAS EN TARJETAS NOVEDOSAS -->
-    <div class="movimientos-grid-layout">
+    <!-- RESUMEN RÁPIDO DE MÉTRICAS -->
+    
+
+    <!-- SECCIONES DE ENTRADAS Y SALIDAS EN GRID -->
+    <div class="movimientos-grid-layout" id="movimientosLayout">
 
         <!-- COLUMNA ENTRADAS -->
-        <div class="columna-movimientos">
+        <div class="columna-movimientos" id="columnaEntradas">
             <div class="columna-header">
-                <h3><span class="badge-tipo entrada">ENTRADAS</span> Registro de Productos</h3>
+                <h3>
+                    <span class="badge-tipo entrada">
+                        <i class="bi bi-box-arrow-in-down"></i> Entradas
+                    </span>
+                    Registro de Productos
+                </h3>
+                <span class="badge-contador" id="badgeEntradasCount">{{ movimientos|length }} registros</span>
             </div>
 
-            <div class="cards-stack">
+            <div class="cards-stack" id="stackEntradas">
                 {% for movimiento in movimientos %}
-                <div class="tarjeta-historial entrada-card">
+                <div class="tarjeta-historial entrada-card item-movimiento"
+                     data-tipo="entrada"
+                     data-nombre="{{ movimiento.nombre|lower }}"
+                     data-id="{{ movimiento.id }}"
+                     data-categoria="{{ movimiento.categoria|default:''|lower }}">
                     <div class="tarjeta-historial-header">
                         <div>
                             <span class="badge-id">ID #{{ movimiento.id }}</span>
                             <strong class="titulo-producto">{{ movimiento.nombre }}</strong>
                         </div>
-                        <span class="badge-tipo entrada">Entrada</span>
+                        <span class="badge-tipo entrada">
+                            <i class="bi bi-arrow-down-left"></i> Entrada
+                        </span>
                     </div>
 
                     <div class="historial-detalles">
                         <div class="detalle-item">
-                            <span class="detalle-label">Marca / Categoría</span>
+                            <span class="detalle-label">Categoría</span>
                             <span class="detalle-val">{{ movimiento.categoria|default:"General" }}</span>
                         </div>
                         <div class="detalle-item">
                             <span class="detalle-label">Cantidad (Stock)</span>
-                            <span class="detalle-val">{{ movimiento.stock }} unid.</span>
+                            <span class="detalle-val">{{ movimiento.stock|intcomma }} unid.</span>
                         </div>
                         <div class="detalle-item">
                             <span class="detalle-label">Precio Unit.</span>
@@ -72,38 +84,58 @@
 
                     <div class="tarjeta-historial-footer">
                         <div class="fecha-creacion">
-                            <strong>Fecha y Hora de Creación:</strong> {{ movimiento.fecha_creacion|date:"d/m/Y - H:i"|default:"Reciente" }}
+                            <i class="bi bi-calendar-check text-muted"></i>
+                            <span><strong>Fecha de registro:</strong> {{ movimiento.fecha_creacion|date:"d/m/Y - H:i"|default:"Reciente" }}</span>
                         </div>
                     </div>
                 </div>
                 {% empty %}
                 <div class="tarjeta-historial empty-card">
-                    <p>No hay entradas registradas.</p>
+                    <i class="bi bi-inbox"></i>
+                    <p class="mb-0 fw-semibold">No hay entradas registradas</p>
+                    <span class="text-muted small">Los ingresos aparecerán aquí al registrar productos.</span>
                 </div>
                 {% endfor %}
+                <div class="tarjeta-historial empty-card d-none" id="emptySearchEntradas">
+                    <i class="bi bi-search"></i>
+                    <p class="mb-0 fw-semibold">Sin coincidencias en entradas</p>
+                </div>
             </div>
         </div>
 
         <!-- COLUMNA SALIDAS -->
-        <div class="columna-movimientos">
+        <div class="columna-movimientos" id="columnaSalidas">
             <div class="columna-header">
-                <h3><span class="badge-tipo salida">SALIDAS</span> Movimientos de Venta</h3>
+                <h3>
+                    <span class="badge-tipo salida">
+                        <i class="bi bi-receipt"></i> Salidas
+                    </span>
+                    Movimientos de Venta
+                </h3>
+                <span class="badge-contador" id="badgeSalidasCount">{{ salidas|length }} ventas</span>
             </div>
 
-            <div class="cards-stack">
+            <div class="cards-stack" id="stackSalidas">
                 {% for salida in salidas %}
-                <div class="tarjeta-historial salida-card">
+                <div class="tarjeta-historial salida-card item-movimiento"
+                     data-tipo="salida"
+                     data-nombre="{{ salida.producto.nombre|lower }}"
+                     data-factura="{{ salida.factura.id }}"
+                     data-cliente="{{ salida.factura.cliente.nombre|default:''|lower }}"
+                     data-vendedor="{{ salida.factura.usuario|default:''|lower }}">
                     <div class="tarjeta-historial-header">
                         <div>
                             <span class="badge-id">Factura #{{ salida.factura.id }}</span>
                             <strong class="titulo-producto">{{ salida.producto.nombre }}</strong>
                         </div>
-                        <span class="badge-tipo salida">Salida</span>
+                        <span class="badge-tipo salida">
+                            <i class="bi bi-arrow-up-right"></i> Salida
+                        </span>
                     </div>
 
                     <div class="historial-detalles">
                         <div class="detalle-item">
-                            <span class="detalle-label">Marca / Categoría</span>
+                            <span class="detalle-label">Categoría</span>
                             <span class="detalle-val">{{ salida.producto.categoria|default:"General" }}</span>
                         </div>
                         <div class="detalle-item">
@@ -112,7 +144,9 @@
                         </div>
                         <div class="detalle-item">
                             <span class="detalle-label">Cliente</span>
-                            <span class="detalle-val">{{ salida.factura.cliente.nombre|default:"Consumidor final" }}</span>
+                            <span class="detalle-val" title="{{ salida.factura.cliente.nombre|default:'Consumidor final' }}">
+                                {{ salida.factura.cliente.nombre|default:"Consumidor final"|truncatechars:22 }}
+                            </span>
                         </div>
                         <div class="detalle-item">
                             <span class="detalle-label">Total Venta</span>
@@ -122,23 +156,124 @@
 
                     <div class="tarjeta-historial-footer">
                         <div class="fecha-creacion">
-                            <strong>Fecha y Hora:</strong> {{ salida.factura.fecha|date:"d/m/Y - H:i" }}
+                            <i class="bi bi-clock-history text-muted"></i>
+                            <span><strong>Fecha:</strong> {{ salida.factura.fecha|date:"d/m/Y - H:i" }}</span>
                         </div>
                         <div class="vendedor-info">
-                            <strong>Vendedor:</strong> {{ salida.factura.usuario }}
+                            <i class="bi bi-person-badge text-muted"></i>
+                            <span><strong>Vendedor:</strong> {{ salida.factura.usuario|default:"Sistema" }}</span>
                         </div>
                     </div>
                 </div>
                 {% empty %}
                 <div class="tarjeta-historial empty-card">
-                    <p>No hay salidas registradas.</p>
+                    <i class="bi bi-receipt-cutoff"></i>
+                    <p class="mb-0 fw-semibold">No hay salidas registradas</p>
+                    <span class="text-muted small">Las salidas se generan automáticamente al facturar.</span>
                 </div>
                 {% endfor %}
+                <div class="tarjeta-historial empty-card d-none" id="emptySearchSalidas">
+                    <i class="bi bi-search"></i>
+                    <p class="mb-0 fw-semibold">Sin coincidencias en salidas</p>
+                </div>
             </div>
         </div>
 
     </div>
 
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const buscador = document.getElementById('buscadorHistorial');
+    const botonesFiltro = document.querySelectorAll('.cs-filtro-btn');
+    const colEntradas = document.getElementById('columnaEntradas');
+    const colSalidas = document.getElementById('columnaSalidas');
+    const gridLayout = document.getElementById('movimientosLayout');
+    const emptyEntradas = document.getElementById('emptySearchEntradas');
+    const emptySalidas = document.getElementById('emptySearchSalidas');
+    const items = document.querySelectorAll('.item-movimiento');
+
+    let filtroActual = 'todos';
+
+    function aplicarFiltros() {
+        const texto = (buscador ? buscador.value : '').toLowerCase().trim();
+        let visibleEntradas = 0;
+        let visibleSalidas = 0;
+
+        items.forEach(function(item) {
+            const tipo = item.dataset.tipo;
+            const nombre = item.dataset.nombre || '';
+            const id = item.dataset.id || '';
+            const factura = item.dataset.factura || '';
+            const categoria = item.dataset.categoria || '';
+            const cliente = item.dataset.cliente || '';
+            const vendedor = item.dataset.vendedor || '';
+
+            const coincideTipo = (filtroActual === 'todos') || (filtroActual === tipo);
+            const coincideTexto = !texto ||
+                nombre.includes(texto) ||
+                id.includes(texto) ||
+                factura.includes(texto) ||
+                categoria.includes(texto) ||
+                cliente.includes(texto) ||
+                vendedor.includes(texto);
+
+            if (coincideTipo && coincideTexto) {
+                item.classList.remove('d-none');
+                if (tipo === 'entrada') visibleEntradas++;
+                if (tipo === 'salida') visibleSalidas++;
+            } else {
+                item.classList.add('d-none');
+            }
+        });
+
+        // Visibilidad de columnas según el filtro de tipo
+        if (filtroActual === 'entradas') {
+            colEntradas.classList.remove('d-none');
+            colSalidas.classList.add('d-none');
+            gridLayout.style.gridTemplateColumns = '1fr';
+        } else if (filtroActual === 'salidas') {
+            colEntradas.classList.add('d-none');
+            colSalidas.classList.remove('d-none');
+            gridLayout.style.gridTemplateColumns = '1fr';
+        } else {
+            colEntradas.classList.remove('d-none');
+            colSalidas.classList.remove('d-none');
+            gridLayout.style.gridTemplateColumns = '';
+        }
+
+        // Mensaje de sin coincidencias en búsqueda
+        if (emptyEntradas) {
+            if (visibleEntradas === 0 && texto && (filtroActual === 'todos' || filtroActual === 'entradas')) {
+                emptyEntradas.classList.remove('d-none');
+            } else {
+                emptyEntradas.classList.add('d-none');
+            }
+        }
+
+        if (emptySalidas) {
+            if (visibleSalidas === 0 && texto && (filtroActual === 'todos' || filtroActual === 'salidas')) {
+                emptySalidas.classList.remove('d-none');
+            } else {
+                emptySalidas.classList.add('d-none');
+            }
+        }
+    }
+
+    if (buscador) {
+        buscador.addEventListener('input', aplicarFiltros);
+    }
+
+    botonesFiltro.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            botonesFiltro.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            filtroActual = this.dataset.filtro;
+            aplicarFiltros();
+        });
+    });
+});
+</script>
 
 {% endblock %}

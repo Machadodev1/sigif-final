@@ -3,12 +3,17 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SIGIF</title>
     <link rel="stylesheet" href="{% static 'css/style1.css' %}">
 </head>
 <body class="login-body">
 
     <div class="login-card">
+        <div class="logo-container">
+            <img src="{% static 'img/logologin1.png' %}" alt="Logo SIGIF" class="login-logo">
+        </div>
+
         <h1>Inicio de sesión</h1>
         <p>Ingrese su correo y contraseña</p>
 
@@ -16,29 +21,29 @@
             {% csrf_token %}
 
             <div class="input-group">
-                <label>Correo electrónico</label>
-                <input type="email" name="correo" required>
+                <label for="correo">Correo electrónico</label>
+                <input type="email" id="correo" name="correo" required>
             </div>
 
             <div class="input-group">
-                <label>Contraseña</label>
-                <input type="password" name="clave" required>
+                <label for="clave">Contraseña</label>
+                <input type="password" id="clave" name="clave" required>
             </div>
 
             <button type="submit" class="login-button">
                 Ingresar
             </button>
         </form>
-        <p>
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert {{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
 
-        </p>
+        {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                    <div class="alert {{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 
 </body>
