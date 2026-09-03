@@ -1,1 +1,29 @@
-{% extends 'base.html' %}{% load humanize %}{% block content %}<div class="container-fluid py-4"><div class="d-flex justify-content-between"><div><h1 class="h3">Reportes financieros</h1><p class="text-muted">Resumen consolidado para el rango seleccionado.</p></div><button class="btn btn-outline-secondary" onclick="window.print()">Imprimir / Guardar PDF</button></div>{% include 'finanzas/_periodo.html' %}<div class="card border-0 shadow-sm p-4"><h2 class="h5">Indicadores</h2><div class="row g-3"><div class="col-md-4">Ingresos <strong class="d-block fs-5">${{ ingresos|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Gastos <strong class="d-block fs-5">${{ gastos_total|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Costos <strong class="d-block fs-5">${{ costos|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Utilidad bruta <strong class="d-block fs-5">${{ utilidad_bruta|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Utilidad neta <strong class="d-block fs-5">${{ utilidad_neta|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Margen neto <strong class="d-block fs-5">{{ margen|floatformat:1 }}%</strong></div><div class="col-md-4">Número de ventas <strong class="d-block fs-5">{{ ventas }}</strong></div><div class="col-md-4">Ticket promedio <strong class="d-block fs-5">${{ ticket|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Pendiente por pagar <strong class="d-block fs-5">${{ cuentas_pendientes|floatformat:0|intcomma }}</strong></div></div><hr><h2 class="h5">Productos más rentables</h2><ol>{% for producto in productos_rentabilidad %}<li>{{ producto.producto }} — ${{ producto.ganancia|floatformat:0|intcomma }} ({{ producto.margen|floatformat:1 }}%)</li>{% empty %}<li class="text-muted">Sin ventas en el período.</li>{% endfor %}</ol><h2 class="h5">Gastos por categoría</h2><ul>{% for gasto in gastos_categoria %}<li>{{ gasto.categoria }}: ${{ gasto.total|floatformat:0|intcomma }}</li>{% empty %}<li class="text-muted">Sin gastos.</li>{% endfor %}</ul></div></div>{% endblock %}
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between">
+        <div>
+            <h1 class="h3">Reportes financieros</h1>
+            <p class="text-muted">Resumen consolidado para el rango seleccionado.</p>
+        </div>
+        <button class="btn btn-outline-secondary" onclick="window.print()">Imprimir / Guardar PDF</button>
+    </div>{% include 'finanzas/_periodo.html' %}
+    <div class="card border-0 shadow-sm p-4">
+        <h2 class="h5">Indicadores</h2>
+        <div class="row g-3">
+            <div class="col-md-4">Ingresos 
+                <strong class="d-block fs-5">${{ ingresos|floatformat:0|intcomma }}</strong>
+            </div>
+            <div class="col-md-4">Gastos 
+                <strong class="d-block fs-5">${{ gastos_total|floatformat:0|intcomma }}</strong>
+            </div>
+            <div class="col-md-4">Costos <strong class="d-block fs-5">${{ costos|floatformat:0|intcomma }}</strong>
+            </div>
+            <div class="col-md-4">Utilidad bruta 
+                <strong class="d-block fs-5">${{ utilidad_bruta|floatformat:0|intcomma }}</strong>
+            </div>
+            <div class="col-md-4">Utilidad neta 
+                <strong class="d-block fs-5">${{ utilidad_neta|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Margen neto <strong class="d-block fs-5">{{ margen|floatformat:1 }}%</strong></div><div class="col-md-4">Número de ventas <strong class="d-block fs-5">{{ ventas }}</strong></div><div class="col-md-4">Ticket promedio <strong class="d-block fs-5">${{ ticket|floatformat:0|intcomma }}</strong></div><div class="col-md-4">Pendiente por pagar <strong class="d-block fs-5">${{ cuentas_pendientes|floatformat:0|intcomma }}</strong></div></div><hr><h2 class="h5">Productos más rentables</h2><ol>{% for producto in productos_rentabilidad %}<li>{{ producto.producto }} — ${{ producto.ganancia|floatformat:0|intcomma }} ({{ producto.margen|floatformat:1 }}%)</li>{% empty %}<li class="text-muted">Sin ventas en el período.</li>{% endfor %}</ol><h2 class="h5">Gastos por categoría</h2><ul>{% for gasto in gastos_categoria %}<li>{{ gasto.categoria }}: ${{ gasto.total|floatformat:0|intcomma }}</li>{% empty %}<li class="text-muted">Sin gastos.</li>{% endfor %}</ul></div></div>{% endblock %}
+
+
