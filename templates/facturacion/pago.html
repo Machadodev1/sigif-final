@@ -441,7 +441,8 @@ document.getElementById("btnConfirmar").addEventListener("click", () => {
         correo: document.getElementById("correo").value,
         telefono: document.getElementById("telefono").value,
         productos: carrito,
-        descuento: porcentajeAplicado
+        descuento: porcentajeAplicado,
+        metodo_pago: document.querySelector('input[name="metodo_pago"]:checked').value
     };
 
     fetch("/facturacion/confirmar-venta/", {

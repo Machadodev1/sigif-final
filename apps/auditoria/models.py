@@ -7,6 +7,7 @@ class Auditoria(models.Model):
         ("PRODUCTOS", "Productos"),
         ("INVENTARIO", "Inventario"),
         ("FACTURACION", "Facturación"),
+        ("FINANZAS", "Finanzas"),
         ("CONFIGURACION", "Configuración"),
     ]
 
