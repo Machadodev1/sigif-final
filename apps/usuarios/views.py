@@ -142,17 +142,19 @@ def editar_usuarios(request, id):
 
     usuario = get_object_or_404(Usuarios, id=id)
 
-    # Usuario que está realizando la acción
     usuario_actual_id = request.session["logueado"]["id"]
     rol_actual = request.session["logueado"]["rol"]
 
-    # Restringir a Empleado para que solo pueda editar su propio perfil
     if rol_actual == "Empleado" and usuario.id != usuario_actual_id:
-        messages.error(request, "Solo tienes permiso para editar tu propio perfil.")
+        messages.error(
+            request,
+            "Solo tienes permiso para editar tu propio perfil."
+        )
         return redirect("dashboard")
 
-    # Cargo original del usuario que estamos editando
+    # Guardamos los valores originales
     cargo_original = usuario.cargo
+    estado_original = usuario.activo
 
     if request.method == "POST":
 
@@ -168,19 +170,25 @@ def editar_usuarios(request, id):
             nuevo_cargo = usuario_editado.cargo
 
             # ==========================================
-            # 1. NADIE PUEDE CAMBIAR SU PROPIO ROL / EMPLEADO NO PUEDE ALTERAR CARGO
+            # 1. NADIE PUEDE CAMBIAR SU PROPIO ROL
             # ==========================================
 
             if usuario.id == usuario_actual_id or rol_actual == "Empleado":
                 usuario_editado.cargo = cargo_original
 
             # ==========================================
-            # 2. ADMIN NO PUEDE MODIFICAR AL SUPERADMIN
+            # 2. NO CAMBIAR ESTADO AL EDITAR
+            # ==========================================
+
+            usuario_editado.activo = estado_original
+
+            # ==========================================
+            # 3. ADMIN NO PUEDE MODIFICAR AL SUPERADMIN
             # ==========================================
 
             if (
                 rol_actual == "Admin"
-                and cargo_original == "SuperAdmin" 
+                and cargo_original == "SuperAdmin"
             ):
 
                 messages.error(
@@ -195,7 +203,7 @@ def editar_usuarios(request, id):
                 )
 
             # ==========================================
-            # 3. ADMIN NO PUEDE CREAR OTRO SUPERADMIN
+            # 4. ADMIN NO PUEDE CREAR OTRO SUPERADMIN
             # ==========================================
 
             if (
@@ -216,12 +224,11 @@ def editar_usuarios(request, id):
                 )
 
             # ==========================================
-            # 4. GUARDAR CAMBIOS
+            # 5. GUARDAR
             # ==========================================
 
             usuario_editado.save()
 
-            # Actualizar nombre en la sesión actual si editó su propio usuario
             if usuario_editado.id == usuario_actual_id:
                 request.session["logueado"]["nombre"] = usuario_editado.nombre
                 request.session.modified = True
