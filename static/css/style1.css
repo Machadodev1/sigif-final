@@ -2563,6 +2563,24 @@ body.login-body {
     }
 }
 
+.messages-container {
+    text-align: center;
+}
 
+.messages-container .alert {
+    text-align: center;
+    margin-top: 20px;
 
+}
 
+.alerts-container {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.alerts-container .alert {
+    flex: 1;
+    margin: 0;
+}
