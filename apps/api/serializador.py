@@ -41,3 +41,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuarios
         fields = '__all__'
+        extra_kwargs = {
+            'contra': {'write_only': True, 'min_length': 8},
+            'es_superadmin_principal': {'read_only': True},
+        }

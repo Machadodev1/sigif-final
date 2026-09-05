@@ -157,7 +157,7 @@
                         <i class="bi bi-shield-check me-1 text-primary"></i> {{ form.cargo.label }} <span
                             class="text-danger">*</span>
                     </label>
-                    {% if request.session.logueado.rol == "Empleado" %}
+                    {% if request.session.logueado.id == form.instance.id or request.session.logueado.rol == "Empleado" %}
                     <div class="form-control bg-light fw-bold text-primary">
                         {{ form.instance.cargo|default:"Empleado" }}
                     </div>
