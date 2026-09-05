@@ -1,14 +1,8 @@
-# pyrefly: ignore [missing-import]
-from urllib import request
-
 from django.shortcuts import render, redirect, get_object_or_404
-# pyrefly: ignore [missing-import]
 from django.contrib import messages
-# pyrefly: ignore [missing-import]
 from django.db.models import Q
 from .forms import UsuarioForm
 from .models import Usuarios
-# pyrefly: ignore [missing-import]
 from apps.auditoria.models import Auditoria
 from core.decoradores import requerir_rol, impedir_crear_superadmin
 
@@ -19,10 +13,16 @@ def login_view(request):
         correo = (request.POST.get("correo") or "").strip().lower()
         contra = request.POST.get("clave")
         try:
-            t = Usuarios.objects.get(
-                correo__iexact=correo,
-                contra=contra
-            )
+            t = Usuarios.objects.get(correo__iexact=correo)
+
+            if not t.check_password(contra):
+                raise Usuarios.DoesNotExist
+
+            # SEGURIDAD: las contraseñas heredadas se convierten a hash al
+            # autenticarse correctamente, sin registrarlas ni mostrarlas.
+            if not t.contra.startswith(('pbkdf2_', 'argon2$', 'bcrypt$', 'scrypt$')):
+                t.set_password(contra)
+                t.save(update_fields=['contra'])
 
             # Verificar si el usuario está activo
             if not t.activo:
@@ -63,10 +63,11 @@ def login_view(request):
 def cambiar_estado_usuario(request, id):
     usuario = get_object_or_404(Usuarios, id=id)
 
-    usuario_logueado = request.session.get("logueado")
+    usuario_logueado = request.session.get("logueado") or {}
+    actor = get_object_or_404(Usuarios, id=usuario_logueado.get("id"), activo=True)
 
-    rol_actual = usuario_logueado["rol"]
-    id_usuario_logueado = usuario_logueado["id"]
+    rol_actual = actor.cargo
+    id_usuario_logueado = actor.id
 
     # EMPLEADO NO PUEDE CAMBIAR ESTADOS
 
@@ -79,24 +80,23 @@ def cambiar_estado_usuario(request, id):
         return redirect("usuarios")
 
 
-    # SUPERADMIN NO PUEDE SER DESACTIVADO
-
-
-    if usuario.cargo == "SuperAdmin":
-        messages.error(
-            request,
-            "El SuperAdmin no puede ser desactivado."
-        )
-        return redirect("usuarios")
-
-
-    # NADIE PUEDE DESACTIVARSE A SÍ MISMO
-
-
+    # SEGURIDAD: la auto-desactivación tiene prioridad para mostrar el
+    # mensaje correcto, incluso si el usuario es SuperAdmin.
     if usuario.id == id_usuario_logueado:
         messages.error(
             request,
             "No puedes desactivar tu propio usuario."
+        )
+        return redirect("usuarios")
+
+
+    # SUPERADMIN NO PUEDE SER DESACTIVADO
+
+
+    if usuario.es_superadmin_principal or usuario.cargo == "SuperAdmin":
+        messages.error(
+            request,
+            "El SuperAdmin no puede ser desactivado."
         )
         return redirect("usuarios")
 
@@ -126,7 +126,7 @@ def cambiar_estado_usuario(request, id):
         estado = "ACTIVO" if usuario.activo else "INACTIVO"
 
         Auditoria.objects.create(
-            usuario=usuario_logueado["nombre"],
+            usuario=actor.nombre,
             accion=f"CAMBIO ESTADO USUARIO: {usuario.nombre} → {estado}",
             modulo="USUARIOS"
         )
@@ -172,7 +172,7 @@ def crear_usuarios(request):
             )
             return redirect('usuarios')
 
-        messages.error(request, "Falta información obligatoria para crear el usuario.")
+        # messages.error(request, "Falta información obligatoria para crear el usuario.")
         return render(request, "usuarios/crear_usuarios.html", {'form': form})
 
     form = UsuarioForm()
@@ -184,8 +184,10 @@ def editar_usuarios(request, id):
 
     usuario = get_object_or_404(Usuarios, id=id)
 
-    usuario_actual_id = request.session["logueado"]["id"]
-    rol_actual = request.session["logueado"]["rol"]
+    usuario_logueado = request.session.get("logueado") or {}
+    actor = get_object_or_404(Usuarios, id=usuario_logueado.get("id"), activo=True)
+    usuario_actual_id = actor.id
+    rol_actual = actor.cargo
 
     if rol_actual == "Empleado" and usuario.id != usuario_actual_id:
         messages.error(
@@ -197,6 +199,29 @@ def editar_usuarios(request, id):
 
     cargo_original = usuario.cargo
     estado_original = usuario.activo
+    es_propio_usuario = usuario.id == usuario_actual_id
+
+    # SEGURIDAD: la autorización se decide con ambos usuarios de la base de
+    # datos, nunca con cargo, hidden, readonly o disabled enviados por HTML.
+    puede_editar = True
+    if usuario.es_superadmin_principal and usuario.id != actor.id:
+        puede_editar = False
+    elif rol_actual == "Empleado" and usuario.id != actor.id:
+        puede_editar = False
+    elif rol_actual == "Admin" and (
+        cargo_original == "SuperAdmin"
+        or (cargo_original == "Admin" and usuario.id != actor.id)
+    ):
+        puede_editar = False
+
+    if not puede_editar:
+        Auditoria.objects.create(
+            usuario=actor.nombre,
+            accion=f"INTENTO RECHAZADO DE MODIFICAR USUARIO: {usuario.nombre}",
+            modulo="USUARIOS",
+        )
+        messages.error(request, "No tienes permiso para modificar este usuario.")
+        return redirect("usuarios")
 
     if request.method == "POST":
 
@@ -212,68 +237,25 @@ def editar_usuarios(request, id):
             nuevo_cargo = usuario_editado.cargo
 
 
-            if usuario.id == usuario_actual_id or rol_actual == "Empleado":
+            if es_propio_usuario or rol_actual == "Empleado":
                 usuario_editado.cargo = cargo_original
 
             usuario_editado.activo = estado_original
 
 
-            print("USUARIO EDITADO:", usuario)
-            print("USUARIO LOGUEADO:", request.user)
-            print("ID EDITADO:", usuario.id)
-            print("ID LOGUEADO:", request.user.id)
-            print("ROL ACTUAL:", rol_actual)
-            print("CARGO ORIGINAL:", cargo_original)
-
-            usuario_logueado = request.session.get("logueado")
-
-            # ==========================================
-            # 3. ADMIN NO PUEDE MODIFICAR AL SUPERADMIN
-            # ==========================================
+            # print("USUARIO EDITADO:", usuario)
+            # print("USUARIO LOGUEADO:", request.user)
+            # print("ID EDITADO:", usuario.id)
+            # print("ID LOGUEADO:", request.user.id)
+            # print("ROL ACTUAL:", rol_actual)
+            # print("CARGO ORIGINAL:", cargo_original)
 
             if (
-                rol_actual == "Admin"
-                and cargo_original == "SuperAdmin" 
-            ):
-
-                messages.error(
-                    request,
-                    "Un Admin no puede modificar al SuperAdmin."
-                )
-
-                return render(
-                    request,
-                    "usuarios/editar_usuarios.html",
-                    {"form": form}
-                )
-
-            if (
-                 rol_actual == "Admin"
-                and cargo_original == "Admin" 
-                and usuario_logueado
-                and usuario.id != usuario_logueado["id"]
-            ):
-            
-                messages.error(
-                    request,
-                    "Un Admin no puede modificar al Admin."
-                )
-            
-                return render(
-                    request,
-                    "usuarios/editar_usuarios.html",
-                    {"form": form}
-                )
-            
-
-            # ==========================================
-            # 4. ADMIN NO PUEDE CREAR OTRO SUPERADMIN
-            # ==========================================
-
-            if (
-                rol_actual == "Admin"
-                and nuevo_cargo == "SuperAdmin"
+                not es_propio_usuario
+                and
+                nuevo_cargo == "SuperAdmin"
                 and cargo_original != "SuperAdmin"
+                and rol_actual != "SuperAdmin"
             ):
 
                 messages.error(
@@ -287,6 +269,17 @@ def editar_usuarios(request, id):
                     {"form": form}
                 )
 
+            # SEGURIDAD: el SuperAdmin principal conserva siempre su rol y
+            # estado, aunque se alteren los controles o el POST en el cliente.
+            if usuario.es_superadmin_principal:
+                usuario_editado.cargo = "SuperAdmin"
+                usuario_editado.activo = True
+
+            # SEGURIDAD: el propio usuario puede modificar sus datos, pero
+            # nunca puede cambiar su rol, aunque manipule el formulario.
+            if es_propio_usuario:
+                usuario_editado.cargo = cargo_original
+
             # ==========================================
             # 5. GUARDAR
             # ==========================================
@@ -298,7 +291,7 @@ def editar_usuarios(request, id):
                 request.session.modified = True
 
             Auditoria.objects.create(
-                usuario=request.session["logueado"]["nombre"],
+                usuario=actor.nombre,
                 accion=f"ACTUALIZÓ PERFIL/USUARIO: {usuario_editado.nombre}",
                 modulo="USUARIOS"
             )
@@ -313,10 +306,10 @@ def editar_usuarios(request, id):
 
             return redirect("usuarios")
 
-        messages.error(
-            request,
-            "Falta información obligatoria para actualizar el usuario."
-        )
+        # messages.error(
+        #     request,
+        #     "Falta información obligatoria para actualizar el usuario."
+        # )
 
         return render(
             request,
@@ -332,36 +325,36 @@ def editar_usuarios(request, id):
         {"form": form}
     )
 
-@requerir_rol(["SuperAdmin", "Admin"])
-def eliminar_usuario(request, id):
-    usuario = get_object_or_404(Usuarios, id=id)
+# @requerir_rol(["SuperAdmin", "Admin"])
+# def eliminar_usuario(request, id):
+#     usuario = get_object_or_404(Usuarios, id=id)
 
 
-    if usuario.cargo == "SuperAdmin":
-        messages.error(
-            request,
-            "No se puede eliminar al Superadmin."
-        )
-        return redirect("usuarios")
+#     if usuario.cargo == "SuperAdmin":
+#         messages.error(
+#             request,
+#             "No se puede eliminar al Superadmin."
+#         )
+#         return redirect("usuarios")
 
-    if usuario.nombre == request.session["logueado"]["nombre"]:
-        messages.error(
-            request,
-            "No puedes eliminar tu propio usuario."
-        )
-        return redirect("usuarios")
+#     if usuario.nombre == request.session["logueado"]["nombre"]:
+#         messages.error(
+#             request,
+#             "No puedes eliminar tu propio usuario."
+#         )
+#         return redirect("usuarios")
 
-    if request.method == 'POST':
-        nombre = usuario.nombre 
-        usuario.delete()
-        Auditoria.objects.create(
-                usuario=request.session["logueado"]["nombre"],
-                accion=f"ELIMINO USUARIO: {nombre}",
-                modulo="USUARIOS"
-            )
-        return redirect('usuarios')
-    else:
-        return render(request, 'usuarios/eliminar_usuario.html', {'usuarios': usuarios})
+#     if request.method == 'POST':
+#         nombre = usuario.nombre
+#         usuario.delete()
+#         Auditoria.objects.create(
+#                 usuario=request.session["logueado"]["nombre"],
+#                 accion=f"ELIMINO USUARIO: {nombre}",
+#                 modulo="USUARIOS"
+#             )
+#         return redirect('usuarios')
+#     else:
+#         return render(request, 'usuarios/eliminar_usuario.html', {'usuarios': usuarios})
 
 
 def logout_view(request):
