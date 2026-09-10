@@ -230,6 +230,13 @@ def editar_gasto(request, pk=None):
         # Validaciones mínimas de negocio para evitar datos corruptos.
         if not concepto:
             raise ValueError('concepto vacío')
+        if len(concepto) < 4:
+            raise ValueError('concepto demasiado corto')
+        # evita "a", "aaa", etc.
+        if len(set(concepto.lower())) < 2 and len(concepto) < 5:
+            raise ValueError('concepto no válido')
+        if proveedor and len(proveedor) < 3:
+            raise ValueError('proveedor demasiado corto')
         if valor <= 0:
             raise ValueError('valor inválido')
         # max_digits=12 con 2 decimales => hasta 99.999.999.999,99 COP.
