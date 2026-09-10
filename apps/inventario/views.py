@@ -72,6 +72,7 @@ from django.views.decorators.http import require_POST
 
 from apps.inventario.models import EntradaInventario, DetalleEntradaInventario
 from apps.auditoria.models import Auditoria
+from apps.finanzas.models import Gasto
 
 
 @requerir_rol(["SuperAdmin", "Admin", "Empleado"])
@@ -80,7 +81,18 @@ def inv_ingresos(request):
     entradas = EntradaInventario.objects.prefetch_related('detalles__producto')
 
     productos_serializados = [
-        {'id': p.id, 'nombre': p.nombre, 'stock': p.stock, 'precio': str(p.precio)}
+        {
+            'id': p.id,
+            'nombre': p.nombre,
+            'stock': p.stock,
+            'precio': str(p.precio),
+            'precio_compra_sugerido': str(
+                DetalleEntradaInventario.objects.filter(producto=p)
+                .order_by('-entrada__fecha', '-id')
+                .values_list('precio', flat=True)
+                .first() or ''
+            ),
+        }
         for p in productos
     ]
 
@@ -103,8 +115,9 @@ def registrar_entrada(request):
         "documento": "...",           # opcional
         "observaciones": "...",       # opcional
         "items": [
-            {"producto_id": 1, "cantidad": 5},                        # existente
+            {"producto_id": 1, "cantidad": 5, "precio": 1000},       # existente
             {"nombre": "...", "categoria": "...", "precio": 1000,
+             "precio_venta": 1500,
              "cantidad": 5, "descripcion": "..."}                     # nuevo
         ]
     }
@@ -172,6 +185,16 @@ def registrar_entrada(request):
             errores.append(f"Producto {idx}: el precio debe ser mayor a cero.")
             continue
 
+        if precio_venta <= 0:
+            errores.append(f"Producto {idx}: el precio de venta debe ser mayor a cero.")
+            continue
+
+        if precio_venta < precio:
+            errores.append(
+                f"Producto {idx}: el precio de venta no puede ser menor al precio de compra."
+            )
+            continue
+
         if producto_id:
             producto = Producto.objects.filter(id=producto_id, activo=True).first()
             if not producto:
@@ -186,10 +209,6 @@ def registrar_entrada(request):
                 continue
             if not categoria:
                 errores.append(f"Producto {idx}: la categoría es obligatoria para un producto nuevo.")
-                continue
-
-            if precio_venta <= 0:
-                errores.append(f"Producto {idx}: el precio de venta debe ser mayor a cero.")
                 continue
 
             producto = Producto.objects.filter(
@@ -210,6 +229,8 @@ def registrar_entrada(request):
                 stock=0,
                 activo=activo,
             )
+
+        producto.precio = int(precio_venta)
 
         subtotal = precio * cantidad
         items_validos.append({
@@ -255,6 +276,16 @@ def registrar_entrada(request):
                 # Aumentar stock
                 producto.stock += item["cantidad"]
                 producto.save(update_fields=["stock"])
+
+            Gasto.objects.create(
+                concepto=f"Compra de inventario {entrada.numero_factura()}",
+                categoria="REPUESTOS",
+                valor=total,
+                fecha=timezone.localdate(entrada.fecha),
+                proveedor=proveedor,
+                descripcion=f"Entrada de productos registrada con {documento or 'sin documento'}.",
+                usuario=usuario,
+            )
 
             Auditoria.objects.create(
                 usuario=usuario,
