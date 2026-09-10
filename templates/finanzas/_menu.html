@@ -4,6 +4,16 @@
     <p class="text-muted mb-0 small">Control contable, flujo de caja, gastos operativos y rentabilidad de inventario</p>
   </div>
 </header>
+{% if messages %}
+  {% for message in messages %}
+    {% if 'module-finanzas' in message.tags %}
+      <div class="alert {% if 'error' in message.tags %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endif %}
 <div class="menu-horizontal mb-4">
   <a href="{% url 'finanzas:finanzas_dashboard' %}"
     class="{% if request.resolver_match.url_name == 'finanzas_dashboard' %}active{% endif %}"

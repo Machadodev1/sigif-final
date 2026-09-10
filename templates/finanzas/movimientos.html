@@ -44,7 +44,6 @@
                         <th>Categoría</th>
                         <th>Proveedor</th>
                         <th>Método</th>
-                        <th>Valor</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -55,9 +54,6 @@
                         <td>{{ gasto.proveedor|default:'—' }}</td>
                         <td>{{ gasto.get_metodo_pago_display }}</td>
                         <td>${{ gasto.valor|floatformat:0|intcomma }}</td>
-                        <td>{% if request.session.logueado.rol != 'Empleado' %}<form method="post"
-                                action="{% url 'finanzas:eliminar_gasto' gasto.id %}">{% csrf_token %}<button
-                                    class="btn btn-sm btn-outline-danger">Eliminar</button></form>{% endif %}</td>
                     </tr>{% empty %}<tr>
                         <td colspan="7" class="text-center text-muted py-4">No hay gastos registrados.</td>
                     </tr>{% endfor %}</tbody>
