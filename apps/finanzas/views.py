@@ -213,9 +213,9 @@ def editar_gasto(request, pk=None):
             else:
                 gasto = Gasto.objects.create(**campos); accion = 'REGISTRÓ'
             Auditoria.objects.create(usuario=campos['usuario'], accion=f'{accion} GASTO: {gasto.concepto}', modulo='FINANZAS')
-            messages.success(request, 'Gasto operativo registrado correctamente.')
+            messages.success(request, 'Gasto operativo registrado correctamente.', extra_tags='module-finanzas')
         except (KeyError, ValueError, ArithmeticError):
-            messages.error(request, 'Verifica los datos del gasto ingresado.')
+            messages.error(request, 'Verifica los datos del gasto ingresado.', extra_tags='module-finanzas')
     return redirect('finanzas:gastos')
 
 
@@ -225,7 +225,7 @@ def eliminar_gasto(request, pk):
         gasto = get_object_or_404(Gasto, pk=pk)
         nombre = gasto.concepto
         gasto.delete()
-        messages.success(request, f'Gasto “{nombre}” eliminado correctamente.')
+        messages.success(request, f'Gasto “{nombre}” eliminado correctamente.', extra_tags='module-finanzas')
     return redirect('finanzas:gastos')
 
 

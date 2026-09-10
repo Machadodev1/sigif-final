@@ -183,7 +183,6 @@
             <th class="text-uppercase text-muted small fw-semibold">Método</th>
             <th class="text-uppercase text-muted small fw-semibold">Usuario</th>
             <th class="text-end text-uppercase text-muted small fw-semibold" style="width: 140px;">Valor</th>
-            <th class="text-center text-uppercase text-muted small fw-semibold pe-3" style="width: 80px;">Acción</th>
           </tr>
         </thead>
         <tbody>
@@ -207,18 +206,7 @@
             </td>
             <td class="text-muted small">{{ gasto.usuario|default:'Admin' }}</td>
             <td class="text-end fw-bold text-danger fs-6">${{ gasto.valor|floatformat:0|intcomma }}</td>
-            <td class="text-center pe-3">
-              {% if request.session.logueado.rol != 'Empleado' %}
-              <form method="post" action="{% url 'finanzas:eliminar_gasto' gasto.id %}" onsubmit="return confirm('¿Eliminar el gasto «{{ gasto.concepto }}»?');">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Eliminar gasto">
-                  <i class="bi bi-trash3"></i>
-                </button>
-              </form>
-              {% else %}
-                <span class="text-muted small">—</span>
-              {% endif %}
-            </td>
+            <td class="text-center pe-3"> </td>
           </tr>
           {% empty %}
           <tr>
