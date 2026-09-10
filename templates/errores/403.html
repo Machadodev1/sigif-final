@@ -33,6 +33,11 @@
     .error-description { font-size:0.95rem; color:var(--text-muted); line-height:1.7; margin-bottom:36px; }
     .error-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(239,68,68,0.1); color:#b91c1c; font-size:0.78rem; font-weight:600; padding:4px 14px; border-radius:999px; margin-bottom:28px; border:1px solid rgba(239,68,68,0.25); letter-spacing:0.04em; text-transform:uppercase; }
     .error-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+    /* URL display */
+    .error-url-block { margin-bottom:28px; }
+    .error-url-label { font-size:0.72rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; display:flex; align-items:center; gap:6px; justify-content:center; }
+    .error-url-label .err-type-tag { background:linear-gradient(135deg,#ef4444,#f87171); color:#fff; font-size:0.68rem; font-weight:700; padding:2px 10px; border-radius:999px; letter-spacing:0.08em; }
+    .error-url { display:flex; align-items:center; gap:8px; background:#f8f9fc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 18px; font-size:0.82rem; color:var(--text-muted); font-family:monospace; max-width:100%; overflow:hidden; word-break:break-all; justify-content:center; }
     .btn-primary-error { display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg,#3a56e4,#5b75f7); color:#fff; border:none; border-radius:12px; padding:12px 28px; font-size:0.92rem; font-weight:600; text-decoration:none; transition:transform 0.2s,box-shadow 0.2s; box-shadow:0 4px 16px rgba(58,86,228,0.25); }
     .btn-primary-error:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(58,86,228,0.35); color:#fff; }
     .btn-secondary-error { display:inline-flex; align-items:center; gap:8px; background:#f1f5f9; color:var(--text-dark); border:none; border-radius:12px; padding:12px 28px; font-size:0.92rem; font-weight:600; text-decoration:none; transition:background 0.2s,transform 0.2s; }
@@ -56,10 +61,20 @@
     <span class="error-badge"><i class="bi bi-lock-fill"></i> Forbidden</span>
     <h1 class="error-title">Acceso Denegado</h1>
     <p class="error-description">No tienes los permisos necesarios para acceder a esta página o realizar esta acción. Si crees que esto es un error, comunícate con el administrador del sistema.</p>
+    <div class="error-url-block">
+      <div class="error-url-label">
+        <i class="bi bi-exclamation-circle"></i> URL solicitada &mdash; <span class="err-type-tag">403 Forbidden</span>
+      </div>
+      <div class="error-url" id="currentUrl"><i class="bi bi-link-45deg"></i> <span></span></div>
+    </div>
     <div class="error-actions">
       <a href="javascript:history.back()" class="btn-secondary-error"><i class="bi bi-arrow-left"></i> Volver atrás</a>
       <a href="/inicio/" class="btn-primary-error"><i class="bi bi-house-fill"></i> Ir al inicio</a>
     </div>
   </div>
+  <script>
+    const el = document.querySelector('#currentUrl span');
+    if (el) el.textContent = window.location.origin + window.location.pathname + window.location.search;
+  </script>
 </body>
 </html>
