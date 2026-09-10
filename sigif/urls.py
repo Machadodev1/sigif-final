@@ -35,5 +35,9 @@ urlpatterns = [
     ),
     path('api/api-token-auth/', LoginTokenView.as_view(), name='api_token_auth'),
     path('api/auth/logout/', LogoutView.as_view(), name='api_logout')
-    
 ]
+
+handler400 = error_400
+handler403 = error_403
+handler404 = error_404
+handler500 = error_500
