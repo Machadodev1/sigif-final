@@ -106,20 +106,12 @@ body {
 }
 
 
-/* Icons for sidebar items */
-.sidebar .menu ul li a::before {
-    font-family: "bootstrap-icons";
+.sidebar .menu ul li a > i {
     margin-right: 12px;
     font-size: 1.1rem;
+    width: 18px;
+    text-align: center;
 }
-.sidebar .menu .menu-dashboard::before { content: "\F425"; } /* house-door */
-.sidebar .menu .menu-usuarios::before { content: "\F4E1"; } /* people */
-.sidebar .menu .menu-productos::before { content: "\F1E4"; } /* box-seam */
-.sidebar .menu .menu-inventario::before { content: "\F1C5"; } /* boxes */
-.sidebar .menu .menu-facturacion::before { content: "\F3EE"; } /* file-earmark-text */
-.sidebar .menu .menu-finanzas::before { content: "\F4F5"; } /* cash-stack */
-.sidebar .menu .menu-auditoria::before { content: "\F2E2"; } /* clipboard-check */
-.sidebar .menu .menu-configuracion::before { content: "\F3E5"; } /* gear */
 
 .sidebar .Cerrar-sesion {
     padding: 20px 15px;
