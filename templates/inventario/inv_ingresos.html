@@ -63,7 +63,8 @@
                             <tr>
                                 <th style="min-width:260px;">Producto</th>
                                 <th style="width:110px;">Cantidad</th>
-                                <th style="width:140px;">Precio unit.</th>
+                                <th style="width:140px;">Precio compra unit.</th>
+                                <th style="width:140px;">Precio venta unit.</th>
                                 <th style="width:140px;">Subtotal</th>
                                 <th style="width:50px;"></th>
                             </tr>
@@ -191,10 +192,6 @@ function filaTemplate() {
                         <label class="form-label small mb-1">Categoría *</label>
                         <input type="text" class="form-control form-control-sm inp-categoria" maxlength="100" placeholder="Ej. Herramientas">
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label small mb-1">Precio de venta ($) *</label>
-                        <input type="number" class="form-control form-control-sm inp-precio-venta" min="1" step="1" placeholder="Ej. 25000">
-                    </div>
                     <div class="col-md-6 d-flex align-items-end">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input inp-activo" id="chkActivo" checked>
@@ -209,7 +206,8 @@ function filaTemplate() {
             </div>
         </td>
         <td><input type="number" class="form-control inp-cantidad" min="1" value="1"></td>
-        <td><input type="number" class="form-control inp-precio" min="1" value="0"></td>
+        <td><input type="number" class="form-control inp-precio" min="1" step="1" value="" placeholder="Costo proveedor"></td>
+        <td><input type="number" class="form-control inp-precio-venta" min="1" step="1" value="" placeholder="Precio al cliente"></td>
         <td class="fw-semibold celda-subtotal">$ 0</td>
         <td><button type="button" class="btn btn-outline-danger btn-sm btn-del"><i class="bi bi-trash"></i></button></td>
     </tr>`;
@@ -255,7 +253,13 @@ body.addEventListener('change', e => {
         const nuevo = e.target.value === '';
         row.querySelector('.campos-nuevo').classList.toggle('d-none', !nuevo);
         const producto = PRODUCTOS.find(p => p.id == e.target.value);
-        if (producto) row.querySelector('.inp-precio').value = producto.precio;
+        if (producto) {
+            row.querySelector('.inp-precio').value = producto.precio_compra_sugerido || '';
+            row.querySelector('.inp-precio-venta').value = producto.precio || '';
+        } else {
+            row.querySelector('.inp-precio').value = '';
+            row.querySelector('.inp-precio-venta').value = '';
+        }
         actualizarTotales();
     }
 });
@@ -284,20 +288,21 @@ document.getElementById('formEntrada').addEventListener('submit', async function
         const sel = row.querySelector('.sel-producto').value;
         const cantidad = parseInt(row.querySelector('.inp-cantidad').value);
         const precio = parseFloat(row.querySelector('.inp-precio').value);
+        const precioVenta = parseFloat(row.querySelector('.inp-precio-venta').value);
 
         if (!cantidad || cantidad <= 0) { error = `Fila ${idx + 1}: la cantidad debe ser mayor a 0.`; return; }
-        if (!precio || precio <= 0)   { error = `Fila ${idx + 1}: el precio debe ser mayor a 0.`; return; }
+        if (!precio || precio <= 0)   { error = `Fila ${idx + 1}: el precio de compra debe ser mayor a 0.`; return; }
+        if (!precioVenta || precioVenta <= 0) { error = `Fila ${idx + 1}: el precio de venta debe ser mayor a 0.`; return; }
+        if (precioVenta < precio) { error = `Fila ${idx + 1}: el precio de venta no puede ser menor al precio de compra.`; return; }
 
         if (sel) {
-            items.push({ producto_id: parseInt(sel), cantidad, precio });
+            items.push({ producto_id: parseInt(sel), cantidad, precio, precio_venta: precioVenta });
         } else {
             const nombre = row.querySelector('.inp-nombre').value.trim();
             const categoria = row.querySelector('.inp-categoria').value.trim();
-            const precioVenta = parseFloat(row.querySelector('.inp-precio-venta').value);
             const activo = row.querySelector('.inp-activo').checked;
             if (!nombre)    { error = `Fila ${idx + 1}: el nombre del nuevo producto es obligatorio.`; return; }
             if (!categoria) { error = `Fila ${idx + 1}: la categoría del nuevo producto es obligatoria.`; return; }
-            if (!precioVenta || precioVenta <= 0) { error = `Fila ${idx + 1}: el precio de venta del nuevo producto debe ser mayor a 0.`; return; }
             items.push({
                 nombre, categoria, activo,
                 precio_venta: precioVenta,
