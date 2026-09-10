@@ -254,14 +254,35 @@ def confirmar_venta(request):
         # VALIDACIONES INICIALES
         # ==========================================
 
-        if not productos:
+        if not isinstance(productos, list) or not productos:
             return JsonResponse({
                 "success": False,
                 "message": "El carrito está vacío"
             })
 
+        from django.core.exceptions import ValidationError as CoreValidationError
+        from django.core.validators import validate_email
+
         if not nombre:
             nombre = "Cliente general"
+        if len(nombre) > 100:
+            return JsonResponse({
+                "success": False,
+                "message": "El nombre del cliente es demasiado largo"
+            }, status=400)
+        if correo:
+            if len(correo) > 100:
+                return JsonResponse({
+                    "success": False,
+                    "message": "El correo del cliente es demasiado largo"
+                }, status=400)
+            try:
+                validate_email(correo)
+            except CoreValidationError:
+                return JsonResponse({
+                    "success": False,
+                    "message": "El correo del cliente no es válido"
+                }, status=400)
 
         # ==========================================
         # CREAR VENTA
@@ -275,16 +296,30 @@ def confirmar_venta(request):
 
             if cliente_id:
 
-                cliente = Cliente.objects.get(
-                    pk=int(cliente_id)
-                )
+                try:
+                    cliente_id = int(cliente_id)
+                except (TypeError, ValueError):
+                    return JsonResponse({
+                        "success": False,
+                        "message": "El cliente seleccionado no es válido"
+                    }, status=400)
+
+                cliente = Cliente.objects.filter(
+                    pk=cliente_id
+                ).first()
+
+                if not cliente:
+                    return JsonResponse({
+                        "success": False,
+                        "message": "El cliente seleccionado no existe"
+                    }, status=400)
 
             else:
 
                 if correo:
 
                     cliente, creado = Cliente.objects.get_or_create(
-                        correo=correo,
+                        correo=correo.lower(),
                         defaults={
                             "nombre": nombre
                         }
@@ -500,7 +535,7 @@ def confirmar_venta(request):
 
         return JsonResponse({
             "success": False,
-            "message": str(e)
+            "message": "Ocurrió un error al confirmar la venta. Intenta nuevamente."
         }, status=400)
 
 # ============================================================

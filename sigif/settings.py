@@ -147,7 +147,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
@@ -185,7 +186,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = _env_bool('DJANGO_EXPIRE_BROWSER_CLOSE', True)
 CSP_DEFAULT_SRC = "'self'"
 CSP_IMG_SRC = "'self' data:"
 CSP_SCRIPT_SRC = "'self' https://cdn.jsdelivr.net https://fonts.googleapis.com 'unsafe-inline'"
-CSP_STYLE_SRC = "'self' https://cdn.jsdelivr.net https://fonts.googleapis.com"
+CSP_STYLE_SRC = "'self' https://cdn.jsdelivr.net https://fonts.googleapis.com 'unsafe-inline'"
 CSP_FONT_SRC = "'self' https://cdn.jsdelivr.net https://fonts.gstatic.com"
 CSP_CONNECT_SRC = "'self'"
 

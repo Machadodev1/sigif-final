@@ -1,6 +1,12 @@
 from django.contrib import admin
 from django.urls import path, include
 from apps.api.views import LogoutView, LoginTokenView
+from core.error_views import (
+    error_400,
+    error_403,
+    error_404,
+    error_500,
+)
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,

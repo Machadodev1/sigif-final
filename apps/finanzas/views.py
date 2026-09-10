@@ -208,18 +208,33 @@ def editar_gasto(request, pk=None):
         return redirect('finanzas:gastos')
 
     try:
-        concepto = (request.POST.get('concepto') or '').strip()
-        proveedor = (request.POST.get('proveedor') or '').strip()
-        descripcion = (request.POST.get('descripcion') or '').strip()
+        def _limpiar_texto(valor, maximo):
+            valor = (valor or '').strip()
+            # SEGURIDAD: elimina marcado HTML/JS antes de guardar.
+            valor = valor.replace('<', '').replace('>', '')
+            return valor[:maximo]
+
+        concepto = _limpiar_texto(request.POST.get('concepto'), 150)
+        proveedor = _limpiar_texto(request.POST.get('proveedor'), 150)
+        descripcion = _limpiar_texto(request.POST.get('descripcion'), 2000)
         categoria = (request.POST.get('categoria') or '').strip()
         metodo_pago = (request.POST.get('metodo_pago') or '').strip()
         valor = Decimal(request.POST['valor'])
+
+        fecha_raw = (request.POST.get('fecha') or '').strip()
+        try:
+            fecha = datetime.strptime(fecha_raw, '%Y-%m-%d').date()
+        except ValueError:
+            raise ValueError('fecha inválida')
 
         # Validaciones mínimas de negocio para evitar datos corruptos.
         if not concepto:
             raise ValueError('concepto vacío')
         if valor <= 0:
             raise ValueError('valor inválido')
+        # max_digits=12 con 2 decimales => hasta 99.999.999.999,99 COP.
+        if valor > Decimal('99999999999.99'):
+            raise ValueError('valor demasiado grande')
         categorias_validas = [c[0] for c in Gasto.CATEGORIAS]
         metodos_validos = [m[0] for m in Gasto.METODOS_PAGO]
         if categoria not in categorias_validas:
@@ -230,7 +245,7 @@ def editar_gasto(request, pk=None):
         campos = {
             'concepto': concepto,
             'categoria': categoria,
-            'fecha': request.POST['fecha'],
+            'fecha': fecha,
             'metodo_pago': metodo_pago,
             'proveedor': proveedor,
             'descripcion': descripcion,

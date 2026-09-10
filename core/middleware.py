@@ -31,11 +31,17 @@ class SecurityHeadersMiddleware:
             "'self' 'unsafe-inline'"
         )
 
+        style = getattr(
+            settings,
+            'CSP_STYLE_SRC',
+            "'self' https://cdn.jsdelivr.net https://fonts.googleapis.com 'unsafe-inline'"
+        )
+
         headers['Content-Security-Policy'] = (
             "default-src 'self'; "
             f"script-src {script}; "
-            "img-src 'self' data:; "
-            "style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+            f"img-src 'self' data:; "
+            f"style-src {style}; "
             "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; "
             "connect-src 'self'"
         )
