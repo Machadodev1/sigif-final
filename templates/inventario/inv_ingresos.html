@@ -163,9 +163,15 @@ const PRODUCTOS = JSON.parse('{{ productos_serializados|escapejs }}');
 
 const body = document.getElementById('itemsBody');
 
+function escapeHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s == null ? '' : String(s);
+    return div.innerHTML;
+}
+
 function filaTemplate() {
     const opciones = PRODUCTOS.map(p =>
-        `<option value="${p.id}">${p.nombre} (Stock: ${p.stock})</option>`
+        `<option value="${p.id}">${escapeHtml(p.nombre)} (Stock: ${p.stock})</option>`
     ).join('');
     return `
     <tr class="item-row">

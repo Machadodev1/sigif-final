@@ -359,22 +359,60 @@ function renderCarrito() {
         total += producto.price * producto.cantidad;
         const div = document.createElement('div');
         div.className = 'carrito-item';
-        div.innerHTML = `
-            <div class="carrito-item-info">
-                <strong class="carrito-item-nombre">${producto.title}</strong>
-               <span class="carrito-item-precio">$${producto.price.toLocaleString('es-CO')} c/u</span>
-            </div>
-            <div class="carrito-item-controls">
-                <button type="button" class="ctrl-btn ctrl-minus">−</button>
-                <span class="ctrl-qty">${producto.cantidad}</span>
-                <button type="button" class="ctrl-btn ctrl-plus">+</button>
-                <button type="button" class="ctrl-btn ctrl-del" data-bs-toggle="modal" data-bs-target="#modalAviso">
-                    <i class="bi bi-trash3"></i>
-                </button>
-            </div>
-           <div class="carrito-item-subtotal">$${(producto.price * producto.cantidad).toLocaleString('es-CO')}</div>
-        `;
-        div.querySelector('.ctrl-plus').addEventListener('click', () => {
+
+        const info = document.createElement('div');
+        info.className = 'carrito-item-info';
+
+        const strong = document.createElement('strong');
+        strong.className = 'carrito-item-nombre';
+        strong.textContent = producto.title;
+
+        const spanPrecio = document.createElement('span');
+        spanPrecio.className = 'carrito-item-precio';
+        spanPrecio.textContent = '$' + producto.price.toLocaleString('es-CO') + ' c/u';
+
+        info.appendChild(strong);
+        info.appendChild(spanPrecio);
+
+        const controls = document.createElement('div');
+        controls.className = 'carrito-item-controls';
+
+        const btnMenos = document.createElement('button');
+        btnMenos.type = 'button';
+        btnMenos.className = 'ctrl-btn ctrl-minus';
+        btnMenos.textContent = '−';
+
+        const qty = document.createElement('span');
+        qty.className = 'ctrl-qty';
+        qty.textContent = producto.cantidad;
+
+        const btnMas = document.createElement('button');
+        btnMas.type = 'button';
+        btnMas.className = 'ctrl-btn ctrl-plus';
+        btnMas.textContent = '+';
+
+        const btnDel = document.createElement('button');
+        btnDel.type = 'button';
+        btnDel.className = 'ctrl-btn ctrl-del';
+        btnDel.dataset.bsToggle = 'modal';
+        btnDel.dataset.bsTarget = '#modalAviso';
+        btnDel.innerHTML = '<i class="bi bi-trash3"></i>';
+
+        controls.appendChild(btnMenos);
+        controls.appendChild(qty);
+        controls.appendChild(btnMas);
+        controls.appendChild(btnDel);
+
+        const subtotal = document.createElement('div');
+        subtotal.className = 'carrito-item-subtotal';
+        subtotal.textContent = '$' + (producto.price * producto.cantidad).toLocaleString('es-CO');
+
+        div.appendChild(info);
+        div.appendChild(controls);
+        div.appendChild(subtotal);
+        div.appendChild(document.createTextNode(' '));
+
+        btnMas.addEventListener('click', () => {
             if (producto.cantidad < producto.stock) {
                 producto.cantidad++;
                 guardarCarrito();
@@ -383,7 +421,7 @@ function renderCarrito() {
                 alert('Has alcanzado el límite de stock disponible.');
             }
         });
-        div.querySelector('.ctrl-minus').addEventListener('click', () => {
+        btnMenos.addEventListener('click', () => {
             producto.cantidad--;
             if (producto.cantidad <= 0) {
                 carrito = carrito.filter(p => p.id !== producto.id);
@@ -391,7 +429,7 @@ function renderCarrito() {
             guardarCarrito();
             renderCarrito();
         });
-        div.querySelector('.ctrl-del').addEventListener('click', () => {
+        btnDel.addEventListener('click', () => {
             productoAEliminar = producto;
         });
         listaCarrito.appendChild(div);
@@ -444,6 +482,7 @@ if (btndes && descInput) {
             alert('Código de descuento no válido');
         }
         localStorage.setItem('porcentajeAplicado', porcentajeAplicado);
+        localStorage.setItem('codigoAplicado', codigo);
         renderCarrito();
     });
 }

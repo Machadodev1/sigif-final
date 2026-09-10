@@ -10,9 +10,6 @@ from apps.facturacion.models import DetalleFactura
 @requerir_rol(["Admin", "Empleado"])
 def inv_configuracion(request):
     config = EmpresaConfig.objects.all()
-    print(config)
-    print (type(config))
-    print("123")
     return render(request, 'configuracion/configuracion.html', {'config': config})
 
 

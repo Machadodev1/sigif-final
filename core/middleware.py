@@ -2,6 +2,49 @@ import threading
 
 _request_local = threading.local()
 
+from django.conf import settings
+
+
+class SecurityHeadersMiddleware:
+    """Aplica de forma explícita cabeceras de seguridad HTTP (CSP incluidas).
+
+    Refuerza las opciones definidas en settings.py para que las respuestas
+    lleven siempre la política de seguridad de contenido, incluso si el
+    header no es añadido por otra vía.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        debug = getattr(settings, 'DEBUG', False)
+
+        headers = {
+            'X-Content-Type-Options': 'nosniff',
+            'Referrer-Policy': 'same-origin',
+            'X-Frame-Options': 'SAMEORIGIN' if debug else 'DENY',
+        }
+
+        script = getattr(
+            settings,
+            'CSP_SCRIPT_SRC',
+            "'self' 'unsafe-inline'"
+        )
+
+        headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            f"script-src {script}; "
+            "img-src 'self' data:; "
+            "style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+            "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; "
+            "connect-src 'self'"
+        )
+
+        for key, value in headers.items():
+            response.setdefault(key, value)
+
+        return response
+
 
 class CurrentUserMiddleware:
     """Middleware that stores the current request in thread-local storage.

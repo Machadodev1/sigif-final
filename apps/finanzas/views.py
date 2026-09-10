@@ -202,20 +202,53 @@ def gastos(request):
 @requerir_rol_accion(['SuperAdmin', 'Admin'], 'finanzas:gastos')
 def editar_gasto(request, pk=None):
     gasto = get_object_or_404(Gasto, pk=pk) if pk else None
-    if request.method == 'POST':
-        try:
-            campos = {k: request.POST[k].strip() for k in ('concepto', 'categoria', 'fecha', 'metodo_pago', 'proveedor', 'descripcion')}
-            campos['valor'] = Decimal(request.POST['valor'])
-            campos['usuario'] = request.session.get('logueado', {}).get('nombre', 'Usuario')
-            if gasto:
-                for key, value in campos.items(): setattr(gasto, key, value)
-                gasto.save(); accion = 'ACTUALIZÓ'
-            else:
-                gasto = Gasto.objects.create(**campos); accion = 'REGISTRÓ'
-            Auditoria.objects.create(usuario=campos['usuario'], accion=f'{accion} GASTO: {gasto.concepto}', modulo='FINANZAS')
-            messages.success(request, 'Gasto operativo registrado correctamente.', extra_tags='module-finanzas')
-        except (KeyError, ValueError, ArithmeticError):
-            messages.error(request, 'Verifica los datos del gasto ingresado.', extra_tags='module-finanzas')
+
+    # SEGURIDAD: solo se aceptan POST; se valida que no haya CSRF.
+    if request.method != 'POST':
+        return redirect('finanzas:gastos')
+
+    try:
+        concepto = (request.POST.get('concepto') or '').strip()
+        proveedor = (request.POST.get('proveedor') or '').strip()
+        descripcion = (request.POST.get('descripcion') or '').strip()
+        categoria = (request.POST.get('categoria') or '').strip()
+        metodo_pago = (request.POST.get('metodo_pago') or '').strip()
+        valor = Decimal(request.POST['valor'])
+
+        # Validaciones mínimas de negocio para evitar datos corruptos.
+        if not concepto:
+            raise ValueError('concepto vacío')
+        if valor <= 0:
+            raise ValueError('valor inválido')
+        categorias_validas = [c[0] for c in Gasto.CATEGORIAS]
+        metodos_validos = [m[0] for m in Gasto.METODOS_PAGO]
+        if categoria not in categorias_validas:
+            categoria = categorias_validas[0] if categorias_validas else ''
+        if metodo_pago not in metodos_validos:
+            metodo_pago = metodos_validos[0] if metodos_validos else ''
+
+        campos = {
+            'concepto': concepto,
+            'categoria': categoria,
+            'fecha': request.POST['fecha'],
+            'metodo_pago': metodo_pago,
+            'proveedor': proveedor,
+            'descripcion': descripcion,
+            'valor': valor,
+            'usuario': request.session.get('logueado', {}).get('nombre', 'Usuario'),
+        }
+        if gasto:
+            for key, value in campos.items():
+                setattr(gasto, key, value)
+            gasto.save();
+            accion = 'ACTUALIZÓ'
+        else:
+            gasto = Gasto.objects.create(**campos)
+            accion = 'REGISTRÓ'
+        Auditoria.objects.create(usuario=campos['usuario'], accion=f'{accion} GASTO: {gasto.concepto}', modulo='FINANZAS')
+        messages.success(request, 'Gasto operativo registrado correctamente.', extra_tags='module-finanzas')
+    except (KeyError, ValueError, ArithmeticError):
+        messages.error(request, 'Verifica los datos del gasto ingresado.', extra_tags='module-finanzas')
     return redirect('finanzas:gastos')
 
 

@@ -1,8 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.authtoken.views import obtain_auth_token
-from django.urls import path
-from apps.api.views import LogoutView
+from apps.api.views import LogoutView, LoginTokenView
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
@@ -35,7 +33,7 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name='schema'),
         name='redoc'
     ),
-    path('api/api-token-auth/', obtain_auth_token, name='api_token_auth'),
+    path('api/api-token-auth/', LoginTokenView.as_view(), name='api_token_auth'),
     path('api/auth/logout/', LogoutView.as_view(), name='api_logout')
     
 ]

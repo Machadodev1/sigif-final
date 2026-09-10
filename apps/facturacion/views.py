@@ -110,7 +110,7 @@ class FacturaDetailView(DetailView):
     def dispatch(self, request, *args, **kwargs):
 
         return requerir_rol(
-            ["Admin", "Empleado"]
+            ["SuperAdmin", "Admin", "Empleado"]
         )(
             super().dispatch
         )(request, *args, **kwargs)
@@ -236,7 +236,6 @@ def confirmar_venta(request):
         data = json.loads(request.body)
 
         productos = data.get("productos", [])
-        descuento = Decimal(str(data.get("descuento", 0)))
         metodo_pago = str(data.get("metodo_pago", "efectivo")).upper()
         if metodo_pago not in dict(Factura.METODOS_PAGO):
             metodo_pago = 'EFECTIVO'
@@ -244,6 +243,12 @@ def confirmar_venta(request):
         cliente_id = data.get("cliente_id")
         nombre = data.get("nombre", "").strip()
         correo = data.get("correo", "").strip()
+
+        # SEGURIDAD: el descuento nunca se toma del cliente. Se recalcula a
+        # partir del código enviado contra la tabla central del servidor.
+        from core.descuentos import porcentaje_codigo
+        codigo_descuento = data.get("codigo_descuento", "")
+        descuento = Decimal(str(porcentaje_codigo(codigo_descuento)))
 
         # ==========================================
         # VALIDACIONES INICIALES
@@ -257,13 +262,6 @@ def confirmar_venta(request):
 
         if not nombre:
             nombre = "Cliente general"
-
-        # Evitar descuentos inválidos
-        if descuento < 0:
-            descuento = Decimal("0")
-
-        if descuento > 100:
-            descuento = Decimal("100")
 
         # ==========================================
         # CREAR VENTA

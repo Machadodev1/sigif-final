@@ -48,15 +48,35 @@ def backupypermisos(request):
         user_id = request.POST.get("user_id")
         cargo = request.POST.get("rol_asignar")
 
-        print("USER ID:", user_id)
-        print("CARGO RECIBIDO:", cargo)
+        logueado = request.session.get("logueado") or {}
+        actor = Usuarios.objects.filter(
+            pk=logueado.get("id"), activo=True
+        ).first()
+
+        # SEGURIDAD: un Admin no puede asignar (ni auto-asignarse) SuperAdmin.
+        if (actor and actor.cargo != "SuperAdmin") and cargo == "SuperAdmin":
+            Auditoria.objects.create(
+                usuario=actor.nombre,
+                accion=f"INTENTO RECHAZADO DE ASIGNAR SUPERADMIN A USUARIO {user_id}",
+                modulo="CONFIGURACION",
+            )
+            messages.error(
+                request,
+                "Solo el SuperAdmin puede asignar el rol de SuperAdmin.",
+            )
+            return redirect("backupypermisos")
 
         try:
             usuario = Usuarios.objects.get(id=user_id)
 
-            print("USUARIO:", usuario.nombre)
-            print("CARGO ANTES:", usuario.cargo)
-    
+            # SEGURIDAD: el SuperAdmin principal está protegido.
+            if usuario.es_superadmin_principal:
+                messages.error(
+                    request,
+                    "El SuperAdmin principal no puede modificarse.",
+                )
+                return redirect("backupypermisos")
+
             usuario.cargo = cargo
             usuario.save()
             Auditoria.objects.create(
@@ -66,8 +86,6 @@ def backupypermisos(request):
             )
 
             usuario.refresh_from_db()
-
-            print("CARGO DESPUÉS:", usuario.cargo)
 
             messages.success(
                 request,

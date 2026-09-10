@@ -17,6 +17,13 @@ CATEGORIAS = [
     ('Insumos de Taller', 'Insumos de Taller'),
 ]
 
+
+def _sanitizar_texto(valor):
+    """Elimina caracteres que permitirían inyección de HTML/JS en el frontend."""
+    if valor is None:
+        return valor
+    return str(valor).replace('<', '').replace('>', '')
+
 class Producto (models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
@@ -33,6 +40,14 @@ class Producto (models.Model):
     activo = models.BooleanField(default=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        # SEGURIDAD: se sanean los campos de texto antes de persistir para
+        # impedir XSS almacenado (nombres/categorías que contengan HTML/JS).
+        self.nombre = _sanitizar_texto(self.nombre)
+        self.categoria = _sanitizar_texto(self.categoria)
+        self.descripcion = _sanitizar_texto(self.descripcion)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.nombre

@@ -77,3 +77,20 @@ class ProductoForm(forms.ModelForm):
             raise forms.ValidationError('El stock es obligatorio.')
         return stock
 
+    def _clean_texto(self, campo, etiqueta):
+        valor = self.cleaned_data.get(campo) or ''
+        if '<' in valor or '>' in valor:
+            raise forms.ValidationError(
+                f'{etiqueta} no puede contener los caracteres < y >.'
+            )
+        return valor
+
+    def clean_nombre(self):
+        return self._clean_texto('nombre', 'El nombre del producto')
+
+    def clean_categoria(self):
+        return self._clean_texto('categoria', 'La categoría')
+
+    def clean_descripcion(self):
+        return self._clean_texto('descripcion', 'La descripción')
+
