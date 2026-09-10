@@ -1,3 +1,82 @@
 {% extends 'base.html' %}
 {% load humanize %}
-{% block content %}<div class="container-fluid py-4"><h1 class="h3">Cuentas y flujo de caja</h1>{% include 'finanzas/_periodo.html' %}<div class="row g-3 mb-4"><div class="col-md-4"><div class="card p-3 border-0 shadow-sm"><small>Por cobrar</small><strong class="fs-4 text-info">${{ saldo_cobrar|floatformat:0|intcomma }}</strong></div></div><div class="col-md-4"><div class="card p-3 border-0 shadow-sm"><small>Por pagar</small><strong class="fs-4 text-warning">${{ saldo_pagar|floatformat:0|intcomma }}</strong></div></div><div class="col-md-4"><div class="card p-3 border-0 shadow-sm"><small>Saldo final de caja</small><strong class="fs-4 text-success">${{ saldo_final|floatformat:0|intcomma }}</strong></div></div></div><div class="card p-3 mb-4 border-0 shadow-sm"><h2 class="h6">Flujo de caja: ingresos − gastos</h2><canvas id="flujoCaja"></canvas></div><div class="card border-0 shadow-sm mb-4"><div class="card-header bg-white"><strong>Cuentas por cobrar</strong></div><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Cliente</th><th>Factura</th><th>Total</th><th>Pagado</th><th>Saldo</th><th>Vencimiento</th><th>Estado</th></tr></thead><tbody>{% for factura in cuentas_cobrar %}<tr><td>{{ factura.cliente }}</td><td>#{{ factura.id }}</td><td>${{ factura.total|floatformat:0|intcomma }}</td><td>${{ factura.valor_pagado|floatformat:0|intcomma }}</td><td>${{ factura.saldo_pendiente|floatformat:0|intcomma }}</td><td>{{ factura.fecha_vencimiento|date:'d/m/Y'|default:'—' }}</td><td>{{ factura.estado_pago }}</td></tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">No hay cuentas por cobrar.</td></tr>{% endfor %}</tbody></table></div></div><div class="card border-0 shadow-sm"><div class="card-header bg-white"><strong>Cuentas por pagar</strong></div><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Proveedor</th><th>Concepto</th><th>Valor</th><th>Pagado</th><th>Saldo</th><th>Vencimiento</th><th>Estado</th></tr></thead><tbody>{% for cuenta in cuentas_pagar %}<tr><td>{{ cuenta.proveedor }}</td><td>{{ cuenta.concepto }}</td><td>${{ cuenta.valor|floatformat:0|intcomma }}</td><td>${{ cuenta.valor_pagado|floatformat:0|intcomma }}</td><td>${{ cuenta.saldo_pendiente|floatformat:0|intcomma }}</td><td>{{ cuenta.fecha_vencimiento|date:'d/m/Y'|default:'—' }}</td><td>{{ cuenta.estado }}</td></tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">No hay obligaciones registradas.</td></tr>{% endfor %}</tbody></table></div></div></div><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script>new Chart(document.getElementById('flujoCaja'),{type:'line',data:{labels:[{% for l in flujo_labels %}'{{ l }}',{% endfor %}],datasets:[{label:'Saldo acumulado',data:[{% for v in flujo_valores %}{{ v }},{% endfor %}],borderColor:'#198754',tension:.25}]}});</script>{% endblock %}
+{% block content %}<div class="container-fluid py-4">
+    <h1 class="h3">Cuentas y flujo de caja</h1>{% include 'finanzas/_periodo.html' %}<div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card p-3 border-0 shadow-sm"><small>Por cobrar</small><strong class="fs-4 text-info">${{
+                    saldo_cobrar|floatformat:0|intcomma }}</strong></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 border-0 shadow-sm"><small>Por pagar</small><strong class="fs-4 text-warning">${{
+                    saldo_pagar|floatformat:0|intcomma }}</strong></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 border-0 shadow-sm"><small>Saldo final de caja</small><strong
+                    class="fs-4 text-success">${{ saldo_final|floatformat:0|intcomma }}</strong></div>
+        </div>
+    </div>
+    <div class="card p-3 mb-4 border-0 shadow-sm">
+        <h2 class="h6">Flujo de caja: ingresos − gastos</h2><canvas id="flujoCaja"></canvas>
+    </div>
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white"><strong>Cuentas por cobrar</strong></div>
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Factura</th>
+                        <th>Total</th>
+                        <th>Pagado</th>
+                        <th>Saldo</th>
+                        <th>Vencimiento</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>{% for factura in cuentas_cobrar %}<tr>
+                        <td>{{ factura.cliente }}</td>
+                        <td>#{{ factura.id }}</td>
+                        <td>${{ factura.total|floatformat:0|intcomma }}</td>
+                        <td>${{ factura.valor_pagado|floatformat:0|intcomma }}</td>
+                        <td>${{ factura.saldo_pendiente|floatformat:0|intcomma }}</td>
+                        <td>{{ factura.fecha_vencimiento|date:'d/m/Y'|default:'—' }}</td>
+                        <td>{{ factura.estado_pago }}</td>
+                    </tr>{% empty %}<tr>
+                        <td colspan="7" class="text-center text-muted py-4">No hay cuentas por cobrar.</td>
+                    </tr>{% endfor %}</tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white"><strong>Cuentas por pagar</strong></div>
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Proveedor</th>
+                        <th>Concepto</th>
+                        <th>Valor</th>
+                        <th>Pagado</th>
+                        <th>Saldo</th>
+                        <th>Vencimiento</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>{% for cuenta in cuentas_pagar %}<tr>
+                        <td>{{ cuenta.proveedor }}</td>
+                        <td>{{ cuenta.concepto }}</td>
+                        <td>${{ cuenta.valor|floatformat:0|intcomma }}</td>
+                        <td>${{ cuenta.valor_pagado|floatformat:0|intcomma }}</td>
+                        <td>${{ cuenta.saldo_pendiente|floatformat:0|intcomma }}</td>
+                        <td>{{ cuenta.fecha_vencimiento|date:'d/m/Y'|default:'—' }}</td>
+                        <td>{{ cuenta.estado }}</td>
+                    </tr>{% empty %}<tr>
+                        <td colspan="7" class="text-center text-muted py-4">No hay obligaciones registradas.</td>
+                    </tr>{% endfor %}</tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>new Chart(document.getElementById('flujoCaja'), { type: 'line', data: { labels: [{% for l in flujo_labels %}'{{ l }}',{% endfor %}], datasets: [{ label: 'Saldo acumulado', data: [{% for v in flujo_valores %}{{ v }}, {% endfor %}], borderColor: '#198754', tension: .25}]}});</script>
+{% endblock %}

@@ -4,6 +4,27 @@ from django.contrib import messages
 from django.shortcuts import redirect
 
 
+def _obtener_usuario_de_sesion(request):
+    from apps.usuarios.models import Usuarios
+
+    logueado = request.session.get("logueado") or {}
+    usuario_id = logueado.get("id")
+    if not usuario_id:
+        return None
+
+    usuario = Usuarios.objects.filter(pk=usuario_id, activo=True).first()
+    if usuario:
+        # SEGURIDAD: el rol y el nombre de la sesión se refrescan desde la
+        # base de datos; no se confía en valores alterados en el navegador.
+        request.session["logueado"] = {
+            "id": usuario.id,
+            "nombre": usuario.nombre,
+            "rol": usuario.cargo,
+        }
+        request.session.modified = True
+    return usuario
+
+
 def requerir_rol(roles_permitidos):
 
     def decorator(view_func):
@@ -11,7 +32,7 @@ def requerir_rol(roles_permitidos):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
 
-            logueado = request.session.get("logueado")
+            usuario = _obtener_usuario_de_sesion(request)
 
             # Inferir nombre del módulo para poder etiquetar el mensaje
             try:
@@ -30,7 +51,7 @@ def requerir_rol(roles_permitidos):
             except Exception:
                 modulo = "app"
 
-            if not logueado:
+            if not usuario:
 
                 messages.error(
                     request,
@@ -40,14 +61,7 @@ def requerir_rol(roles_permitidos):
 
                 return redirect("dashboard")
 
-            rol = logueado.get("rol")
-
-            if not rol:
-
-                is_staff = getattr(request.user, "is_staff", None)
-
-                if is_staff is not None:
-                    rol = "Admin" if is_staff else "Empleado"
+            rol = usuario.cargo
 
             if rol in roles_permitidos:
                 return view_func(request, *args, **kwargs)
@@ -72,8 +86,14 @@ def impedir_crear_superadmin(view_func):
 
         if request.method == "POST":
 
+            from apps.usuarios.models import Usuarios
+
             cargo = request.POST.get("cargo")
-            cargo_actual = request.session["logueado"].get("cargo")
+            logueado = request.session.get("logueado") or {}
+            actor = Usuarios.objects.filter(
+                pk=logueado.get("id"), activo=True
+            ).first()
+            cargo_actual = actor.cargo if actor else None
 
             if cargo == "SuperAdmin" and cargo_actual != "SuperAdmin":
 
@@ -96,7 +116,7 @@ def requerir_rol_accion(roles_permitidos, url_retorno):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
 
-            logueado = request.session.get("logueado")
+            usuario = _obtener_usuario_de_sesion(request)
 
             # Inferir nombre del módulo
             try:
@@ -115,7 +135,7 @@ def requerir_rol_accion(roles_permitidos, url_retorno):
             except Exception:
                 modulo = "app"
 
-            if not logueado:
+            if not usuario:
 
                 messages.error(
                     request,
@@ -125,14 +145,7 @@ def requerir_rol_accion(roles_permitidos, url_retorno):
 
                 return redirect("dashboard")
 
-            rol = logueado.get("rol")
-
-            if not rol:
-
-                is_staff = getattr(request.user, "is_staff", None)
-
-                if is_staff is not None:
-                    rol = "Admin" if is_staff else "Empleado"
+            rol = usuario.cargo
 
             # TIENE PERMISO
             if rol in roles_permitidos:

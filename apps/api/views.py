@@ -74,6 +74,40 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Usuarios.objects.all().order_by('-id')
     serializer_class = UsuarioSerializer
+
+    def perform_create(self, serializer):
+        actor = self._actor()
+        if not actor or actor.cargo not in ('Admin', 'SuperAdmin'):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('No tienes permiso para crear usuarios.')
+        if serializer.validated_data.get('cargo') == 'SuperAdmin' and actor.cargo != 'SuperAdmin':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('Solo un SuperAdmin puede asignar ese rol.')
+        serializer.save()
+
+    def perform_update(self, serializer):
+        actor = self._actor()
+        target = self.get_object()
+        if not actor or actor.cargo not in ('Admin', 'SuperAdmin'):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('No tienes permiso para modificar usuarios.')
+        if target.es_superadmin_principal and target.id != actor.id:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('El SuperAdmin principal está protegido.')
+        if actor.cargo == 'Admin' and (
+            target.cargo == 'SuperAdmin'
+            or (target.cargo == 'Admin' and target.id != actor.id)
+        ):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('No tienes permiso para modificar ese usuario.')
+        serializer.save(cargo=target.cargo, activo=target.activo)
+
+    def _actor(self):
+        from apps.usuarios.models import Usuarios
+        session_user = self.request.session.get('logueado') or {}
+        return Usuarios.objects.filter(
+            pk=session_user.get('id'), activo=True
+        ).first()
     @action(detail=False, methods=['get'])
     def activos(self, request):
         usuarios = Usuarios.objects.filter(activo=True)

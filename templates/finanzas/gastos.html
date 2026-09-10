@@ -57,25 +57,7 @@
     </div>
 
     <!-- Rubro Principal -->
-    <div class="col-xl-3 col-md-6">
-      <div class="card pg-kpi-card shadow-sm h-100 p-3 bg-white rounded-3 border">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <div>
-            <span class="pg-kpi-label text-muted fw-semibold small text-uppercase">Mayor Rubro de Gasto</span>
-            <div class="pg-kpi-value text-dark fw-bold fs-5 mt-1 text-truncate" style="max-width: 190px;">
-              {{ categoria_mayor_gasto.categoria|default:"Sin gastos" }}
-            </div>
-          </div>
-          <div class="pg-kpi-icon bg-warning-subtle text-warning-emphasis rounded-3 p-2">
-            <i class="bi bi-pie-chart fs-5"></i>
-          </div>
-        </div>
-        <div class="d-flex align-items-center gap-2 text-muted small pt-2 border-top">
-          <i class="bi bi-cash text-warning-emphasis"></i>
-          <span>${{ categoria_mayor_gasto.total|default:0|floatformat:0|intcomma }} acumulado</span>
-        </div>
-      </div>
-    </div>
+    
 
     <!-- Gastos en Efectivo (Caja Menor) -->
     <div class="col-xl-3 col-md-6">

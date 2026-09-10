@@ -1,1 +1,85 @@
-{% extends 'base.html' %}{% load humanize %}{% block content %}{% include 'finanzas/_menu.html' %}<div class="container-fluid py-4">{% include 'finanzas/_periodo.html' %}{% if tipo == 'ingresos' %}<div class="card border-0 shadow-sm"><div class="card-header bg-white"><strong>Ingresos por facturación</strong><small class="text-muted ms-2">Se crean automáticamente al confirmar la venta.</small></div><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Fecha</th><th>Factura</th><th>Cliente</th><th>Método de pago</th><th>Valor pagado</th><th>Estado</th></tr></thead><tbody>{% for factura in facturas %}<tr><td>{{ factura.fecha|date:'d/m/Y H:i' }}</td><td>#{{ factura.id }}</td><td>{{ factura.cliente }}</td><td>{{ factura.get_metodo_pago_display }}</td><td>${{ factura.valor_pagado|floatformat:0|intcomma }}</td><td>{{ factura.estado_pago }}</td></tr>{% empty %}<tr><td colspan="6" class="text-center text-muted py-4">No hay ingresos en este período.</td></tr>{% endfor %}</tbody></table></div></div>{% else %}<div class="d-flex justify-content-between mb-3"><div><h2 class="h5">Gastos operativos</h2><p class="text-muted mb-0">Registra y consulta los egresos del negocio.</p></div>{% if request.session.logueado.rol != 'Empleado' %}<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#gastoModal">Registrar gasto</button>{% endif %}</div><div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th>Proveedor</th><th>Método</th><th>Valor</th><th></th></tr></thead><tbody>{% for gasto in gastos %}<tr><td>{{ gasto.fecha|date:'d/m/Y' }}</td><td>{{ gasto.concepto }}</td><td>{{ gasto.get_categoria_display }}</td><td>{{ gasto.proveedor|default:'—' }}</td><td>{{ gasto.get_metodo_pago_display }}</td><td>${{ gasto.valor|floatformat:0|intcomma }}</td><td>{% if request.session.logueado.rol != 'Empleado' %}<form method="post" action="{% url 'finanzas:eliminar_gasto' gasto.id %}">{% csrf_token %}<button class="btn btn-sm btn-outline-danger">Eliminar</button></form>{% endif %}</td></tr>{% empty %}<tr><td colspan="7" class="text-center text-muted py-4">No hay gastos registrados.</td></tr>{% endfor %}</tbody></table></div></div><div class="modal fade" id="gastoModal"><div class="modal-dialog"><form class="modal-content" method="post" action="{% url 'finanzas:nuevo_gasto' %}">{% csrf_token %}<div class="modal-header"><h5>Registrar gasto</h5><button class="btn-close" type="button" data-bs-dismiss="modal"></button></div><div class="modal-body"><input class="form-control mb-2" name="concepto" placeholder="Concepto" required><select class="form-select mb-2" name="categoria">{% for v,l in categorias %}<option value="{{v}}">{{l}}</option>{%endfor%}</select><input class="form-control mb-2" type="number" name="valor" placeholder="Valor" required><input class="form-control mb-2" type="date" name="fecha" required><select class="form-select mb-2" name="metodo_pago">{% for v,l in metodos %}<option value="{{v}}">{{l}}</option>{%endfor%}</select><input class="form-control mb-2" name="proveedor" placeholder="Proveedor (opcional)"><textarea class="form-control" name="descripcion" placeholder="Descripción"></textarea></div><div class="modal-footer"><button class="btn btn-primary">Guardar</button></div></form></div></div>{% endif %}</div>{% endblock %}
+{% extends 'base.html' %}{% load humanize %}{% block content %}{% include 'finanzas/_menu.html' %}<div
+    class="container-fluid py-4">{% include 'finanzas/_periodo.html' %}{% if tipo == 'ingresos' %}<div
+        class="card border-0 shadow-sm">
+        <div class="card-header bg-white"><strong>Ingresos por facturación</strong><small class="text-muted ms-2">Se
+                crean automáticamente al confirmar la venta.</small></div>
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Factura</th>
+                        <th>Cliente</th>
+                        <th>Método de pago</th>
+                        <th>Valor pagado</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>{% for factura in facturas %}<tr>
+                        <td>{{ factura.fecha|date:'d/m/Y H:i' }}</td>
+                        <td>#{{ factura.id }}</td>
+                        <td>{{ factura.cliente }}</td>
+                        <td>{{ factura.get_metodo_pago_display }}</td>
+                        <td>${{ factura.valor_pagado|floatformat:0|intcomma }}</td>
+                        <td>{{ factura.estado_pago }}</td>
+                    </tr>{% empty %}<tr>
+                        <td colspan="6" class="text-center text-muted py-4">No hay ingresos en este período.</td>
+                    </tr>{% endfor %}</tbody>
+            </table>
+        </div>
+    </div>{% else %}<div class="d-flex justify-content-between mb-3">
+        <div>
+            <h2 class="h5">Gastos operativos</h2>
+            <p class="text-muted mb-0">Registra y consulta los egresos del negocio.</p>
+        </div>{% if request.session.logueado.rol != 'Empleado' %}<button class="btn btn-primary" data-bs-toggle="modal"
+            data-bs-target="#gastoModal">Registrar gasto</button>{% endif %}
+    </div>
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Concepto</th>
+                        <th>Categoría</th>
+                        <th>Proveedor</th>
+                        <th>Método</th>
+                        <th>Valor</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>{% for gasto in gastos %}<tr>
+                        <td>{{ gasto.fecha|date:'d/m/Y' }}</td>
+                        <td>{{ gasto.concepto }}</td>
+                        <td>{{ gasto.get_categoria_display }}</td>
+                        <td>{{ gasto.proveedor|default:'—' }}</td>
+                        <td>{{ gasto.get_metodo_pago_display }}</td>
+                        <td>${{ gasto.valor|floatformat:0|intcomma }}</td>
+                        <td>{% if request.session.logueado.rol != 'Empleado' %}<form method="post"
+                                action="{% url 'finanzas:eliminar_gasto' gasto.id %}">{% csrf_token %}<button
+                                    class="btn btn-sm btn-outline-danger">Eliminar</button></form>{% endif %}</td>
+                    </tr>{% empty %}<tr>
+                        <td colspan="7" class="text-center text-muted py-4">No hay gastos registrados.</td>
+                    </tr>{% endfor %}</tbody>
+            </table>
+        </div>
+    </div>
+    <div class="modal fade" id="gastoModal">
+        <div class="modal-dialog">
+            <form class="modal-content" method="post" action="{% url 'finanzas:nuevo_gasto' %}">{% csrf_token %}<div
+                    class="modal-header">
+                    <h5>Registrar gasto</h5><button class="btn-close" type="button" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body"><input class="form-control mb-2" name="concepto" placeholder="Concepto"
+                        required><select class="form-select mb-2" name="categoria">{% for v,l in categorias %}<option
+                            value="{{v}}">{{l}}</option>{%endfor%}</select><input class="form-control mb-2"
+                        type="number" name="valor" placeholder="Valor" required><input class="form-control mb-2"
+                        type="date" name="fecha" required><select class="form-select mb-2" name="metodo_pago">{% for v,l
+                        in metodos %}<option value="{{v}}">{{l}}</option>{%endfor%}</select><input
+                        class="form-control mb-2" name="proveedor" placeholder="Proveedor (opcional)"><textarea
+                        class="form-control" name="descripcion" placeholder="Descripción"></textarea></div>
+                <div class="modal-footer"><button class="btn btn-primary">Guardar</button></div>
+            </form>
+        </div>
+    </div>{% endif %}
+</div>{% endblock %}
