@@ -30,15 +30,16 @@ class UsuarioForm(forms.ModelForm):
     contra = forms.CharField(
         label='Contraseña',
         min_length=8,
+        required=False,
         widget=forms.PasswordInput(attrs={
-            'placeholder': 'Mínimo 8 caracteres',
+            'placeholder': '********',
             'class': 'form-control',
-        }),
+    }),
         error_messages={
-            'required': 'La contraseña es obligatoria para continuar.',
-            'min_length': 'La contraseña debe tener como mínimo 8 caracteres.',
+        'min_length': 'La contraseña debe tener como mínimo 8 caracteres.',
         },
     )
+
 
     correo = forms.EmailField(
         label='Correo electrónico',

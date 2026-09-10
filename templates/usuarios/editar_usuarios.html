@@ -130,14 +130,22 @@
                 <!-- Contraseña -->
                 <div class="col-12 col-md-6">
                     <label for="{{ form.contra.id_for_label }}" class="form-label fw-semibold text-secondary small">
-                        <i class="bi bi-key me-1 text-primary"></i> {{ form.contra.label }} <span
-                            class="text-danger">*</span>
+                        <i class="bi bi-key me-1 text-primary"></i> {{ form.contra.label }}
                     </label>
+
                     {{ form.contra }}
+
+                    <small class="text-muted">
+                        Deja este campo vacío si no deseas cambiar la contraseña.
+                    </small>
+
                     {% if form.contra.errors %}
-                    <div class="text-danger small mt-1">{{ form.contra.errors|join:", " }}</div>
+                    <div class="text-danger small mt-1">
+                        {{ form.contra.errors|join:", " }}
+                    </div>
                     {% endif %}
                 </div>
+
 
                 <!-- Teléfono -->
                 <div class="col-12 col-md-6">

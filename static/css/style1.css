@@ -106,19 +106,12 @@ body {
 }
 
 
-/* Icons for sidebar items */
-.sidebar .menu ul li a::before {
-    font-family: "bootstrap-icons";
+.sidebar .menu ul li a > i {
     margin-right: 12px;
     font-size: 1.1rem;
+    width: 18px;
+    text-align: center;
 }
-.sidebar .menu ul li:nth-child(1) a::before { content: "\F43E"; } /* house-door */
-.sidebar .menu ul li:nth-child(2) a::before { content: "\F4E1"; } /* people */
-.sidebar .menu ul li:nth-child(3) a::before { content: "\F1E4"; } /* box */
-.sidebar .menu ul li:nth-child(4) a::before { content: "\F478"; } /* clipboard-data */
-.sidebar .menu ul li:nth-child(5) a::before { content: "\F3EE"; } /* file-earmark-text */
-.sidebar .menu ul li:nth-child(6) a::before { content: "\F456"; } /* list-check */
-.sidebar .menu ul li:nth-child(7) a::before { content: "\F3E5"; } /* gear */
 
 .sidebar .Cerrar-sesion {
     padding: 20px 15px;

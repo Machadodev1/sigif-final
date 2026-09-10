@@ -232,6 +232,8 @@ def editar_usuarios(request, id):
 
         if form.is_valid():
 
+            contra_original = usuario.contra
+
             usuario_editado = form.save(commit=False)
 
             nuevo_cargo = usuario_editado.cargo
@@ -242,14 +244,14 @@ def editar_usuarios(request, id):
 
             usuario_editado.activo = estado_original
 
+            # Si no escribieron una nueva contraseña,
+            # conservar la contraseña que ya tenía el usuario.
+            if not form.cleaned_data.get("contra"):
+                usuario_editado.contra = contra_original
 
-            # print("USUARIO EDITADO:", usuario)
-            # print("USUARIO LOGUEADO:", request.user)
-            # print("ID EDITADO:", usuario.id)
-            # print("ID LOGUEADO:", request.user.id)
-            # print("ROL ACTUAL:", rol_actual)
-            # print("CARGO ORIGINAL:", cargo_original)
-
+            # GUARDAR
+            usuario_editado.save()
+            
             if (
                 not es_propio_usuario
                 and
@@ -302,7 +304,7 @@ def editar_usuarios(request, id):
             )
 
             if rol_actual == "Empleado":
-                return redirect("usuarios")
+                return redirect("dashboard")
 
             return redirect("usuarios")
 

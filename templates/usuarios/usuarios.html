@@ -13,10 +13,12 @@
     {# Mensajes específicos del módulo 'usuarios' #}
     {% if messages %}
     {% for message in messages %}
+    {% if 'module-finanzas' not in message.tags %}
     <div class="alert {% if 'error' in message.tags or message.tags == 'error' %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags or message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} alert-dismissible fade show {{ message.tags }}" role="alert">
         {{ message }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+    {% endif %}
     {% endfor %}
     {% endif %}
 
@@ -38,11 +40,6 @@
                 <button class="cs-filtro-btn" data-filtro="inactivo">Inactivos</button>
                 <button class="cs-filtro-btn" data-filtro="admin">Admins</button>
             </div>
-
-            <a href="{% url 'crear_usuarios' %}" class="cv-cart-btn" style="background: linear-gradient(135deg, #3a56e4, #5c7cfa); color: #fff; text-decoration: none;">
-                <i class="bi bi-person-plus-fill"></i>
-                <span class="cv-cart-label">Nuevo usuario</span>
-            </a>
         </div>
     </div>
 
