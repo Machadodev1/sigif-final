@@ -7,7 +7,7 @@ from apps.facturacion.models import DetalleFactura
 
 
 
-@requerir_rol(["Admin", "Empleado"])
+@requerir_rol(["SuperAdmin", "Admin", "Empleado"])
 def inv_configuracion(request):
     config = EmpresaConfig.objects.all()
     return render(request, 'configuracion/configuracion.html', {'config': config})
@@ -230,15 +230,15 @@ def registrar_entrada(request):
                 activo=activo,
             )
 
-        producto.precio = int(precio_venta)
-
-        subtotal = precio * cantidad
-        items_validos.append({
-            "producto": producto,
-            "cantidad": cantidad,
-            "precio": precio,
-            "subtotal": subtotal,
-        })
+            # No pisar precio aquí; se actualiza dentro de la transacción con lock
+            subtotal = precio * cantidad
+            items_validos.append({
+                "producto": producto,
+                "cantidad": cantidad,
+                "precio": precio,
+                "precio_venta": precio_venta,
+                "subtotal": subtotal,
+            })
 
     if errores:
         return JsonResponse({
@@ -263,7 +263,17 @@ def registrar_entrada(request):
 
             for item in items_validos:
                 producto = item["producto"]
-                producto.save()  # guarda el producto nuevo si aplica
+                if producto.pk is None:
+                    # Producto nuevo: se crea con el stock inicial
+                    producto.stock = item["cantidad"]
+                    producto.precio = int(item["precio_venta"])
+                    producto.save()
+                else:
+                    # Producto existente: lock + update atómico
+                    producto = Producto.objects.select_for_update().get(pk=producto.pk)
+                    producto.precio = int(item["precio_venta"])
+                    producto.stock = producto.stock + item["cantidad"]
+                    producto.save(update_fields=["precio", "stock"])
 
                 DetalleEntradaInventario.objects.create(
                     entrada=entrada,
@@ -272,10 +282,6 @@ def registrar_entrada(request):
                     precio=item["precio"],
                     subtotal=item["subtotal"],
                 )
-
-                # Aumentar stock
-                producto.stock += item["cantidad"]
-                producto.save(update_fields=["stock"])
 
             Gasto.objects.create(
                 concepto=f"Compra de inventario {entrada.numero_factura()}",

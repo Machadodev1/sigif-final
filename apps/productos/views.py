@@ -8,7 +8,7 @@ from apps.auditoria.models import Auditoria
 
 @requerir_rol(["SuperAdmin","Admin", "Empleado"])
 def productos(request):
-    productos = Producto.objects.all()
+    productos = Producto.objects.all().order_by('nombre')
     q = request.GET.get('q', '').strip()
     if q:
         productos = productos.filter(
@@ -16,6 +16,10 @@ def productos(request):
             Q(descripcion__icontains=q) | 
             Q(categoria__icontains=q)
         )
+    from django.core.paginator import Paginator
+    paginator = Paginator(productos, 20)
+    page_number = request.GET.get('page')
+    productos = paginator.get_page(page_number)
     return render(request, 'productos/productos.html', {'productos': productos, 'q': q})
 
 

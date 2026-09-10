@@ -32,18 +32,23 @@ def _periodo(request):
 
 
 def _costos_detalles(detalles):
-    """Costo unitario desde inventario; usa el costo conocido más reciente.
+    """Costo unitario desde inventario; usa el costo conocido más reciente."""
+    # Precarga compras por producto para evitar N+1
+    producto_ids = {d.producto_id for d in detalles}
+    compras_por_producto = defaultdict(list)
+    for c in DetalleEntradaInventario.objects.filter(producto_id__in=producto_ids).select_related('entrada').order_by('producto_id', '-entrada__fecha', '-id'):
+        compras_por_producto[c.producto_id].append(c)
 
-    En SIGIF algunas ventas históricas se registraron antes de que existiera
-    el módulo de entradas. Para no reportarlas artificialmente sin costo, se
-    usa la última compra disponible como costo de referencia en ese caso.
-    """
     costo, productos = Decimal('0'), defaultdict(lambda: {'producto': None, 'cantidad': 0, 'ingresos': Decimal('0'), 'costos': Decimal('0')})
     for detalle in detalles:
-        compras = DetalleEntradaInventario.objects.filter(producto=detalle.producto)
-        compra = compras.filter(entrada__fecha__lte=detalle.factura.fecha).order_by('-entrada__fecha', '-id').first()
-        if not compra:
-            compra = compras.order_by('-entrada__fecha', '-id').first()
+        compras = compras_por_producto.get(detalle.producto_id, [])
+        compra = None
+        for comp in compras:
+            if comp.entrada.fecha <= detalle.factura.fecha:
+                compra = comp
+                break
+        if not compra and compras:
+            compra = compras[0]
         unitario = compra.precio if compra else Decimal('0')
         subtotal_costo = unitario * detalle.cantidad
         costo += subtotal_costo
@@ -67,7 +72,7 @@ def _resumen(inicio, fin):
     gastos = Gasto.objects.filter(fecha__range=(inicio, fin))
     # Solo el valor efectivamente pagado es ingreso; las ventas a crédito
     # quedan disponibles en Cuentas por cobrar.
-    ingresos = sum((f.valor_pagado for f in facturas), Decimal('0'))
+    ingresos = facturas.aggregate(v=Sum('valor_pagado'))['v'] or Decimal('0')
     total_gastos = gastos.aggregate(valor=Sum('valor'))['valor'] or Decimal('0')
     costos, productos = _costos_detalles(detalles)
     bruta, neta = ingresos - costos, ingresos - costos - total_gastos

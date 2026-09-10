@@ -283,6 +283,23 @@ def editar_usuarios(request, id):
 
             nuevo_cargo = usuario_editado.cargo
 
+            # Validar escalada antes de guardar
+            if (
+                not es_propio_usuario
+                and
+                nuevo_cargo == "SuperAdmin"
+                and cargo_original != "SuperAdmin"
+                and rol_actual != "SuperAdmin"
+            ):
+                messages.error(
+                    request,
+                    "Un Administrador no puede asignar el rol de SuperAdmin."
+                )
+                return render(
+                    request,
+                    "usuarios/editar_usuarios.html",
+                    {"form": form}
+                )
 
             if es_propio_usuario or rol_actual == "Empleado":
                 usuario_editado.cargo = cargo_original
@@ -294,28 +311,6 @@ def editar_usuarios(request, id):
             if not form.cleaned_data.get("contra"):
                 usuario_editado.contra = contra_original
 
-            # GUARDAR
-            usuario_editado.save()
-            
-            if (
-                not es_propio_usuario
-                and
-                nuevo_cargo == "SuperAdmin"
-                and cargo_original != "SuperAdmin"
-                and rol_actual != "SuperAdmin"
-            ):
-
-                messages.error(
-                    request,
-                    "Un Administrador no puede asignar el rol de SuperAdmin."
-                )
-
-                return render(
-                    request,
-                    "usuarios/editar_usuarios.html",
-                    {"form": form}
-                )
-
             # SEGURIDAD: el SuperAdmin principal conserva siempre su rol y
             # estado, aunque se alteren los controles o el POST en el cliente.
             if usuario.es_superadmin_principal:
@@ -326,10 +321,6 @@ def editar_usuarios(request, id):
             # nunca puede cambiar su rol, aunque manipule el formulario.
             if es_propio_usuario:
                 usuario_editado.cargo = cargo_original
-
-            # ==========================================
-            # 5. GUARDAR
-            # ==========================================
 
             usuario_editado.save()
 
