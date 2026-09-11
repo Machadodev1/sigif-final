@@ -25,13 +25,21 @@
     <nav class="menu">
       <ul>
         <li><a href="{% url 'dashboard' %}" class="menu-dashboard {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="bi bi-speedometer2" aria-hidden="true"></i>Dashboard</a></li>
+        {% if modulo_usuarios %}
         <li><a href="{% url 'usuarios' %}" class="menu-usuarios {% if request.resolver_match.url_name == 'usuarios' %}active{% endif %}"><i class="bi bi-people" aria-hidden="true"></i>Usuarios</a></li>
+        {% endif %}
         <li><a href="{% url 'productos' %}" class="menu-productos {% if request.resolver_match.url_name == 'productos' %}active{% endif %}"><i class="bi bi-box-seam" aria-hidden="true"></i>Productos</a></li>
         <li><a href="{% url 'inventario' %}" class="menu-inventario {% if request.resolver_match.url_name == 'inventario' %}active{% endif %}"><i class="bi bi-boxes" aria-hidden="true"></i>Inventario</a></li>
         <li><a href="{% url 'factura-list' %}" class="menu-facturacion {% if request.resolver_match.url_name == 'factura-list' or request.resolver_match.url_name == 'factura-crear' or request.resolver_match.url_name == 'factura-detalle' %}active{% endif %}"><i class="bi bi-receipt" aria-hidden="true"></i>Facturación</a></li>
+        {% if modulo_finanzas %}
         <li><a href="{% url 'finanzas:finanzas_dashboard' %}" class="menu-finanzas {% if request.resolver_match.namespace == 'finanzas' %}active{% endif %}"><i class="bi bi-cash-stack" aria-hidden="true"></i>Finanzas</a></li>
+        {% endif %}
+        {% if modulo_auditoria %}
         <li><a href="{% url 'auditoria' %}" class="menu-auditoria {% if request.resolver_match.url_name == 'auditoria' %}active{% endif %}"><i class="bi bi-clipboard-check" aria-hidden="true"></i>Auditoría</a></li>
+        {% endif %}
+        {% if modulo_configuracion %}
         <li><a href="{% url 'configuracion' %}" class="menu-configuracion {% if request.resolver_match.url_name == 'configuracion' %}active{% endif %}"><i class="bi bi-gear" aria-hidden="true"></i>Configuración</a></li>
+        {% endif %}
       </ul>
     </nav>
     <div class="Cerrar-sesion">

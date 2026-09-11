@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from apps.auditoria.models import Auditoria
+from apps.configuracion.models import EmpresaConfig
 from apps.facturacion.models import DetalleFactura, Factura
 from apps.inventario.models import DetalleEntradaInventario
 from core.decoradores import requerir_rol, requerir_rol_accion
@@ -85,7 +86,7 @@ def _resumen(inicio, fin):
     return {'facturas': facturas, 'detalles': detalles, 'gastos': gastos, 'ingresos': ingresos, 'costos': costos, 'gastos_total': total_gastos, 'utilidad_bruta': bruta, 'utilidad_neta': neta, 'margen': (neta / ingresos * 100) if ingresos else Decimal('0'), 'ventas': facturas.count(), 'ticket': ingresos / facturas.count() if facturas.exists() else Decimal('0'), 'productos': productos, 'dias': dict(dias), 'metodos_pago': dict(metodos)}
 
 
-@requerir_rol(['SuperAdmin', 'Admin', 'Empleado'])
+@requerir_rol(['SuperAdmin', 'Admin'])
 def dashboard(request):
     """1. Estado de resultados (P&G): Pérdidas y ganancias consolidado."""
     inicio, fin, opcion = _periodo(request)
@@ -95,36 +96,38 @@ def dashboard(request):
     return render(request, 'finanzas/dashboard.html', data)
 
 
-@requerir_rol(['SuperAdmin', 'Admin', 'Empleado'])
+@requerir_rol(['SuperAdmin', 'Admin'])
 def ventas_categoria(request):
     """2. Reporte de ventas por categoría: Identifica qué categoría genera más dinero y rentabilidad."""
     inicio, fin, opcion = _periodo(request)
     data = _resumen(inicio, fin)
-    
-    # Agrupación profunda por categoría de producto
+
+    detalles = data['detalles']
+    # Un solo recorrido para asociar facturas y SKUs únicos a cada categoría.
+    cat_facturas = defaultdict(set)
+    cat_productos = defaultdict(set)
+    for det in detalles:
+        cat = det.producto.categoria or 'Repuestos Generales'
+        cat_facturas[cat].add(det.factura_id)
+        cat_productos[cat].add(det.producto.nombre)
+
+    # Los agregados por producto ya fueron calculados en _resumen() con la
+    # misma lógica de costos; aquí solo se agrupan por categoría (sin N+1).
     cat_map = defaultdict(lambda: {
         'categoria': '', 'ingresos': Decimal('0'), 'costos': Decimal('0'),
-        'unidades': 0, 'facturas': set(), 'productos': set()
+        'unidades': 0
     })
-    
-    for det in data['detalles']:
-        cat = det.producto.categoria or 'Repuestos Generales'
+    for item in data['productos']:
+        producto = item['producto']
+        if not producto:
+            continue
+        cat = producto.categoria or 'Repuestos Generales'
         entry = cat_map[cat]
         entry['categoria'] = cat
-        entry['ingresos'] += det.subtotal
-        
-        compras = DetalleEntradaInventario.objects.filter(producto=det.producto)
-        compra = compras.filter(entrada__fecha__lte=det.factura.fecha).order_by('-entrada__fecha', '-id').first()
-        if not compra:
-            compra = compras.order_by('-entrada__fecha', '-id').first()
-        unitario = compra.precio if compra else Decimal('0')
-        costo_sub = unitario * det.cantidad
-        
-        entry['costos'] += costo_sub
-        entry['unidades'] += det.cantidad
-        entry['facturas'].add(det.factura_id)
-        entry['productos'].add(det.producto.nombre)
-        
+        entry['ingresos'] += item['ingresos']
+        entry['costos'] += item['costos']
+        entry['unidades'] += item['cantidad']
+
     categorias_resumen = []
     total_unidades = 0
     for cat, item in cat_map.items():
@@ -138,10 +141,10 @@ def ventas_categoria(request):
             'ganancia': ganancia,
             'margen': margen,
             'unidades': item['unidades'],
-            'transacciones': len(item['facturas']),
-            'total_skus': len(item['productos'])
+            'transacciones': len(cat_facturas.get(cat, ())),
+            'total_skus': len(cat_productos.get(cat, ()))
         })
-        
+
     categorias_resumen.sort(key=lambda x: x['ingresos'], reverse=True)
     
     data.update({
@@ -156,7 +159,7 @@ def ventas_categoria(request):
     return render(request, 'finanzas/ventas_categoria.html', data)
 
 
-@requerir_rol(['SuperAdmin', 'Admin', 'Empleado'])
+@requerir_rol(['SuperAdmin', 'Admin'])
 def gastos(request):
     """3. Historial de gastos operativos: Desglose y registro de en qué se gasta el dinero."""
     inicio, fin, opcion = _periodo(request)
@@ -289,7 +292,7 @@ def eliminar_gasto(request, pk):
     return redirect('finanzas:gastos')
 
 
-@requerir_rol(['SuperAdmin', 'Admin', 'Empleado'])
+@requerir_rol(['SuperAdmin', 'Admin'])
 def rentabilidad(request):
     """4. Rentabilidad de inventario: Márgenes de ganancia obtenidos por rotación de repuestos."""
     inicio, fin, opcion = _periodo(request)
@@ -313,7 +316,7 @@ def rentabilidad(request):
     return render(request, 'finanzas/rentabilidad.html', data)
 
 
-@requerir_rol(['SuperAdmin', 'Admin', 'Empleado'])
+@requerir_rol(['SuperAdmin', 'Admin'])
 def caja_conciliacion(request):
     """5. Reporte de caja y conciliación: Cortes de caja y balance de entradas/salidas diarias."""
     inicio, fin, opcion = _periodo(request)
@@ -403,7 +406,8 @@ def caja_conciliacion(request):
         'total_gastos_otros': total_gastos_otros,
         'saldo_efectivo_en_caja': saldo_efectivo_en_caja,
         'cuentas_pendientes': cuentas_pendientes,
-        'fecha_generacion': timezone.now()
+        'fecha_generacion': timezone.now(),
+        'config_empresa': EmpresaConfig.objects.first() or EmpresaConfig(),
     })
     return render(request, 'finanzas/caja_conciliacion.html', data)
 
