@@ -27,6 +27,7 @@ urlpatterns = [
     path('auditoria/', include('apps.auditoria.urls')),
     path('configuracion/', include('apps.configuracion.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api-auth/', include('rest_framework.urls')),
 
     path(
         'api/docs/',
