@@ -195,9 +195,9 @@ def registrar_entrada(request):
             errores.append(f"Producto {idx}: el precio de venta debe ser mayor a cero.")
             continue
 
-        if precio_venta < precio:
+        if precio_venta <= precio:
             errores.append(
-                f"Producto {idx}: el precio de venta no puede ser menor al precio de compra."
+                f"Producto {idx}: el precio de venta debe ser mayor al precio de compra."
             )
             continue
 

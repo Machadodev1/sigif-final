@@ -176,8 +176,10 @@ if not DEBUG and _env_bool('DJANGO_HTTPS', True):
     SECURE_HSTS_PRELOAD = True
     SECURE_BROWSER_XSS_FILTER = True
 
-if _env_bool('DJANGO_CSRF_COOKIE_HTTPONLY', True):
-    CSRF_COOKIE_HTTPONLY = True
+# La cookie CSRF NO debe ser HttpOnly: el módulo de pago la lee desde
+# JavaScript (getCookie("csrftoken")) para enviar el header X-CSRFToken
+# en las solicitudes AJAX. HttpOnly la volvería ilegible y fallaría el pago.
+CSRF_COOKIE_HTTPONLY = _env_bool('DJANGO_CSRF_COOKIE_HTTPONLY', False)
 
 # La sesión expira al cerrar el navegador por seguridad (sin cookie persistente).
 SESSION_EXPIRE_AT_BROWSER_CLOSE = _env_bool('DJANGO_EXPIRE_BROWSER_CLOSE', True)

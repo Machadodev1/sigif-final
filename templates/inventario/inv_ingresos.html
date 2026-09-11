@@ -308,7 +308,7 @@ document.getElementById('formEntrada').addEventListener('submit', async function
         if (!cantidad || cantidad <= 0) { error = `Fila ${idx + 1}: la cantidad debe ser mayor a 0.`; return; }
         if (!precio || precio <= 0)   { error = `Fila ${idx + 1}: el precio de compra debe ser mayor a 0.`; return; }
         if (!precioVenta || precioVenta <= 0) { error = `Fila ${idx + 1}: el precio de venta debe ser mayor a 0.`; return; }
-        if (precioVenta < precio) { error = `Fila ${idx + 1}: el precio de venta no puede ser menor al precio de compra.`; return; }
+        if (precioVenta <= precio) { error = `Fila ${idx + 1}: el precio de venta debe ser mayor al precio de compra.`; return; }
 
         if (sel) {
             items.push({ producto_id: parseInt(sel), cantidad, precio, precio_venta: precioVenta });
