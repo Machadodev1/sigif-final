@@ -32,18 +32,23 @@ def _periodo(request):
 
 
 def _costos_detalles(detalles):
-    """Costo unitario desde inventario; usa el costo conocido más reciente.
+    """Costo unitario desde inventario; usa el costo conocido más reciente."""
+    # Precarga compras por producto para evitar N+1
+    producto_ids = {d.producto_id for d in detalles}
+    compras_por_producto = defaultdict(list)
+    for c in DetalleEntradaInventario.objects.filter(producto_id__in=producto_ids).select_related('entrada').order_by('producto_id', '-entrada__fecha', '-id'):
+        compras_por_producto[c.producto_id].append(c)
 
-    En SIGIF algunas ventas históricas se registraron antes de que existiera
-    el módulo de entradas. Para no reportarlas artificialmente sin costo, se
-    usa la última compra disponible como costo de referencia en ese caso.
-    """
     costo, productos = Decimal('0'), defaultdict(lambda: {'producto': None, 'cantidad': 0, 'ingresos': Decimal('0'), 'costos': Decimal('0')})
     for detalle in detalles:
-        compras = DetalleEntradaInventario.objects.filter(producto=detalle.producto)
-        compra = compras.filter(entrada__fecha__lte=detalle.factura.fecha).order_by('-entrada__fecha', '-id').first()
-        if not compra:
-            compra = compras.order_by('-entrada__fecha', '-id').first()
+        compras = compras_por_producto.get(detalle.producto_id, [])
+        compra = None
+        for comp in compras:
+            if comp.entrada.fecha <= detalle.factura.fecha:
+                compra = comp
+                break
+        if not compra and compras:
+            compra = compras[0]
         unitario = compra.precio if compra else Decimal('0')
         subtotal_costo = unitario * detalle.cantidad
         costo += subtotal_costo
@@ -67,7 +72,7 @@ def _resumen(inicio, fin):
     gastos = Gasto.objects.filter(fecha__range=(inicio, fin))
     # Solo el valor efectivamente pagado es ingreso; las ventas a crédito
     # quedan disponibles en Cuentas por cobrar.
-    ingresos = sum((f.valor_pagado for f in facturas), Decimal('0'))
+    ingresos = facturas.aggregate(v=Sum('valor_pagado'))['v'] or Decimal('0')
     total_gastos = gastos.aggregate(valor=Sum('valor'))['valor'] or Decimal('0')
     costos, productos = _costos_detalles(detalles)
     bruta, neta = ingresos - costos, ingresos - costos - total_gastos
@@ -202,20 +207,75 @@ def gastos(request):
 @requerir_rol_accion(['SuperAdmin', 'Admin'], 'finanzas:gastos')
 def editar_gasto(request, pk=None):
     gasto = get_object_or_404(Gasto, pk=pk) if pk else None
-    if request.method == 'POST':
+
+    # SEGURIDAD: solo se aceptan POST; se valida que no haya CSRF.
+    if request.method != 'POST':
+        return redirect('finanzas:gastos')
+
+    try:
+        def _limpiar_texto(valor, maximo):
+            valor = (valor or '').strip()
+            # SEGURIDAD: elimina marcado HTML/JS antes de guardar.
+            valor = valor.replace('<', '').replace('>', '')
+            return valor[:maximo]
+
+        concepto = _limpiar_texto(request.POST.get('concepto'), 150)
+        proveedor = _limpiar_texto(request.POST.get('proveedor'), 150)
+        descripcion = _limpiar_texto(request.POST.get('descripcion'), 2000)
+        categoria = (request.POST.get('categoria') or '').strip()
+        metodo_pago = (request.POST.get('metodo_pago') or '').strip()
+        valor = Decimal(request.POST['valor'])
+
+        fecha_raw = (request.POST.get('fecha') or '').strip()
         try:
-            campos = {k: request.POST[k].strip() for k in ('concepto', 'categoria', 'fecha', 'metodo_pago', 'proveedor', 'descripcion')}
-            campos['valor'] = Decimal(request.POST['valor'])
-            campos['usuario'] = request.session.get('logueado', {}).get('nombre', 'Usuario')
-            if gasto:
-                for key, value in campos.items(): setattr(gasto, key, value)
-                gasto.save(); accion = 'ACTUALIZÓ'
-            else:
-                gasto = Gasto.objects.create(**campos); accion = 'REGISTRÓ'
-            Auditoria.objects.create(usuario=campos['usuario'], accion=f'{accion} GASTO: {gasto.concepto}', modulo='FINANZAS')
-            messages.success(request, 'Gasto operativo registrado correctamente.', extra_tags='module-finanzas')
-        except (KeyError, ValueError, ArithmeticError):
-            messages.error(request, 'Verifica los datos del gasto ingresado.', extra_tags='module-finanzas')
+            fecha = datetime.strptime(fecha_raw, '%Y-%m-%d').date()
+        except ValueError:
+            raise ValueError('fecha inválida')
+
+        # Validaciones mínimas de negocio para evitar datos corruptos.
+        if not concepto:
+            raise ValueError('concepto vacío')
+        if len(concepto) < 4:
+            raise ValueError('concepto demasiado corto')
+        # evita "a", "aaa", etc.
+        if len(set(concepto.lower())) < 2 and len(concepto) < 5:
+            raise ValueError('concepto no válido')
+        if proveedor and len(proveedor) < 3:
+            raise ValueError('proveedor demasiado corto')
+        if valor <= 0:
+            raise ValueError('valor inválido')
+        # max_digits=12 con 2 decimales => hasta 99.999.999.999,99 COP.
+        if valor > Decimal('99999999999.99'):
+            raise ValueError('valor demasiado grande')
+        categorias_validas = [c[0] for c in Gasto.CATEGORIAS]
+        metodos_validos = [m[0] for m in Gasto.METODOS_PAGO]
+        if categoria not in categorias_validas:
+            categoria = categorias_validas[0] if categorias_validas else ''
+        if metodo_pago not in metodos_validos:
+            metodo_pago = metodos_validos[0] if metodos_validos else ''
+
+        campos = {
+            'concepto': concepto,
+            'categoria': categoria,
+            'fecha': fecha,
+            'metodo_pago': metodo_pago,
+            'proveedor': proveedor,
+            'descripcion': descripcion,
+            'valor': valor,
+            'usuario': request.session.get('logueado', {}).get('nombre', 'Usuario'),
+        }
+        if gasto:
+            for key, value in campos.items():
+                setattr(gasto, key, value)
+            gasto.save();
+            accion = 'ACTUALIZÓ'
+        else:
+            gasto = Gasto.objects.create(**campos)
+            accion = 'REGISTRÓ'
+        Auditoria.objects.create(usuario=campos['usuario'], accion=f'{accion} GASTO: {gasto.concepto}', modulo='FINANZAS')
+        messages.success(request, 'Gasto operativo registrado correctamente.', extra_tags='module-finanzas')
+    except (KeyError, ValueError, ArithmeticError):
+        messages.error(request, 'Verifica los datos del gasto ingresado.', extra_tags='module-finanzas')
     return redirect('finanzas:gastos')
 
 

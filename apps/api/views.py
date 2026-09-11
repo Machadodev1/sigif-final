@@ -4,6 +4,8 @@ from rest_framework.permissions import *
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.throttling import ScopedRateThrottle
 
 from apps.auditoria.models import Auditoria
 from apps.configuracion.models import EmpresaConfig
@@ -13,6 +15,7 @@ from apps.usuarios.models import Usuarios
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .authentication import *
+from .permissions import RolApiPermission
 
 from .serializador import (
     AuditoriaSerializer,
@@ -26,7 +29,7 @@ from .serializador import (
 
 class AuditoriaViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [RolApiPermission]
     queryset = Auditoria.objects.all().order_by('-id')
     serializer_class = AuditoriaSerializer
     @action(detail=False, methods=['get'])
@@ -38,28 +41,27 @@ class AuditoriaViewSet(viewsets.ModelViewSet):
 
 class EmpresaConfigViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [RolApiPermission]
     queryset = EmpresaConfig.objects.all().order_by('-id')
     serializer_class = EmpresaConfigSerializer
 
 
 class ClienteViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [RolApiPermission]
     queryset = Cliente.objects.all().order_by('-id')
     serializer_class = ClienteSerializer
 
 
 class FacturaViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [RolApiPermission]
     queryset = Factura.objects.all().order_by('-id')
     serializer_class = FacturaSerializer
 
 
 class ProductoViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
     queryset = Producto.objects.all().order_by('-id')
     serializer_class = ProductoSerializer
     @action(detail=False, methods=['get'])
@@ -71,7 +73,7 @@ class ProductoViewSet(viewsets.ModelViewSet):
 
 class UsuarioViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [RolApiPermission]
     queryset = Usuarios.objects.all().order_by('-id')
     serializer_class = UsuarioSerializer
 
@@ -113,6 +115,12 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         usuarios = Usuarios.objects.filter(activo=True)
         serializer = self.get_serializer(usuarios, many=True)
         return Response(serializer.data)
+
+class LoginTokenView(ObtainAuthToken):
+    """Obtiene un token de API con límite de intentos (anti brute-force)."""
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'login'
+
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]

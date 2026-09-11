@@ -20,16 +20,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+# SECRET_KEY: se lee del entorno (.env). El fallback NO debe usarse en
+# producción; solo permite arrancar en desarrollo local.
+SECRET_KEY = os.getenv(
+    'SECRET_KEY',
+    'django-insecure-hp&cm^f97q9reb#ao*@ed(6jwszwg+3%l^d=yg)#(z^tr@!vy6'
+)
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-hp&cm^f97q9reb#ao*@ed(6jwszwg+3%l^d=yg)#(z^tr@!vy6'
+# DEBUG: se controla con la variable de entorno DJANGO_DEBUG (True/False).
+# Por defecto False para no exponer información sensible en producción.
+DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in ('1', 'true', 'yes', 'on')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ["*"]
+# ALLOWED_HOSTS: lista separada por comas en DJANGO_ALLOWED_HOSTS.
+# Vacío en producción hace fallar las peticiones cuyo Host no esté aprobado.
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = [
+        h.strip()
+        for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+        if h.strip()
+    ]
 
 
 # Application definition
@@ -61,6 +72,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'core.middleware.SecurityHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -135,11 +147,63 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+# ================================================================
+# SEGURIDAD: headers HTTP, cookies y protección CSRF/clickjacking
+# ================================================================
+
+def _env_bool(name, default=False):
+    return os.getenv(name, str(default)).lower() in ('1', 'true', 'yes', 'on')
+
+# Marcas de seguridad que solo se activan cuando se sirve por HTTPS.
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+X_FRAME_OPTIONS = 'DENY' if not DEBUG else 'SAMEORIGIN'
+
+if not DEBUG and _env_bool('DJANGO_HTTPS', True):
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000            # 1 año
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_BROWSER_XSS_FILTER = True
+
+if _env_bool('DJANGO_CSRF_COOKIE_HTTPONLY', True):
+    CSRF_COOKIE_HTTPONLY = True
+
+# La sesión expira al cerrar el navegador por seguridad (sin cookie persistente).
+SESSION_EXPIRE_AT_BROWSER_CLOSE = _env_bool('DJANGO_EXPIRE_BROWSER_CLOSE', True)
+
+# Política de seguridad de contenido para mitigar ataques XSS.
+# Se mantiene 'unsafe-inline' porque las plantillas usan <script> inline;
+# aun así, los commits a orígenes externos arbitrarios quedan bloqueados.
+CSP_DEFAULT_SRC = "'self'"
+CSP_IMG_SRC = "'self' data:"
+CSP_SCRIPT_SRC = "'self' https://cdn.jsdelivr.net https://fonts.googleapis.com 'unsafe-inline'"
+CSP_STYLE_SRC = "'self' https://cdn.jsdelivr.net https://fonts.googleapis.com 'unsafe-inline'"
+CSP_FONT_SRC = "'self' https://cdn.jsdelivr.net https://fonts.gstatic.com"
+CSP_CONNECT_SRC = "'self'"
+
+# ================================================================
+# SEGURIDAD: cache (para limitación de intentos de login)
+# ================================================================
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'sigif-cache',
+    }
+}
+
+# ================================================================
+# REST FRAMEWORK: autenticación, permisos y límite de peticiones
+# ================================================================
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'SIGIF API',
@@ -148,13 +212,26 @@ SPECTACULAR_SETTINGS = {
 }
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
         'apps.api.authentication.ExpiringTokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '20/min',
+        'user': '300/min',
+        'login': '5/min',
+    },
 }
+
+# SEGURIDAD: los tokens de la API expiran tras N minutos de haberse creado.
+TOKEN_EXPIRATION_MINUTES = int(os.getenv('TOKEN_EXPIRATION_MINUTES', '60'))
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST')

@@ -29,12 +29,14 @@ class FacturaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Factura
         fields = '__all__'
+        read_only_fields = ('total', 'descuento', 'valor_pagado')
 
 
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
         fields = '__all__'
+        read_only_fields = ('stock',)
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
