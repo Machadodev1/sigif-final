@@ -11,4 +11,3 @@ venv/
 *.log
 .env
 
-db.sqlite3
