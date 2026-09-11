@@ -15,7 +15,7 @@ from apps.usuarios.models import Usuarios
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .authentication import *
-from .permissions import RolApiPermission
+from .permissions import RolApiPermission, ProductoLecturaPublica
 
 from .serializador import (
     AuditoriaSerializer,
@@ -62,7 +62,7 @@ class FacturaViewSet(viewsets.ModelViewSet):
 
 class ProductoViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [RolApiPermission]
+    permission_classes = [ProductoLecturaPublica]
     queryset = Producto.objects.all().order_by('-id')
     serializer_class = ProductoSerializer
     @action(detail=False, methods=['get'])
