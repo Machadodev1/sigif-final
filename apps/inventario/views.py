@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from apps.productos.models import Producto
+from apps.productos.models import Producto, CATEGORIAS
 
 from apps.configuracion.models import EmpresaConfig
 from core.decoradores import requerir_rol
@@ -96,9 +96,15 @@ def inv_ingresos(request):
         for p in productos
     ]
 
+    categorias_existentes = sorted(
+        set(Producto.objects.exclude(categoria='').values_list('categoria', flat=True))
+        | {c for c, _ in CATEGORIAS}
+    )
+
     contexto = {
         'productos': productos,
         'entradas': entradas,
+        'categorias': json.dumps(categorias_existentes, ensure_ascii=False),
         'productos_serializados': json.dumps(productos_serializados, ensure_ascii=False),
     }
     return render(request, 'inventario/inv_ingresos.html', contexto)
@@ -230,15 +236,15 @@ def registrar_entrada(request):
                 activo=activo,
             )
 
-            # No pisar precio aquí; se actualiza dentro de la transacción con lock
-            subtotal = precio * cantidad
-            items_validos.append({
-                "producto": producto,
-                "cantidad": cantidad,
-                "precio": precio,
-                "precio_venta": precio_venta,
-                "subtotal": subtotal,
-            })
+        # No pisar precio aquí; se actualiza dentro de la transacción con lock
+        subtotal = precio * cantidad
+        items_validos.append({
+            "producto": producto,
+            "cantidad": cantidad,
+            "precio": precio,
+            "precio_venta": precio_venta,
+            "subtotal": subtotal,
+        })
 
     if errores:
         return JsonResponse({

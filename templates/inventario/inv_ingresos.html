@@ -161,6 +161,7 @@
 
 <script>
 const PRODUCTOS = JSON.parse('{{ productos_serializados|escapejs }}');
+const CATEGORIAS = JSON.parse('{{ categorias|escapejs }}');
 
 const body = document.getElementById('itemsBody');
 
@@ -173,6 +174,9 @@ function escapeHtml(s) {
 function filaTemplate() {
     const opciones = PRODUCTOS.map(p =>
         `<option value="${p.id}">${escapeHtml(p.nombre)} (Stock: ${p.stock})</option>`
+    ).join('');
+    const catOpciones = CATEGORIAS.map(c =>
+        `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`
     ).join('');
     return `
     <tr class="item-row">
@@ -190,7 +194,12 @@ function filaTemplate() {
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small mb-1">Categoría *</label>
-                        <input type="text" class="form-control form-control-sm inp-categoria" maxlength="100" placeholder="Ej. Herramientas">
+                        <select class="form-select form-select-sm inp-categoria-select">
+                            <option value="">— Selecciona una categoría —</option>
+                            ${catOpciones}
+                            <option value="__nueva__">+ Otra (crear nueva)…</option>
+                        </select>
+                        <input type="text" class="form-control form-control-sm inp-categoria mt-2 d-none" maxlength="100" placeholder="Escribe la nueva categoría">
                     </div>
                     <div class="col-md-6 d-flex align-items-end">
                         <div class="form-check">
@@ -262,6 +271,12 @@ body.addEventListener('change', e => {
         }
         actualizarTotales();
     }
+    if (e.target.matches('.inp-categoria-select')) {
+        const row = e.target.closest('.item-row');
+        const esNueva = e.target.value === '__nueva__';
+        row.querySelector('.inp-categoria').classList.toggle('d-none', !esNueva);
+        if (esNueva) row.querySelector('.inp-categoria').focus();
+    }
 });
 
 document.getElementById('btnAddItem').addEventListener('click', agregarFila);
@@ -299,7 +314,10 @@ document.getElementById('formEntrada').addEventListener('submit', async function
             items.push({ producto_id: parseInt(sel), cantidad, precio, precio_venta: precioVenta });
         } else {
             const nombre = row.querySelector('.inp-nombre').value.trim();
-            const categoria = row.querySelector('.inp-categoria').value.trim();
+            let categoria = row.querySelector('.inp-categoria-select').value;
+            if (categoria === '__nueva__') {
+                categoria = row.querySelector('.inp-categoria').value.trim();
+            }
             const activo = row.querySelector('.inp-activo').checked;
             if (!nombre)    { error = `Fila ${idx + 1}: el nombre del nuevo producto es obligatorio.`; return; }
             if (!categoria) { error = `Fila ${idx + 1}: la categoría del nuevo producto es obligatoria.`; return; }
