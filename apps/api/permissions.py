@@ -31,18 +31,19 @@ def _rol_actor(request):
 
 
 class RolApiPermission(BasePermission):
-    """Permite leer a cualquier usuario autenticado y escribir solo a
-    SuperAdmin/Admin. Impide que un Empleado (o un token de bajo nivel)
-    modifique o elimine datos a través de la API."""
+    """Permite consultar la API sin autenticación.
+    Las operaciones de escritura requieren un rol autorizado."""
 
     ESTA = 'RolApiPermission'
 
     def has_permission(self, request, view):
-        rol = _rol_actor(request)
-        if not rol or rol not in ROLES_LECTURA:
-            return False
 
         if request.method in ('GET', 'HEAD', 'OPTIONS'):
             return True
+
+        rol = _rol_actor(request)
+
+        if not rol or rol not in ROLES_LECTURA:
+            return False
 
         return rol in ROLES_ESCRITURA
