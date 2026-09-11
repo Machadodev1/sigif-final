@@ -1,15 +1,55 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.core.cache import cache
 from django.db.models import Q
 from .forms import UsuarioForm
 from .models import Usuarios
 from apps.auditoria.models import Auditoria
 from core.decoradores import requerir_rol, impedir_crear_superadmin
 
+# ---------------------------------------------------------------
+# SEGURIDAD: límite de intentos de inicio de sesión (brute force)
+# ---------------------------------------------------------------
+
+MAX_INTENTOS_LOGIN = 5
+VENTANA_MINUTOS = 5
+
+
+def _ip_cliente(request):
+    # Confiable tras proxies que fijan X-Forwarded-For. backend_proxy lo usa.
+    xf = request.META.get('HTTP_X_FORWARDED_FOR')
+    if xf:
+        return xf.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', 'desconocido')
+
+
+def _check_login_limit(request):
+    clave = f"login_fail:{_ip_cliente(request)}"
+    fallos = cache.get(clave, 0)
+    if fallos >= MAX_INTENTOS_LOGIN:
+        return True
+    return False
+
+
+def _register_login_failure(request):
+    clave = f"login_fail:{_ip_cliente(request)}"
+    fallos = cache.get(clave, 0) + 1
+    cache.set(clave, fallos, timeout=VENTANA_MINUTOS * 60)
+    return fallos
 
 
 def login_view(request):
     if request.method == "POST":
+
+        # SEGURIDAD: bloqueo temporal tras demasiados intentos fallidos.
+        if _check_login_limit(request):
+            messages.error(
+                request,
+                "Demasiados intentos fallidos. Intenta de nuevo en unos minutos."
+            )
+            request.session["logueado"] = None
+            return redirect("login")
+
         correo = (request.POST.get("correo") or "").strip().lower()
         contra = request.POST.get("clave")
         try:
@@ -26,6 +66,7 @@ def login_view(request):
 
             # Verificar si el usuario está activo
             if not t.activo:
+                _register_login_failure(request)
                 messages.error(
                     request,
                     "Tu usuario está inactivo. Comunícate con un administrador."
@@ -34,6 +75,9 @@ def login_view(request):
                 return redirect("login")
 
             messages.success(request, "Bienvenido al sistema")
+
+            # SEGURIDAD: se limpia el contador de fallos de la IP al entrar.
+            cache.delete(f"login_fail:{_ip_cliente(request)}")
 
             request.session["logueado"] = {
                 "id": t.id,
@@ -44,6 +88,7 @@ def login_view(request):
             return redirect("dashboard")
 
         except Usuarios.DoesNotExist:
+            _register_login_failure(request)
             messages.error(
                 request,
                 "Usuario o contraseña incorrecto"
@@ -238,6 +283,23 @@ def editar_usuarios(request, id):
 
             nuevo_cargo = usuario_editado.cargo
 
+            # Validar escalada antes de guardar
+            if (
+                not es_propio_usuario
+                and
+                nuevo_cargo == "SuperAdmin"
+                and cargo_original != "SuperAdmin"
+                and rol_actual != "SuperAdmin"
+            ):
+                messages.error(
+                    request,
+                    "Un Administrador no puede asignar el rol de SuperAdmin."
+                )
+                return render(
+                    request,
+                    "usuarios/editar_usuarios.html",
+                    {"form": form}
+                )
 
             if es_propio_usuario or rol_actual == "Empleado":
                 usuario_editado.cargo = cargo_original
@@ -249,28 +311,6 @@ def editar_usuarios(request, id):
             if not form.cleaned_data.get("contra"):
                 usuario_editado.contra = contra_original
 
-            # GUARDAR
-            usuario_editado.save()
-            
-            if (
-                not es_propio_usuario
-                and
-                nuevo_cargo == "SuperAdmin"
-                and cargo_original != "SuperAdmin"
-                and rol_actual != "SuperAdmin"
-            ):
-
-                messages.error(
-                    request,
-                    "Un Administrador no puede asignar el rol de SuperAdmin."
-                )
-
-                return render(
-                    request,
-                    "usuarios/editar_usuarios.html",
-                    {"form": form}
-                )
-
             # SEGURIDAD: el SuperAdmin principal conserva siempre su rol y
             # estado, aunque se alteren los controles o el POST en el cliente.
             if usuario.es_superadmin_principal:
@@ -281,10 +321,6 @@ def editar_usuarios(request, id):
             # nunca puede cambiar su rol, aunque manipule el formulario.
             if es_propio_usuario:
                 usuario_editado.cargo = cargo_original
-
-            # ==========================================
-            # 5. GUARDAR
-            # ==========================================
 
             usuario_editado.save()
 

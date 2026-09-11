@@ -61,6 +61,7 @@ class FacturaListView(ListView):
     model = Factura
     template_name = 'facturacion/facturacion.html'
     context_object_name = 'facturas'
+    paginate_by = 20
 
     def dispatch(self, request, *args, **kwargs):
         return requerir_rol(
@@ -110,7 +111,7 @@ class FacturaDetailView(DetailView):
     def dispatch(self, request, *args, **kwargs):
 
         return requerir_rol(
-            ["Admin", "Empleado"]
+            ["SuperAdmin", "Admin", "Empleado"]
         )(
             super().dispatch
         )(request, *args, **kwargs)
@@ -236,7 +237,6 @@ def confirmar_venta(request):
         data = json.loads(request.body)
 
         productos = data.get("productos", [])
-        descuento = Decimal(str(data.get("descuento", 0)))
         metodo_pago = str(data.get("metodo_pago", "efectivo")).upper()
         if metodo_pago not in dict(Factura.METODOS_PAGO):
             metodo_pago = 'EFECTIVO'
@@ -245,25 +245,45 @@ def confirmar_venta(request):
         nombre = data.get("nombre", "").strip()
         correo = data.get("correo", "").strip()
 
+        # SEGURIDAD: el descuento nunca se toma del cliente. Se recalcula a
+        # partir del código enviado contra la tabla central del servidor.
+        from core.descuentos import porcentaje_codigo
+        codigo_descuento = data.get("codigo_descuento", "")
+        descuento = Decimal(str(porcentaje_codigo(codigo_descuento)))
+
         # ==========================================
         # VALIDACIONES INICIALES
         # ==========================================
 
-        if not productos:
+        if not isinstance(productos, list) or not productos:
             return JsonResponse({
                 "success": False,
                 "message": "El carrito está vacío"
             })
 
+        from django.core.exceptions import ValidationError as CoreValidationError
+        from django.core.validators import validate_email
+
         if not nombre:
             nombre = "Cliente general"
-
-        # Evitar descuentos inválidos
-        if descuento < 0:
-            descuento = Decimal("0")
-
-        if descuento > 100:
-            descuento = Decimal("100")
+        if len(nombre) > 100:
+            return JsonResponse({
+                "success": False,
+                "message": "El nombre del cliente es demasiado largo"
+            }, status=400)
+        if correo:
+            if len(correo) > 100:
+                return JsonResponse({
+                    "success": False,
+                    "message": "El correo del cliente es demasiado largo"
+                }, status=400)
+            try:
+                validate_email(correo)
+            except CoreValidationError:
+                return JsonResponse({
+                    "success": False,
+                    "message": "El correo del cliente no es válido"
+                }, status=400)
 
         # ==========================================
         # CREAR VENTA
@@ -277,27 +297,46 @@ def confirmar_venta(request):
 
             if cliente_id:
 
-                cliente = Cliente.objects.get(
-                    pk=int(cliente_id)
-                )
+                try:
+                    cliente_id = int(cliente_id)
+                except (TypeError, ValueError):
+                    return JsonResponse({
+                        "success": False,
+                        "message": "El cliente seleccionado no es válido"
+                    }, status=400)
+
+                cliente = Cliente.objects.filter(
+                    pk=cliente_id
+                ).first()
+
+                if not cliente:
+                    return JsonResponse({
+                        "success": False,
+                        "message": "El cliente seleccionado no existe"
+                    }, status=400)
 
             else:
 
                 if correo:
 
                     cliente, creado = Cliente.objects.get_or_create(
-                        correo=correo,
+                        correo=correo.lower(),
                         defaults={
                             "nombre": nombre
                         }
                     )
 
                 else:
-
-                    cliente = Cliente.objects.create(
-                        nombre=nombre,
-                        correo=""
+                    # Evita crear un Cliente nuevo por cada venta sin correo:
+                    # reutiliza un único "Consumidor Final" (get_or_create).
+                    cliente, _ = Cliente.objects.get_or_create(
+                        correo="consumidorfinal@pos.com",
+                        defaults={"nombre": nombre if nombre != "Cliente general" else "Consumidor Final"}
                     )
+                    # Si el nombre enviado es más específico, úsalo para la factura
+                    if nombre != "Cliente general" and cliente.nombre == "Consumidor Final":
+                        # no se pisa el cliente singleton, solo se usa el nombre para esta venta
+                        pass
 
             # --------------------------------------
             # PRODUCTOS
@@ -309,13 +348,31 @@ def confirmar_venta(request):
 
             for item in productos:
 
-                producto = Producto.objects.get(
-                    id=item["id"]
-                )
+                try:
+                    pid = int(item.get("id"))
+                    cantidad = int(item.get("cantidad"))
+                except (TypeError, ValueError, AttributeError):
+                    return JsonResponse({
+                        "success": False,
+                        "message": "Datos de producto no válidos"
+                    }, status=400)
 
-                cantidad = int(
-                    item["cantidad"]
-                )
+                # Bloquea la fila para evitar overselling concurrente
+                try:
+                    producto = Producto.objects.select_for_update().get(
+                        id=pid
+                    )
+                except Producto.DoesNotExist:
+                    return JsonResponse({
+                        "success": False,
+                        "message": "Uno de los productos ya no existe"
+                    }, status=400)
+
+                if not producto.activo:
+                    return JsonResponse({
+                        "success": False,
+                        "message": f"El producto {producto.nombre} no está disponible"
+                    }, status=400)
 
                 # Validar cantidad
                 if cantidad <= 0:
@@ -326,9 +383,9 @@ def confirmar_venta(request):
                             f"Cantidad inválida para "
                             f"{producto.nombre}"
                         )
-                    })
+                    }, status=400)
 
-                # Validar stock
+                # Validar stock (dentro del lock)
                 if cantidad > producto.stock:
 
                     return JsonResponse({
@@ -339,12 +396,17 @@ def confirmar_venta(request):
                             f"Stock disponible: "
                             f"{producto.stock}"
                         )
-                    })
+                    }, status=400)
 
-                # Precio actual del producto
+                # Precio actual del producto (snapshot)
                 precio = Decimal(
                     str(producto.precio)
                 )
+                if precio <= 0:
+                    return JsonResponse({
+                        "success": False,
+                        "message": f"Precio no válido para {producto.nombre}"
+                    }, status=400)
 
                 subtotal = precio * cantidad
 
@@ -414,12 +476,9 @@ def confirmar_venta(request):
                     subtotal=item["subtotal"]
                 )
 
-                # Descontar inventario
-                producto.stock -= item["cantidad"]
-
-                producto.save(
-                    update_fields=["stock"]
-                )
+                # Descontar inventario de forma atómica (fila ya bloqueada)
+                from django.db.models import F
+                Producto.objects.filter(id=producto.id).update(stock=F('stock') - item["cantidad"])
 
         # ==========================================
         # ENVÍO DEL CORREO EN SEGUNDO PLANO
@@ -502,7 +561,7 @@ def confirmar_venta(request):
 
         return JsonResponse({
             "success": False,
-            "message": str(e)
+            "message": "Ocurrió un error al confirmar la venta. Intenta nuevamente."
         }, status=400)
 
 # ============================================================

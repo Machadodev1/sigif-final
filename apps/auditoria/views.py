@@ -148,9 +148,13 @@ def obtener_auditorias_filtradas(request):
 @requerir_rol(["SuperAdmin", "Admin"])
 def auditoria(request):
 
-    datos = obtener_auditorias_filtradas(
+    datos_qs = obtener_auditorias_filtradas(
         request
     )
+    from django.core.paginator import Paginator
+    paginator = Paginator(datos_qs, 20)
+    page_number = request.GET.get("page")
+    datos = paginator.get_page(page_number)
 
     modulo = request.GET.get(
         "modulo",

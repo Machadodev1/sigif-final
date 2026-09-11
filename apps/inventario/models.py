@@ -15,6 +15,16 @@ class EntradaInventario(models.Model):
     fecha = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
+    def save(self, *args, **kwargs):
+        # SEGURIDAD: se sanean textos antes de persistir (anti XSS).
+        if self.proveedor:
+            self.proveedor = str(self.proveedor).replace('<', '').replace('>', '')
+        if self.documento:
+            self.documento = str(self.documento).replace('<', '').replace('>', '')
+        if self.observaciones:
+            self.observaciones = str(self.observaciones).replace('<', '').replace('>', '')
+        super().save(*args, **kwargs)
+
     def numero_factura(self):
         """Numero de factura de entrada generado automaticamente: ENT-00001"""
         return f"ENT-{self.id:05d}"

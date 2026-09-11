@@ -5,6 +5,12 @@ class Cliente(models.Model):
     nombre = models.CharField(max_length=100)
     correo = models.EmailField()
 
+    def save(self, *args, **kwargs):
+        # SEGURIDAD: saneamiento anti XSS en el nombre del cliente.
+        if self.nombre:
+            self.nombre = str(self.nombre).replace('<', '').replace('>', '')
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.nombre
 

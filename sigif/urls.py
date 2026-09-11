@@ -1,10 +1,12 @@
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.authtoken.views import obtain_auth_token
-from apps.api.views import LogoutView
-from core.error_views import error_400, error_403, error_404, error_500
-
-
+from apps.api.views import LogoutView, LoginTokenView
+from core.error_views import (
+    error_400,
+    error_403,
+    error_404,
+    error_500,
+)
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
@@ -25,6 +27,7 @@ urlpatterns = [
     path('auditoria/', include('apps.auditoria.urls')),
     path('configuracion/', include('apps.configuracion.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api-auth/', include('rest_framework.urls')),
 
     path(
         'api/docs/',
@@ -37,7 +40,7 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name='schema'),
         name='redoc'
     ),
-    path('api/api-token-auth/', obtain_auth_token, name='api_token_auth'),
+    path('api/api-token-auth/', LoginTokenView.as_view(), name='api_token_auth'),
     path('api/auth/logout/', LogoutView.as_view(), name='api_logout')
 ]
 
