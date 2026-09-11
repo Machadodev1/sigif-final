@@ -37,7 +37,13 @@ class ApiIndexTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()[0]['usuario'], 'admin')
 
-    def test_api_index_rejects_anonymous(self):
+    def test_api_index_public_but_data_requires_auth(self):
+        # La raíz de la API es pública: lista las rutas, pero no expone datos.
         response = self.client.get('/api/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'productos')
+        self.assertContains(response, 'clientes')
 
-        self.assertNotEqual(response.status_code, 200)
+        # Los endpoints de datos sí exigen autenticación.
+        clientes = self.client.get('/api/clientes/')
+        self.assertNotEqual(clientes.status_code, 200)

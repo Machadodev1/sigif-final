@@ -3,6 +3,7 @@ import threading
 _request_local = threading.local()
 
 from django.conf import settings
+from django.shortcuts import render
 
 
 class SecurityHeadersMiddleware:
@@ -49,6 +50,24 @@ class SecurityHeadersMiddleware:
         for key, value in headers.items():
             response.setdefault(key, value)
 
+        return response
+
+
+class CustomErrorPagesMiddleware:
+    """Renderiza las plantillas personalizadas de errores (templates/errores/)
+    en lugar de las páginas técnicas que muestra Django cuando DEBUG=True.
+
+    Con DEBUG=False los handler* definidos en sigif/urls.py ya generan estas
+    plantillas, así que este middleware solo actúa en desarrollo.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if settings.DEBUG and response.status_code in (400, 403, 404, 500):
+            template = f'errores/{response.status_code}.html'
+            return render(request, template, status=response.status_code)
         return response
 
 

@@ -12,6 +12,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
     SpectacularRedocView,
 )
+from rest_framework.permissions import AllowAny
 
 
 urlpatterns = [
@@ -26,18 +27,18 @@ urlpatterns = [
     path('finanzas/', include('apps.finanzas.urls')),
     path('auditoria/', include('apps.auditoria.urls')),
     path('configuracion/', include('apps.configuracion.urls')),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/schema/', SpectacularAPIView.as_view(permission_classes=[AllowAny]), name='schema'),
     path('api-auth/', include('rest_framework.urls')),
 
     path(
         'api/docs/',
-        SpectacularSwaggerView.as_view(url_name='schema'),
+        SpectacularSwaggerView.as_view(permission_classes=[AllowAny], url_name='schema'),
         name='swagger-ui'
     ),
 
     path(
         'api/redoc/',
-        SpectacularRedocView.as_view(url_name='schema'),
+        SpectacularRedocView.as_view(permission_classes=[AllowAny], url_name='schema'),
         name='redoc'
     ),
     path('api/api-token-auth/', LoginTokenView.as_view(), name='api_token_auth'),

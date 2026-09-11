@@ -1,4 +1,4 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from apps.usuarios.models import Usuarios
 
@@ -31,19 +31,34 @@ def _rol_actor(request):
 
 
 class RolApiPermission(BasePermission):
-    """Permite consultar la API sin autenticación.
+    """Requiere autenticación para consultar la API.
     Las operaciones de escritura requieren un rol autorizado."""
 
     ESTA = 'RolApiPermission'
 
     def has_permission(self, request, view):
 
-        if request.method in ('GET', 'HEAD', 'OPTIONS'):
-            return True
-
         rol = _rol_actor(request)
 
         if not rol or rol not in ROLES_LECTURA:
             return False
 
+        if request.method in SAFE_METHODS:
+            return True
+
+        return rol in ROLES_ESCRITURA
+
+
+class ProductoLecturaPublica(BasePermission):
+    """Permite ver los productos sin autenticación (solo métodos seguros).
+    Las operaciones de escritura requieren un rol autorizado."""
+
+    ESTA = 'ProductoLecturaPublica'
+
+    def has_permission(self, request, view):
+
+        if request.method in SAFE_METHODS:
+            return True
+
+        rol = _rol_actor(request)
         return rol in ROLES_ESCRITURA
