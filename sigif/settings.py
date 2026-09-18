@@ -162,10 +162,19 @@ STATICFILES_DIRS = [
 def _env_bool(name, default=False):
     return os.getenv(name, str(default)).lower() in ('1', 'true', 'yes', 'on')
 
-# Marcas de seguridad básicas (no requieren HTTPS).
+# Marcas de seguridad que solo se activan cuando se sirve por HTTPS.
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY' if not DEBUG else 'SAMEORIGIN'
+
+if not DEBUG and _env_bool('DJANGO_HTTPS', True):
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000            # 1 año
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_BROWSER_XSS_FILTER = True
 
 # La cookie CSRF NO debe ser HttpOnly: el módulo de pago la lee desde
 # JavaScript (getCookie("csrftoken")) para enviar el header X-CSRFToken
