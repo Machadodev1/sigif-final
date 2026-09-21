@@ -2127,7 +2127,23 @@ body.login-body {
     padding-bottom: 6px;
     border-bottom: 1px dashed #e2e8f0;
 }
-.tf-productos-lista { display: flex; flex-direction: column; gap: 6px; }
+.tf-productos-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: #c7d2fe #eef2ff;
+}
+.tf-productos-lista::-webkit-scrollbar { width: 6px; }
+.tf-productos-lista::-webkit-scrollbar-track { background: #eef2ff; border-radius: 4px; }
+.tf-productos-lista::-webkit-scrollbar-thumb {
+    background: #c7d2fe;
+    border-radius: 4px;
+}
+.tf-productos-lista::-webkit-scrollbar-thumb:hover { background: #a5b4fc; }
 .tf-detalle-item {
     display: flex;
     justify-content: space-between;

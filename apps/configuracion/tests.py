@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 
+from apps.auditoria.models import Auditoria
 from apps.usuarios.models import Usuarios
 
 from .models import EmpresaConfig
@@ -135,3 +136,57 @@ class BackupyPermisosTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.empleado.refresh_from_db()
         self.assertEqual(self.empleado.cargo, 'Empleado')
+
+
+class ConfiguracionVistasTests(TestCase):
+    def setUp(self):
+        self.admin = Usuarios.objects.create(
+            nombre='Admin',
+            documento='77777777',
+            contra='secret123',
+            telefono='3001112230',
+            correo='config@empresa.com',
+            cargo='Admin',
+            activo=True,
+        )
+        _loguear_admin(self.client, self.admin)
+
+    def test_configuracion_requiere_login(self):
+        client = self.client_class()
+        response = client.get(reverse('configuracion'))
+        self.assertEqual(response.status_code, 302)
+
+    def test_configuracion_sin_registro_previo_no_falla(self):
+        self.assertEqual(EmpresaConfig.objects.count(), 0)
+        response = self.client.get(reverse('configuracion'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_backupypermisos_lista_usuarios(self):
+        response = self.client.get(reverse('backupypermisos'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Admin')
+
+    def test_admin_no_puede_asignar_superadmin(self):
+        empleado = Usuarios.objects.create(
+            nombre='Empleado',
+            documento='88888888',
+            contra='secret123',
+            telefono='3001112229',
+            correo='empleado@config.com',
+            cargo='Empleado',
+            activo=True,
+        )
+
+        response = self.client.post(reverse('backupypermisos'), {
+            'user_id': empleado.id,
+            'rol_asignar': 'SuperAdmin',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        empleado.refresh_from_db()
+        self.assertEqual(empleado.cargo, 'Empleado')
+        self.assertTrue(
+            Auditoria.objects.filter(modulo='CONFIGURACION').filter(
+                accion__icontains='INTENTO RECHAZADO'
+            ).exists()
+        )
