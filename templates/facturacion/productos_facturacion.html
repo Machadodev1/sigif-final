@@ -148,8 +148,26 @@
 <!-- =====================================================
      MODAL DE MOVIMIENTOS
 ====================================================== -->
+<style>
+    .tabla-movimientos th,
+    .tabla-movimientos td {
+        padding: 12px 14px;
+        white-space: nowrap;
+    }
+    .tabla-movimientos th:last-child,
+    .tabla-movimientos td:last-child {
+        min-width: 130px;
+        white-space: nowrap;
+    }
+    .tabla-movimientos td:nth-child(3),
+    .tabla-movimientos td:nth-child(4) {
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
 <div class="modal fade" id="modalMovimientos" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-width: 1140px;">
         <div class="modal-content" style="border-radius: 14px; overflow: hidden;">
 
             <div class="modal-header" style="background: linear-gradient(135deg, #1e293b, #475569); color: #fff; border: none;">
@@ -163,8 +181,8 @@
             </div>
 
             <div class="modal-body" style="background: #f8fafc;">
-                <div class="table-responsive" style="border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background: #fff;">
-                    <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                <div class="table-responsive" style="border: 1px solid #e2e8f0; border-radius: 10px; background: #fff;">
+                    <table class="table table-hover align-middle mb-0 tabla-movimientos" style="font-size: 0.85rem;">
                         <thead class="table-light">
                             <tr>
                                 <th><i class="bi bi-receipt me-1"></i> Factura</th>

@@ -2052,7 +2052,8 @@ body.login-body {
     border-bottom: 1px solid #e8eef8;
     gap: 12px;
 }
-.tf-header-left { display: flex; align-items: center; gap: 14px; }
+.tf-header-left { display: flex; align-items: center; gap: 14px; min-width: 0; overflow: hidden; }
+.tf-header-left > div { min-width: 0; }
 .tf-icon-wrap {
     width: 48px;
     height: 48px;
@@ -2068,6 +2069,9 @@ body.login-body {
     display: block;
     font-size: 0.95rem;
     color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .tf-num strong { color: #0f172a; font-size: 1.05rem; }
 .tf-fecha {
@@ -2077,7 +2081,10 @@ body.login-body {
     font-size: 0.78rem;
     color: #94a3b8;
     margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
 }
+.tf-fecha i { flex-shrink: 0; }
 .tf-total-badge {
     background: linear-gradient(135deg, #059669, #047857);
     color: #fff;

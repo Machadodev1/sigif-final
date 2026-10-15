@@ -27,5 +27,6 @@ router.register(r'usuarios', UsuarioViewSet, basename='usuarios')
 urlpatterns = router.urls
 
 urlpatterns+=[
+    path('api/token/', LoginTokenView.as_view(), name='api_token'),
     path('api/token/logout/', LogoutView.as_view(), name='api_logout')
 ]
