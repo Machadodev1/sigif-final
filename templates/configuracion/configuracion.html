@@ -148,6 +148,34 @@
                             <div class="p-2 bg-light rounded border text-muted">{{ config.correo_contacto|default:"Sin especificar" }}</div>
                             {% endif %}
                         </div>
+
+                        <div>
+                            <label for="backup_email" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">
+                                <i class="bi bi-envelope-arrow-up me-1 text-success"></i> Correo para Envío de Backups
+                            </label>
+                            {% if user.is_staff or request.session.logueado.rol == "SuperAdmin" or request.session.logueado.rol == "Admin" %}
+                            <input type="email" id="backup_email" name="backup_email" value="{{ config.backup_email|default_if_none:'' }}" class="form-control" placeholder="backups@empresa.com">
+                            <small class="text-muted d-block mt-1" style="font-size: 0.76rem;">Los respaldos se enviarán en formato .zip a este correo.</small>
+                            {% else %}
+                            <div class="p-2 bg-light rounded border text-muted">{{ config.backup_email|default:"Sin configurar" }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="backup_frecuencia" class="form-label" style="font-weight: 600; color: #334155; font-size: 0.9rem;">
+                                <i class="bi bi-clock-history me-1 text-success"></i> Frecuencia de Backup Automático
+                            </label>
+                            {% if user.is_staff or request.session.logueado.rol == "SuperAdmin" or request.session.logueado.rol == "Admin" %}
+                            <select id="backup_frecuencia" name="backup_frecuencia" class="form-select">
+                                <option value="diario" {% if config.backup_frecuencia == 'diario' %}selected{% endif %}>Cada medianoche (Diario)</option>
+                                <option value="semanal" {% if config.backup_frecuencia == 'semanal' %}selected{% endif %}>Cada Domingo (Semanal)</option>
+                                <option value="mensual" {% if config.backup_frecuencia == 'mensual' %}selected{% endif %}>Cada fin de mes (Mensual)</option>
+                                <option value="nunca" {% if config.backup_frecuencia == 'nunca' %}selected{% endif %}>Desactivar automatización</option>
+                            </select>
+                            {% else %}
+                            <div class="p-2 bg-light rounded border text-muted">{{ config.get_backup_frecuencia_display }}</div>
+                            {% endif %}
+                        </div>
                     </div>
 
                     {% if user.is_staff or request.session.logueado.rol == "SuperAdmin" or request.session.logueado.rol == "Admin" %}

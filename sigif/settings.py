@@ -155,6 +155,10 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+# Media: carpeta donde se almacenan los respaldos de la base de datos.
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'backups'
+
 # ================================================================
 # SEGURIDAD: headers HTTP, cookies y protección CSRF/clickjacking
 # ================================================================
