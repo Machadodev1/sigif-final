@@ -13,6 +13,8 @@ urlpatterns = [
     # 3. Historial de gastos operativos
     path('gastos/', views.gastos, name='gastos'),
     path('gastos/nuevo/', views.editar_gasto, name='nuevo_gasto'),
+    path('gastos/editar/<int:pk>/', views.editar_gasto, name='editar_gasto'),
+    path('gastos/eliminar/<int:pk>/', views.eliminar_gasto, name='eliminar_gasto'),
     
     # 4. Rentabilidad de inventario
     path('rentabilidad/', views.rentabilidad, name='rentabilidad'),

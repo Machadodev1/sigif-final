@@ -287,8 +287,14 @@ def eliminar_gasto(request, pk):
     if request.method == 'POST':
         gasto = get_object_or_404(Gasto, pk=pk)
         nombre = gasto.concepto
+        usuario = request.session.get('logueado', {}).get('nombre', 'Usuario')
         gasto.delete()
-        messages.success(request, f'Gasto “{nombre}” eliminado correctamente.', extra_tags='module-finanzas')
+        Auditoria.objects.create(
+            usuario=usuario,
+            accion=f'ELIMINÓ GASTO: {nombre}',
+            modulo='FINANZAS'
+        )
+        messages.success(request, f'Gasto "{nombre}" eliminado correctamente.', extra_tags='module-finanzas')
     return redirect('finanzas:gastos')
 
 

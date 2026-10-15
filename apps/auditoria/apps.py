@@ -9,7 +9,7 @@ class AuditoriaConfig(AppConfig):
         # registrar señales para apps críticas
         try:
             from . import signals as auditoria_signals
-            targets = ['usuarios', 'productos', 'inventario', 'facturacion', 'configuracion']
+            targets = ['usuarios', 'productos', 'inventario', 'facturacion', 'configuracion', 'finanzas']
             for t in targets:
                 auditoria_signals.register_signals_for_app(t)
         except Exception:

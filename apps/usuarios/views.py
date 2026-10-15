@@ -85,7 +85,7 @@ def login_view(request):
                 "rol": t.cargo
             }
 
-            return redirect("dashboard")
+            return redirect("dashboard")    
 
         except Usuarios.DoesNotExist:
             _register_login_failure(request)
