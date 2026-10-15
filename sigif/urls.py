@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
 from apps.api.views import LogoutView, LoginTokenView
 from core.error_views import (
     error_400,
@@ -16,6 +17,7 @@ from rest_framework.permissions import AllowAny
 
 
 urlpatterns = [
+    path('favicon.ico', RedirectView.as_view(url='/static/img/logologin.png', permanent=True)),
     path('admin/', admin.site.urls),
 
     path('api/', include('apps.api.urls')),
