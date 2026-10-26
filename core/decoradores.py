@@ -2,6 +2,7 @@ from functools import wraps
 
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.core.exceptions import PermissionDenied
 
 
 def _obtener_usuario_de_sesion(request):
@@ -26,18 +27,14 @@ def _obtener_usuario_de_sesion(request):
 
 
 def requerir_rol(roles_permitidos):
-
     def decorator(view_func):
-
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
-
             usuario = _obtener_usuario_de_sesion(request)
 
-            # Inferir nombre del módulo para poder etiquetar el mensaje
+            # Inferir nombre del módulo para etiquetar el mensaje
             try:
                 resolver = getattr(request, "resolver_match", None)
-
                 if resolver and resolver.app_name:
                     modulo = resolver.app_name
                 else:
@@ -47,19 +44,17 @@ def requerir_rol(roles_permitidos):
                         if components[-1] == "views" and len(components) >= 2
                         else components[-1]
                     )
-
             except Exception:
                 modulo = "app"
 
             if not usuario:
-
                 messages.error(
                     request,
                     "Debes iniciar sesión para continuar.",
-                    extra_tags=f"module-{modulo}"
+                    extra_tags=f"module-{modulo}",
                 )
-
-                return redirect("dashboard")
+                # Si no ha iniciado sesión, redirigir al login o lanzar 403
+                raise PermissionDenied("Debes iniciar sesión para continuar.")
 
             rol = usuario.cargo
 
@@ -69,10 +64,13 @@ def requerir_rol(roles_permitidos):
             messages.error(
                 request,
                 "No tienes permisos para acceder a este módulo.",
-                extra_tags=f"module-{modulo}"
+                extra_tags=f"module-{modulo}",
             )
 
-            return redirect("dashboard")
+            # Lanza el error 403 en lugar de redirigir
+            raise PermissionDenied(
+                "No tienes permisos para acceder a este módulo."
+            )
 
         return _wrapped_view
 
