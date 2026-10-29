@@ -70,6 +70,12 @@ def _crear_backup_db(tipo='manual', request=None):
 def _crear_zip_backup(backup):
     backup_dir = _get_backup_dir()
     ruta_json = backup_dir / backup.nombre
+    if not ruta_json.exists():
+        raise FileNotFoundError(
+            f"El archivo del backup '{backup.nombre}' no existe en el servidor. "
+            "Genera el backup de nuevo antes de enviarlo."
+        )
+
     nombre_zip = backup.nombre.replace('.json', '.zip')
     ruta_zip = backup_dir / nombre_zip
 
@@ -303,6 +309,16 @@ def _enviar_backup_email_view(request):
         return redirect("backupypermisos")
 
     backup = get_object_or_404(Backup, id=backup_id)
+
+    # Validar que el archivo del backup exista en disco antes de intentar enviarlo.
+    if not (_get_backup_dir() / backup.nombre).exists():
+        messages.error(
+            request,
+            f"El archivo del backup '{backup.nombre}' no existe en el servidor. "
+            "Genera el backup de nuevo."
+        )
+        return redirect("backupypermisos")
+
     config = EmpresaConfig.objects.first()
 
     if not config or not config.backup_email:

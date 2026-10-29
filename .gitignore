@@ -21,3 +21,7 @@ db.sqlite3.backup
 # Respaldos generados
 backups/
 
+# Scripts de diagnóstico temporales
+diag_*.py
+test_envio.py
+
