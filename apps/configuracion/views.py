@@ -1,3 +1,4 @@
+import io
 import json
 import os
 import shutil
@@ -24,9 +25,25 @@ from .models import EmpresaConfig, Backup
 
 
 def _get_backup_dir():
+    """Directorio donde se guardan los backups.
+
+    En plataformas con filesystem de solo lectura (Vercel, Lambda, etc.)
+    el proyecto no se puede escribir, así que se usa /tmp, que sí es
+    escribible. En desarrollo y servidores normales se usa BASE_DIR/backups.
+    """
     backup_dir = settings.BASE_DIR / 'backups'
-    backup_dir.mkdir(exist_ok=True)
-    return backup_dir
+    try:
+        backup_dir.mkdir(exist_ok=True)
+        # Verificar que realmente se pueda escribir (Vercel: read-only).
+        probe = backup_dir / '.write_probe'
+        probe.touch()
+        probe.unlink()
+        return backup_dir
+    except OSError:
+        # Filesystem de solo lectura: usar /tmp (Vercel, AWS Lambda, etc.)
+        tmp_dir = Path('/tmp') / 'sigif_backups'
+        tmp_dir.mkdir(parents=True, exist_ok=True)
+        return tmp_dir
 
 
 def _crear_backup_db(tipo='manual', request=None):
@@ -67,27 +84,23 @@ def _crear_backup_db(tipo='manual', request=None):
         return None, str(e)
 
 
-def _crear_zip_backup(backup):
-    backup_dir = _get_backup_dir()
-    ruta_json = backup_dir / backup.nombre
-    if not ruta_json.exists():
-        raise FileNotFoundError(
-            f"El archivo del backup '{backup.nombre}' no existe en el servidor. "
-            "Genera el backup de nuevo antes de enviarlo."
-        )
-
-    nombre_zip = backup.nombre.replace('.json', '.zip')
-    ruta_zip = backup_dir / nombre_zip
-
-    with zipfile.ZipFile(ruta_zip, 'w', zipfile.ZIP_DEFLATED) as zf:
-        zf.write(ruta_json, backup.nombre)
-
-    return ruta_zip, nombre_zip
-
-
 def _enviar_backup_email(backup, email_destino):
     try:
-        ruta_zip, nombre_zip = _crear_zip_backup(backup)
+        backup_dir = _get_backup_dir()
+        ruta_json = backup_dir / backup.nombre
+        if not ruta_json.exists():
+            return False, (
+                f"El archivo del backup '{backup.nombre}' no existe en el servidor "
+                "(en Vercel los archivos temporales se borran entre invocaciones). "
+                "Genera el backup de nuevo antes de enviarlo."
+            )
+
+        # Crear el ZIP en memoria: evita depender del filesystem para el zip.
+        contenido_json = ruta_json.read_bytes()
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr(backup.nombre, contenido_json)
+        buffer.seek(0)
 
         email = EmailMessage(
             subject=f'Backup SIGIF - {backup.nombre}',
@@ -95,13 +108,12 @@ def _enviar_backup_email(backup, email_destino):
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[email_destino],
         )
-        email.attach_file(ruta_zip)
+        email.attach(backup.nombre.replace('.json', '.zip'), buffer.getvalue(), 'application/zip')
         email.send()
 
         backup.enviado_email = True
         backup.save()
 
-        ruta_zip.unlink()
         return True, None
     except Exception as e:
         return False, str(e)
